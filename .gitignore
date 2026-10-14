@@ -1,0 +1,9 @@
+dist/
+build/
+.mygo/
+frontend/node_modules/
+frontend/dist/
+*.test
+*.out
+.DS_Store
+.scratch/
