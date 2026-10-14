@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -464,12 +465,12 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		tf, err := st.GetTrackedFile(ctx, rule.ID, "p1.png")
-		if err == nil && tf.Status == store.ItemStatusConfirmed {
+		r, rErr := st.GetBackupRule(ctx, rule.ID)
+		if err == nil && tf.Status == store.ItemStatusConfirmed && rErr == nil && r.Status == store.BackupStatusActive {
 			break
 		}
 		time.Sleep(15 * time.Millisecond)
 	}
-
 	uploadMu.Lock()
 	if len(uploadedNames) != 1 || uploadedNames[0] != "p1.png" {
 		t.Fatalf("uploadedNames = %v, want [p1.png] (photos only)", uploadedNames)
@@ -499,12 +500,12 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 	}
 	for time.Now().Before(deadline) {
 		tf, err := st.GetTrackedFile(ctx, rule.ID, "v1.mp4")
-		if err == nil && tf.Status == store.ItemStatusConfirmed {
+		r, rErr := st.GetBackupRule(ctx, rule.ID)
+		if err == nil && tf.Status == store.ItemStatusConfirmed && rErr == nil && r.Status == store.BackupStatusActive {
 			break
 		}
 		time.Sleep(15 * time.Millisecond)
 	}
-
 	// Mid-write changing file: create changing.png that mutates during upload stream
 	changingPath := filepath.Join(backupDir, "changing.png")
 	writePNGFile(t, changingPath, 10, 10)
@@ -921,8 +922,8 @@ func TestReconcileRejectsSameNameSameSizeWithDifferentOrMissingMD5AndHandlesNilC
 }
 
 func TestBackupScanReportsPartialDirectoryWalkError(t *testing.T) {
-	if os.Getuid() == 0 {
-		t.Skip("skipping permission test when running as root")
+	if runtime.GOOS == "windows" || os.Getuid() == 0 {
+		t.Skip("skipping POSIX 0000 directory permission test on Windows or root")
 	}
 	t.Parallel()
 	ctx := context.Background()
