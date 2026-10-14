@@ -1,13 +1,11 @@
-import { defineConfig } from "mygo-cli"
-
-export default defineConfig({
+export default {
   name: "Rainforest",
   id: "com.thedavidweng.rainforest",
   version: "0.1.0",
   main: ".",
-  devCommand: "bun --cwd frontend run dev",
+  devCommand: "bun run --cwd frontend dev",
   devUrl: "http://localhost:5173",
-  buildCommand: "bun --cwd frontend run build",
+  buildCommand: "bun run --cwd frontend build",
   frontendDist: "frontend/dist",
   bindings: "frontend/src/mygo.ts",
-})
+}

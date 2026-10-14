@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+      - name: Install frontend dependencies
+        run: bun install --cwd frontend --frozen-lockfile
+      - name: Run quality gates
+        run: mise run check
+      - name: Verify no uncommitted changes or bindings drift
+        run: git diff --exit-code
+      - name: Build and smoke test rainforest binary
+        run: |
+          go build -o dist/rainforest .
+          ./dist/rainforest --version
+
+  matrix:
+    name: Cross-Platform Test & Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+      - name: Install frontend dependencies
+        run: bun install --cwd frontend --frozen-lockfile
+      - name: Run frontend typecheck, tests, and production bundle build
+        run: |
+          bun run --cwd frontend typecheck
+          bun --cwd frontend test
+          bun run --cwd frontend build
+      - name: Run Go tests
+        run: go test ./...
+      - name: Package desktop build via MyGo
+        run: bunx mygo build -skip-dmg -skip-notarize
