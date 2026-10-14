@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. v0.1.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Desktop Artifacts (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: darwin/arm64
+            archive_name: rainforest-darwin-arm64.tar.gz
+          - os: macos-latest
+            target: darwin/amd64
+            archive_name: rainforest-darwin-amd64.tar.gz
+          - os: ubuntu-latest
+            target: linux/amd64
+            archive_name: rainforest-linux-amd64.tar.gz
+          - os: ubuntu-latest
+            target: linux/arm64
+            archive_name: rainforest-linux-arm64.tar.gz
+          - os: windows-latest
+            target: windows/amd64
+            archive_name: rainforest-windows-amd64.zip
+          - os: windows-latest
+            target: windows/arm64
+            archive_name: rainforest-windows-arm64.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag_name || github.ref }}
+
+      - uses: jdx/mise-action@v4
+
+      - name: Install frontend dependencies
+        run: bun install --cwd frontend --frozen-lockfile
+
+      - name: Run pre-release tests
+        run: |
+          go test ./...
+          bun run --cwd frontend typecheck
+          bun --cwd frontend test
+          bun run --cwd frontend build
+
+      - name: Build MyGo desktop bundle (${{ matrix.target }})
+        shell: bash
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          MACOS_NOTARIZE_PROFILE: ${{ secrets.MACOS_NOTARIZE_PROFILE }}
+          MYGO_UPDATER_PUBLIC_KEY: ${{ secrets.MYGO_UPDATER_PUBLIC_KEY }}
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          FLAGS=(-platform "${{ matrix.target }}" -o dist)
+          if [[ "${{ matrix.os }}" == macos-* ]]; then
+            if [[ -z "${MACOS_SIGNING_IDENTITY:-}" ]]; then
+              FLAGS+=(-skip-dmg)
+            fi
+            if [[ -z "${MACOS_NOTARIZE_PROFILE:-}" ]]; then
+              FLAGS+=(-skip-notarize)
+            fi
+          else
+            FLAGS+=(-skip-dmg -skip-notarize)
+          fi
+          bunx mygo build "${FLAGS[@]}"
+      - name: Package release archive and SHA-256 checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          if [[ "${{ matrix.archive_name }}" == *.zip ]]; then
+            (cd dist && zip -r "../release-assets/${{ matrix.archive_name }}" .)
+          else
+            tar -czf "release-assets/${{ matrix.archive_name }}" -C dist .
+          fi
+          (
+            cd release-assets
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "${{ matrix.archive_name }}" > "${{ matrix.archive_name }}.sha256"
+            else
+              shasum -a 256 "${{ matrix.archive_name }}" > "${{ matrix.archive_name }}.sha256"
+            fi
+          )
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ strategy.job-index }}
+          path: release-assets/*
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag_name != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag_name || github.ref }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate combined checksums.txt
+        run: |
+          cd artifacts
+          cat *.sha256 > checksums.txt
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag_name || github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber
+          else
+            gh release create "$TAG" artifacts/* --title "$TAG" --generate-notes
+          fi

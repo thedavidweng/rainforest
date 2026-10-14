@@ -1,0 +1,31 @@
+export default {
+  name: "Rainforest",
+  id: "com.thedavidweng.rainforest",
+  identifier: "com.thedavidweng.rainforest",
+  version: "0.1.0",
+  copyright: "Copyright (C) 2026 Davy Weng and contributors",
+  main: ".",
+  devCommand: "bun run --cwd frontend dev",
+  devUrl: "http://localhost:5173",
+  buildCommand: "bun run --cwd frontend build",
+  frontendDist: "frontend/dist",
+  bindings: "frontend/src/mygo.ts",
+  updates: {
+    github: "thedavidweng/rainforest",
+    tagPrefix: "v",
+    publicKey:
+      process.env.MYGO_UPDATER_PUBLIC_KEY ||
+      "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+    changelog: "CHANGELOG.md",
+  },
+  macos: {
+    minimumSystemVersion: "12.0",
+    dmgTitle: "Rainforest",
+    ...(process.env.MACOS_SIGNING_IDENTITY
+      ? { signingIdentity: process.env.MACOS_SIGNING_IDENTITY }
+      : {}),
+    ...(process.env.MACOS_NOTARIZE_PROFILE
+      ? { notarize: { keychainProfile: process.env.MACOS_NOTARIZE_PROFILE } }
+      : {}),
+  },
+}
