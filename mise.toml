@@ -2,6 +2,7 @@
 go = "1.27.2"
 gofumpt = "0.12.0"
 golangci-lint = "2.14.0"
+bun = "1.4.2"
 
 [tasks.build]
 run = "go build ./..."
@@ -20,21 +21,30 @@ run = '''
 for f in CLAUDE.md .cursorrules .windsurfrules .clinerules GEMINI.md; do
   if [ -e "$f" ]; then echo "forbidden per-tool agent file: $f (use AGENTS.md)"; exit 1; fi
 done
-dirs=""
-for d in pkg cmd internal; do
-  if [ -d "$d" ]; then dirs="$dirs $d"; fi
-done
-if [ -n "$dirs" ]; then
-  files=$(find $dirs -name '*.go' ! -name '*_test.go')
-  if [ -n "$files" ]; then
-    total=$(cat $files | grep -cv '^[[:space:]]*$')
-    comments=$(cat $files | grep -E '^[[:space:]]*//' | grep -cvE '^[[:space:]]*//(go:|nolint)' || true)
-    if [ "$comments" -gt $((total * 5 / 100)) ]; then
-      echo "comment budget exceeded: $comments comment lines > 5% of $total code lines"; exit 1
-    fi
+files=$(find . -path './frontend' -prune -o -path './.git' -prune -o -name '*.go' ! -name '*_test.go' -print)
+if [ -n "$files" ]; then
+  total=$(cat $files | grep -cv '^[[:space:]]*$')
+  comments=$(cat $files | grep -E '^[[:space:]]*//' | grep -cvE '^[[:space:]]*//(go:|nolint)' || true)
+  if [ "$comments" -gt $((total * 5 / 100)) ]; then
+    echo "comment budget exceeded: $comments comment lines > 5% of $total code lines"; exit 1
   fi
 fi
 '''
 
+[tasks.bindings-check]
+run = '''
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+MYGO_GENERATE="$tmp" go run .
+diff -u frontend/src/mygo.ts "$tmp"
+'''
+
+[tasks.frontend-check]
+run = '''
+bun run --cwd frontend typecheck
+bun --cwd frontend test
+bun run --cwd frontend build
+'''
+
 [tasks.check]
-depends = ["fmt", "build", "test", "lint", "conventions"]
+depends = ["fmt", "build", "test", "lint", "conventions", "bindings-check", "frontend-check"]

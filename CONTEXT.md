@@ -20,5 +20,6 @@
 ## Architectural Sources of Truth
 
 - Core engine, SQLite state store, one-way backup & reconciliation architecture: `docs/adr/0001-rainforest-architecture.md`
+- MyGo v0.4.8 desktop shell, generated TypeScript bindings, and frontend `Backend` seam: `docs/adr/0002-mygo-desktop-shell.md`
 - Domain terms: `GLOSSARY.md`
 - Agent & repository rules: `AGENTS.md`
