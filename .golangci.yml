@@ -1,0 +1,42 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocritic
+    - misspell
+    - unconvert
+    - prealloc
+    - unparam
+    - godox
+    - whitespace
+    - nolintlint
+  settings:
+    errcheck:
+      check-type-assertions: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      settings:
+        hugeParam:
+          sizeThreshold: 512
+    misspell:
+      locale: US
+      ignore-rules:
+        - cancelled
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+  exclusions:
+    presets:
+      - std-error-handling
+
+run:
+  timeout: 5m
