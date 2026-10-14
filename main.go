@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/egoist/mygo"
+	"github.com/thedavidweng/rainforest/internal/autostart"
 	"github.com/thedavidweng/rainforest/internal/gui"
 )
 
@@ -65,14 +66,17 @@ func setupDesktop(svc *gui.Services) {
 	_ = os.MkdirAll(userDataDir, 0o700)
 
 	shell := &desktopShell{svc: svc}
+	autostartMgr := autostart.NewDefaultManager()
 	svc.SetFilePicker(newFilePicker())
 	svc.SetEmitter(shell.handleEvent)
+	svc.SetLaunchAtLoginHook(autostartMgr.SetEnabled)
 
 	if _, err := svc.Init(gui.Options{
-		DBPath:    filepath.Join(userDataDir, "rainforest.db"),
-		VaultPath: filepath.Join(userDataDir, "credentials.json"),
-		Emitter:   shell.handleEvent,
-		Picker:    newFilePicker(),
+		DBPath:          filepath.Join(userDataDir, "rainforest.db"),
+		VaultPath:       filepath.Join(userDataDir, "credentials.json"),
+		Emitter:         shell.handleEvent,
+		Picker:          newFilePicker(),
+		LaunchAtLoginFn: autostartMgr.SetEnabled,
 	}); err != nil {
 		mygo.Dialog.Error("Rainforest Startup Error", err.Error())
 		mygo.App.Exit(1)
@@ -121,7 +125,7 @@ func setupDesktop(svc *gui.Services) {
 			win.Hide()
 			return
 		}
-		if shell.activeTransferCount() > 0 {
+		if shell.shouldPromptQuit() {
 			e.PreventDefault()
 			go shell.requestQuit()
 		}
@@ -141,7 +145,7 @@ func setupDesktop(svc *gui.Services) {
 		if shell.quitting.Load() {
 			return
 		}
-		if shell.activeTransferCount() > 0 {
+		if shell.shouldPromptQuit() {
 			e.PreventDefault()
 			go shell.requestQuit()
 			return
@@ -262,6 +266,14 @@ func (d *desktopShell) activeTransferCount() int {
 	return active
 }
 
+func (d *desktopShell) shouldPromptQuit() bool {
+	return gui.DecideQuit(
+		d.activeTransferCount(),
+		d.svc.ActiveBackupCount(context.Background()),
+		d.closeToTrayEnabled(),
+	) != gui.QuitImmediately
+}
+
 func (d *desktopShell) requestQuit() {
 	if d.quitting.Load() {
 		return
@@ -295,6 +307,7 @@ func (d *desktopShell) requestQuit() {
 
 func (d *desktopShell) confirmQuit() {
 	d.quitting.Store(true)
+	d.svc.Close()
 	mygo.App.Quit()
 }
 

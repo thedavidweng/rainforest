@@ -59,8 +59,26 @@ jobs:
           bun run --cwd frontend build
 
       - name: Build MyGo desktop bundle (${{ matrix.target }})
-        run: bunx mygo build -platform ${{ matrix.target }} -skip-dmg -skip-notarize -o dist
-
+        shell: bash
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          MACOS_NOTARIZE_PROFILE: ${{ secrets.MACOS_NOTARIZE_PROFILE }}
+          MYGO_UPDATER_PUBLIC_KEY: ${{ secrets.MYGO_UPDATER_PUBLIC_KEY }}
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          FLAGS=(-platform "${{ matrix.target }}" -o dist)
+          if [[ "${{ matrix.os }}" == macos-* ]]; then
+            if [[ -z "${MACOS_SIGNING_IDENTITY:-}" ]]; then
+              FLAGS+=(-skip-dmg)
+            fi
+            if [[ -z "${MACOS_NOTARIZE_PROFILE:-}" ]]; then
+              FLAGS+=(-skip-notarize)
+            fi
+          else
+            FLAGS+=(-skip-dmg -skip-notarize)
+          fi
+          bunx mygo build "${FLAGS[@]}"
       - name: Package release archive and SHA-256 checksum
         shell: bash
         run: |

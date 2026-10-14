@@ -807,9 +807,7 @@ export class MemoryBackend implements Backend {
   }
 
   readonly downloads: Backend["downloads"] = {
-    listSources: async () => structuredClone(this.recoveryState),
     listDestinations: async () => structuredClone(this.recoveryState),
-
     startDownload: async (input: DownloadInput) => {
       const destDir = input.destDir.trim()
       if (!destDir) {
@@ -888,6 +886,7 @@ export class MemoryBackend implements Backend {
         } satisfies BackendError
       }
 
+      const policy = (input.conflictPolicy ?? "").trim() || this.settingsState.defaultConflictPolicy || "skip"
       const bytesTotal = items.reduce((sum, it) => sum + it.size, 0)
       const tr: TransferDTO = {
         id,
@@ -896,6 +895,7 @@ export class MemoryBackend implements Backend {
         sourceSummary:
           items.length === 1 ? items[0]!.name : `${items[0]!.name} +${items.length - 1} more`,
         destLocalDir: destDir,
+        conflictPolicy: policy,
         bytesDone: bytesTotal,
         bytesTotal,
         itemsDone: items.length,
@@ -1027,6 +1027,13 @@ export class MemoryBackend implements Backend {
             ok: true,
             message: "Skipped while offline.",
           },
+          {
+            grade: 5,
+            name: "write_probe",
+            status: "skipped",
+            ok: true,
+            message: "Skipped while offline.",
+          },
         ]
         return {
           healthy: false,
@@ -1071,7 +1078,43 @@ export class MemoryBackend implements Backend {
             ok: true,
             message: "Search read probe succeeded.",
           },
+          {
+            grade: 5,
+            name: "write_probe",
+            status: "skipped",
+            ok: true,
+            message:
+              "Write probe skipped (enable opt-in write probe with confirmation to test remote folder creation and trash).",
+          },
         ],
+      }
+    },
+
+    doctorWithWriteProbe: async (confirm: boolean): Promise<DoctorReportDTO> => {
+      if (!confirm) {
+        throw {
+          code: "VALIDATION_FAILED",
+          category: "validation",
+          message:
+            "write probe requires explicit confirmation before creating and trashing a temporary remote folder",
+          details: { field: "confirm" },
+        } satisfies BackendError
+      }
+      const base = await this.settings.doctor()
+      if (base.unconfigured) {
+        return base
+      }
+      const checks = base.checks.filter((c) => c.grade !== 5)
+      checks.push({
+        grade: 5,
+        name: "write_probe",
+        status: "pass",
+        ok: true,
+        message: "Created and trashed temporary probe folder probe-node-1.",
+      })
+      return {
+        ...base,
+        checks,
       }
     },
   }
@@ -1306,7 +1349,6 @@ export function failingBackend(err: BackendError): Backend {
       pickFolder: fail,
     },
     downloads: {
-      listSources: fail,
       listDestinations: fail,
       startDownload: fail,
       pickTargetDirectory: fail,
@@ -1315,6 +1357,7 @@ export function failingBackend(err: BackendError): Backend {
       get: fail,
       update: fail,
       doctor: fail,
+      doctorWithWriteProbe: fail,
     },
     events: {
       onTransferStage: () => () => {},

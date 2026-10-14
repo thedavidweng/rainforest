@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 	"github.com/thedavidweng/rainforest/internal/engine"
 	"github.com/thedavidweng/rainforest/internal/store"
 )
@@ -42,9 +43,10 @@ type DownloadInput struct {
 	Items           []DownloadItemInput `json:"items,omitempty"`
 	ContainerNodeID string              `json:"containerNodeId,omitempty"`
 	DestDir         string              `json:"destDir"`
+	ConflictPolicy  string              `json:"conflictPolicy,omitempty"`
 }
 
-func (d *Downloads) ListSources(ctx context.Context) (*RecoverySourcesDTO, error) {
+func (d *Downloads) ListDestinations(ctx context.Context) (*RecoverySourcesDTO, error) {
 	_, eng, err := d.state.deps()
 	if err != nil {
 		return nil, err
@@ -91,10 +93,6 @@ func (d *Downloads) ListSources(ctx context.Context) (*RecoverySourcesDTO, error
 	}, nil
 }
 
-func (d *Downloads) ListDestinations(ctx context.Context) (*RecoverySourcesDTO, error) {
-	return d.ListSources(ctx)
-}
-
 func (d *Downloads) StartDownload(ctx context.Context, in DownloadInput) (*TransferDTO, error) {
 	_, eng, err := d.state.deps()
 	if err != nil {
@@ -116,6 +114,7 @@ func (d *Downloads) StartDownload(ctx context.Context, in DownloadInput) (*Trans
 		Items:           specs,
 		ContainerNodeID: strings.TrimSpace(in.ContainerNodeID),
 		DestDir:         strings.TrimSpace(in.DestDir),
+		ConflictPolicy:  aphotos.ConflictPolicy(strings.ToLower(strings.TrimSpace(in.ConflictPolicy))),
 	})
 	if err != nil {
 		return nil, toError(err)

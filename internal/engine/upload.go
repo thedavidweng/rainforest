@@ -400,19 +400,18 @@ func (e *Engine) processSingleUploadItem(
 	sizeBefore := infoBefore.Size()
 	item.Size = sizeBefore
 
-	if item.MD5 == "" {
-		if md5Hex, hErr := computeFileMD5(item.LocalPath); hErr == nil {
-			item.MD5 = md5Hex
-		} else if errors.Is(hErr, errFileModifiedMidFlight) {
-			item.Status = store.ItemStatusSkipped
-			item.ErrorMessage = errFileModifiedMidFlight.Error()
-			item.UpdatedAt = time.Now().UTC()
-			_ = st.UpdateTransferItem(context.Background(), item)
-			return
-		}
-	}
-
 	if checkRemoteBeforePost {
+		if item.MD5 == "" {
+			if md5Hex, hErr := computeFileMD5(item.LocalPath); hErr == nil {
+				item.MD5 = md5Hex
+			} else if errors.Is(hErr, errFileModifiedMidFlight) {
+				item.Status = store.ItemStatusSkipped
+				item.ErrorMessage = errFileModifiedMidFlight.Error()
+				item.UpdatedAt = time.Now().UTC()
+				_ = st.UpdateTransferItem(context.Background(), item)
+				return
+			}
+		}
 		if existing, fErr := findRemoteNodeForItem(ctx, client, item, tr.DestNodeID); fErr == nil && existing != nil && strings.TrimSpace(existing.ID) != "" {
 			item.Status = store.ItemStatusConfirmed
 			item.RemoteNodeID = existing.ID

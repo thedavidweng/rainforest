@@ -53,7 +53,7 @@ func NewFileStore(path string) *FileStore {
 	return &FileStore{path: filepath.Clean(cleaned)}
 }
 
-func DefaultVaultPath() string {
+func DefaultDataDir() string {
 	dir, err := os.UserConfigDir()
 	if err != nil || strings.TrimSpace(dir) == "" {
 		home, hErr := os.UserHomeDir()
@@ -63,7 +63,11 @@ func DefaultVaultPath() string {
 			dir = "."
 		}
 	}
-	return filepath.Join(dir, "rainforest", "credentials.json")
+	return filepath.Join(dir, "rainforest")
+}
+
+func DefaultVaultPath() string {
+	return filepath.Join(DefaultDataDir(), "credentials.json")
 }
 
 func (s *FileStore) Path() string {

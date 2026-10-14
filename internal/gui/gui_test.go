@@ -224,11 +224,14 @@ func TestTrayTrackerAndQuitLifecycleDecisions(t *testing.T) {
 	if got := gui.DecideQuit(0, 0, false); got != gui.QuitImmediately {
 		t.Errorf("DecideQuit(0, 0, false) = %v, want QuitImmediately", got)
 	}
-	if got := gui.DecideQuit(0, 1, false); got != gui.QuitImmediately {
-		t.Errorf("DecideQuit(0, 1, false) = %v, want QuitImmediately when no active transfer is running", got)
+	if got := gui.DecideQuit(0, 1, false); got != gui.QuitPromptConfirm {
+		t.Errorf("DecideQuit(0, 1, false) = %v, want QuitPromptConfirm when active backups exist and closeToTray is false", got)
 	}
-	if got := gui.DecideQuit(1, 1, true); got != gui.QuitAsk {
-		t.Errorf("DecideQuit(1, 1, true) = %v, want QuitAsk", got)
+	if got := gui.DecideQuit(0, 1, true); got != gui.QuitImmediately {
+		t.Errorf("DecideQuit(0, 1, true) = %v, want QuitImmediately when closeToTray is true and no active transfer is running", got)
+	}
+	if got := gui.DecideQuit(1, 1, true); got != gui.QuitPromptConfirm {
+		t.Errorf("DecideQuit(1, 1, true) = %v, want QuitPromptConfirm", got)
 	}
 
 	msg := gui.QuitMessage(2, 1, true)
@@ -530,6 +533,15 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 				},
 			}), nil
 
+		case req.Method == http.MethodPost && req.URL.Path == "/drive/v1/nodes":
+			return jsonResponse(http.StatusCreated, map[string]any{
+				"id":   "probe-folder-1",
+				"name": ".rainforest-doctor-probe",
+				"kind": "FOLDER",
+			}), nil
+
+		case req.Method == http.MethodPatch && req.URL.Path == "/drive/v1/trash":
+			return jsonResponse(http.StatusOK, map[string]any{}), nil
 		case req.Method == http.MethodGet && strings.HasSuffix(req.URL.Path, "/contentRedirection"):
 			parts := strings.Split(strings.TrimPrefix(req.URL.Path, "/drive/v1/nodes/"), "/")
 			nodeID := parts[0]
@@ -673,10 +685,10 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 		t.Fatalf("Backups.SetAllStopped(false): %v", err)
 	}
 
-	// 5. Recovery Downloads: ListSources + StartDownload
-	sources, err := svc.Downloads.ListSources(ctx)
+	// 5. Recovery Downloads: ListDestinations + StartDownload
+	sources, err := svc.Downloads.ListDestinations(ctx)
 	if err != nil {
-		t.Fatalf("Downloads.ListSources: %v", err)
+		t.Fatalf("Downloads.ListDestinations: %v", err)
 	}
 	if len(sources.ConfirmedItems) < 2 || len(sources.Folders) != 1 || len(sources.Albums) != 1 {
 		t.Fatalf("unexpected RecoverySourcesDTO: %+v", sources)
@@ -728,8 +740,21 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Settings.Doctor (online): %v", err)
 	}
-	if !docOnline.Healthy || len(docOnline.Checks) != 4 {
-		t.Fatalf("expected healthy 4-grade doctor report, got %+v", docOnline)
+	if !docOnline.Healthy || len(docOnline.Checks) != 5 {
+		t.Fatalf("expected healthy 5-grade doctor report, got %+v", docOnline)
+	}
+	if docOnline.Checks[4].Status != "skipped" {
+		t.Errorf("expected grade 5 write_probe skipped by default, got %+v", docOnline.Checks[4])
+	}
+	if _, err := svc.Settings.DoctorWithWriteProbe(ctx, false); err == nil {
+		t.Fatal("expected DoctorWithWriteProbe(false) to require confirmation")
+	}
+	docProbe, err := svc.Settings.DoctorWithWriteProbe(ctx, true)
+	if err != nil {
+		t.Fatalf("Settings.DoctorWithWriteProbe(true): %v", err)
+	}
+	if !docProbe.Healthy || len(docProbe.Checks) != 5 || docProbe.Checks[4].Status != "pass" {
+		t.Fatalf("expected healthy grade 5 pass from DoctorWithWriteProbe(true), got %+v", docProbe)
 	}
 
 	// 7. Remove backup rule & clear history

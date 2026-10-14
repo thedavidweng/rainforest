@@ -114,11 +114,12 @@ type QuitDecision int
 const (
 	QuitImmediately QuitDecision = iota
 	QuitAsk
+	QuitPromptConfirm = QuitAsk
 )
 
 func DecideQuit(activeTransfers, activeBackups int, closeToTray bool) QuitDecision {
-	if activeTransfers > 0 {
-		return QuitAsk
+	if activeTransfers > 0 || (activeBackups > 0 && !closeToTray) {
+		return QuitPromptConfirm
 	}
 	return QuitImmediately
 }

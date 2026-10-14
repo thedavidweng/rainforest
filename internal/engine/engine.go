@@ -96,8 +96,7 @@ type Engine struct {
 	active   map[string]*activeTransferControl
 
 	scanMu   sync.Mutex
-	scanning map[string]bool
-
+	scanning map[string]string
 	bgCancel context.CancelFunc
 	bgWG     sync.WaitGroup
 }
@@ -114,7 +113,7 @@ func New(cfg Config) *Engine {
 		observer:     cfg.Observer,
 		pollInterval: poll,
 		active:       make(map[string]*activeTransferControl),
-		scanning:     make(map[string]bool),
+		scanning:     make(map[string]string),
 	}
 }
 

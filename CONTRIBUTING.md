@@ -55,7 +55,7 @@ frontend/
     mygo-backend.ts             Production MyGo IPC adapter
     mygo.ts                     Generated MyGo TypeScript bindings (do not hand-edit)
     testing/memory-backend.ts   In-memory Backend implementation for Happy-DOM tests
-    views/                      TransfersView, BackupsView, DownloadsView, SettingsModal
+    views/                      TransfersView, BackupsView, DownloadsView, SettingsView
 docs/
   adr/                          Architecture Decision Records
   agents/                       Agent workflow, issue tracker, and domain conventions

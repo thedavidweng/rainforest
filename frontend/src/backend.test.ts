@@ -192,15 +192,16 @@ describe("MemoryBackend", () => {
 
   test("supports recovery downloads and settings updates with validation", async () => {
     const backend = new MemoryBackend()
-    const sources = await backend.downloads.listSources()
+    const sources = await backend.downloads.listDestinations()
     expect(sources.confirmedItems.length).toBeGreaterThan(0)
 
     const dl = await backend.downloads.startDownload({
       nodeIds: [sources.confirmedItems[0]!.remoteNodeId ?? "node-1"],
       destDir: "/Users/alice/Restored",
+      conflictPolicy: "rename",
     })
     expect(dl.kind).toBe("download")
-
+    expect(dl.conflictPolicy).toBe("rename")
     const updated = await backend.settings.update({
       region: "ca",
       maxMetadataConcurrency: 4,
@@ -221,7 +222,11 @@ describe("MemoryBackend", () => {
 
     const doctor = await backend.settings.doctor()
     expect(doctor.healthy).toBe(true)
-    expect(doctor.checks).toHaveLength(4)
+    expect(doctor.checks).toHaveLength(5)
+
+    const doctorProbe = await backend.settings.doctorWithWriteProbe(true)
+    expect(doctorProbe.healthy).toBe(true)
+    expect(doctorProbe.checks.find((c) => c.grade === 5)?.status).toBe("pass")
   })
 })
 
@@ -237,7 +242,7 @@ describe("failingBackend", () => {
     await expect(backend.auth.status()).rejects.toEqual(err)
     await expect(backend.transfers.list()).rejects.toEqual(err)
     await expect(backend.backups.list()).rejects.toEqual(err)
-    await expect(backend.downloads.listSources()).rejects.toEqual(err)
+    await expect(backend.downloads.listDestinations()).rejects.toEqual(err)
     await expect(backend.settings.get()).rejects.toEqual(err)
   })
 })
