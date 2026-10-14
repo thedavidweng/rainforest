@@ -116,10 +116,21 @@ function fileBaseName(filePath: string): string {
   return slash >= 0 ? trimmed.slice(slash + 1) : trimmed
 }
 
+const VALID_REGIONS: Record<string, true> = {
+  us: true,
+  ca: true,
+  uk: true,
+  jp: true,
+  de: true,
+  fr: true,
+  it: true,
+  es: true,
+}
+
 function evidenceForRegion(region: string): string {
   const r = region.trim().toLowerCase()
   if (r === "us") return "verified"
-  if (r === "ca" || r === "uk" || r === "jp") return "experimental"
+  if (VALID_REGIONS[r]) return "experimental"
   return ""
 }
 
@@ -128,19 +139,18 @@ function inferRegionFromCookies(raw: string): string {
   if (lower.includes("ubid-main") || lower.includes("ubid_main") || lower.includes("at-main") || lower.includes("at_main")) {
     return "us"
   }
-  if (lower.includes("ubid-acbca") || lower.includes("ubid_acbca") || lower.includes("at-acbca") || lower.includes("at_acbca")) {
-    return "ca"
-  }
-  if (lower.includes("ubid-acbuk") || lower.includes("ubid_acbuk") || lower.includes("at-acbuk") || lower.includes("at_acbuk")) {
-    return "uk"
-  }
-  if (lower.includes("ubid-acbjp") || lower.includes("ubid_acbjp") || lower.includes("at-acbjp") || lower.includes("at_acbjp")) {
-    return "jp"
+  for (const r of ["ca", "uk", "jp", "de", "fr", "it", "es"]) {
+    if (
+      lower.includes(`ubid-acb${r}`) ||
+      lower.includes(`ubid_acb${r}`) ||
+      lower.includes(`at-acb${r}`) ||
+      lower.includes(`at_acb${r}`)
+    ) {
+      return r
+    }
   }
   return ""
 }
-
-const VALID_REGIONS: Record<string, true> = { us: true, ca: true, uk: true, jp: true }
 const VALID_POLICIES: Record<string, true> = { skip: true, rename: true, fail: true }
 
 const SAMPLE_THUMBNAIL =
