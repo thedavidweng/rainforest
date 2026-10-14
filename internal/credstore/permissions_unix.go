@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 )
 
 func enforceDirPermissions(dir string) error {
@@ -19,7 +21,7 @@ func enforceFilePermissions(path string) error {
 func checkVaultPermissions(vaultPath string) (ok bool, msg, hint string) {
 	info, err := os.Stat(vaultPath)
 	if err != nil {
-		return false, err.Error(), ""
+		return false, aphotos.Redact(err.Error()), ""
 	}
 	filePerm := info.Mode().Perm()
 	dirPath := filepath.Dir(vaultPath)

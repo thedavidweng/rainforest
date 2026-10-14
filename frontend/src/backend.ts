@@ -56,6 +56,26 @@ export type {
   UsageSummary,
 }
 
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let val = bytes
+  let idx = 0
+  while (val >= 1024 && idx < units.length - 1) {
+    val /= 1024
+    idx++
+  }
+  return `${val >= 10 || idx === 0 ? val.toFixed(idx === 0 ? 0 : 1) : val.toFixed(2)} ${units[idx]}`
+}
+
+export function errorMessageFrom(err: unknown): string {
+  if (typeof err === "object" && err !== null && "message" in err && typeof err.message === "string") {
+    return err.message
+  }
+  if (err instanceof Error) return err.message
+  return String(err)
+}
+
 export interface BackendError {
   code: string
   category: string
@@ -108,7 +128,6 @@ export interface Backend {
     pickFolder(): Promise<string>
   }
   downloads: {
-    listSources(): Promise<RecoverySourcesDTO>
     listDestinations(): Promise<RecoverySourcesDTO>
     startDownload(input: DownloadInput): Promise<TransferDTO>
     pickTargetDirectory(): Promise<string>
@@ -117,6 +136,7 @@ export interface Backend {
     get(): Promise<SettingsDTO>
     update(input: SettingsInput): Promise<SettingsDTO>
     doctor(): Promise<DoctorReportDTO>
+    doctorWithWriteProbe(confirm: boolean): Promise<DoctorReportDTO>
   }
   events: {
     onTransferStage(cb: (t: TransferDTO) => void): () => void

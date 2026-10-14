@@ -659,6 +659,64 @@ func TestRecoveryDownloadVerifiedAndErrorReporting(t *testing.T) {
 	if !bytes.Equal(restoredBytes, fileBytes) {
 		t.Errorf("recovered file content mismatch")
 	}
+
+	// Verify download conflict policy skip / fail / rename
+	skipTr, err := eng.StartDownload(ctx, engine.DownloadJobRequest{
+		Items: []engine.DownloadItemSpec{{
+			NodeID:       "node-ok",
+			Name:         "recovered.jpg",
+			ExpectedSize: int64(len(fileBytes)),
+			ExpectedMD5:  expectedMD5,
+		}},
+		DestDir:        destDir,
+		ConflictPolicy: aphotos.ConflictSkip,
+	})
+	if err != nil {
+		t.Fatalf("StartDownload(skip): %v", err)
+	}
+	doneSkip := waitForTransferTerminal(t, eng, skipTr.ID)
+	if doneSkip.Stage != store.StageCompleted || doneSkip.ItemsSkipped != 1 {
+		t.Fatalf("expected StageCompleted with 1 skipped on ConflictSkip, got %+v", doneSkip)
+	}
+
+	failTr, err := eng.StartDownload(ctx, engine.DownloadJobRequest{
+		Items: []engine.DownloadItemSpec{{
+			NodeID:       "node-ok",
+			Name:         "recovered.jpg",
+			ExpectedSize: int64(len(fileBytes)),
+			ExpectedMD5:  expectedMD5,
+		}},
+		DestDir:        destDir,
+		ConflictPolicy: aphotos.ConflictFail,
+	})
+	if err != nil {
+		t.Fatalf("StartDownload(fail): %v", err)
+	}
+	doneFail := waitForTransferTerminal(t, eng, failTr.ID)
+	if doneFail.Stage != store.StageFailed || doneFail.ItemsFailed != 1 {
+		t.Fatalf("expected StageFailed with 1 failed on ConflictFail, got %+v", doneFail)
+	}
+
+	renameTr, err := eng.StartDownload(ctx, engine.DownloadJobRequest{
+		Items: []engine.DownloadItemSpec{{
+			NodeID:       "node-ok",
+			Name:         "recovered.jpg",
+			ExpectedSize: int64(len(fileBytes)),
+			ExpectedMD5:  expectedMD5,
+		}},
+		DestDir:        destDir,
+		ConflictPolicy: aphotos.ConflictRename,
+	})
+	if err != nil {
+		t.Fatalf("StartDownload(rename): %v", err)
+	}
+	doneRename := waitForTransferTerminal(t, eng, renameTr.ID)
+	if doneRename.Stage != store.StageCompleted || doneRename.ItemsDone != 1 {
+		t.Fatalf("expected StageCompleted with 1 done on ConflictRename, got %+v", doneRename)
+	}
+	if _, statErr := os.Stat(filepath.Join(destDir, "recovered (1).jpg")); statErr != nil {
+		t.Fatalf("expected disambiguated file recovered (1).jpg on ConflictRename, got %v", statErr)
+	}
 }
 
 func TestCancelTransferAndBackupPauseResumeAndGlobalStop(t *testing.T) {

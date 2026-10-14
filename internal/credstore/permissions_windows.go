@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
+
+	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 )
 
 func enforceDirPermissions(dir string) error {
@@ -27,14 +29,14 @@ func restrictWindowsACL(target, grantPerm string) error {
 	}
 	cmd := exec.Command("icacls", target, "/inheritance:r", "/grant:r", fmt.Sprintf("%s:%s", u.Username, grantPerm))
 	if out, runErr := cmd.CombinedOutput(); runErr != nil {
-		return fmt.Errorf("icacls %s: %w (%s)", target, runErr, strings.TrimSpace(string(out)))
+		return fmt.Errorf("icacls %s: %s (%s)", aphotos.Redact(target), aphotos.Redact(runErr.Error()), aphotos.Redact(strings.TrimSpace(string(out))))
 	}
 	return nil
 }
 
 func checkVaultPermissions(vaultPath string) (ok bool, msg, hint string) {
 	if _, err := os.Stat(vaultPath); err != nil {
-		return false, err.Error(), ""
+		return false, aphotos.Redact(err.Error()), ""
 	}
 	out, err := exec.Command("icacls", vaultPath).CombinedOutput()
 	if err != nil {

@@ -138,7 +138,6 @@ export const mygoBackend: Backend = {
     pickFolder: async () => (await call(Backups.pickFolder())) ?? "",
   },
   downloads: {
-    listSources: () => callRequired(Downloads.listSources(), "recovery sources"),
     listDestinations: () => callRequired(Downloads.listDestinations(), "recovery destinations"),
     startDownload: (input) => callRequired(Downloads.startDownload(input), "download transfer"),
     pickTargetDirectory: async () => (await call(Downloads.pickTargetDirectory())) ?? "",
@@ -147,6 +146,8 @@ export const mygoBackend: Backend = {
     get: () => callRequired(Settings.get(), "settings"),
     update: (input) => callRequired(Settings.update(input), "settings"),
     doctor: () => callRequired(Settings.doctor(), "doctor report"),
+    doctorWithWriteProbe: (confirm) =>
+      callRequired(Settings.doctorWithWriteProbe(confirm), "doctor report"),
   },
   events: {
     onTransferStage: (cb) => safeSubscribe(events.transferStage.on, cb),

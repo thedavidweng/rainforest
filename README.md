@@ -62,7 +62,6 @@ Rainforest pairs each marketplace region with its corresponding `drive/v1` API d
 | **CA** (`ca`) | `https://www.amazon.ca/drive/v1` | `https://content-na.drive.amazonaws.com/cdproxy/nodes` | `session-id`, `ubid-acbca`, `at-acbca` | `experimental` |
 | **UK** (`uk`) | `https://www.amazon.co.uk/drive/v1` | `https://content-eu.drive.amazonaws.com/cdproxy/nodes` | `session-id`, `ubid-acbuk`, `at-acbuk` | `experimental` |
 | **JP** (`jp`) | `https://www.amazon.co.jp/drive/v1` | `https://content-jp.drive.amazonaws.com/cdproxy/nodes` | `session-id`, `ubid-acbjp`, `at-acbjp` | `experimental` |
-| **EU** (`de`, `fr`, `it`, `es`) | `https://www.amazon.{tld}/drive/v1` | `https://content-eu.drive.amazonaws.com/cdproxy/nodes` | `session-id`, `ubid-acb{tld}`, `at-acb{tld}` | `experimental` |
 
 Regions marked `experimental` have complete URL and cookie routing contracts tested against mock transports, and the UI surfaces an explicit `experimental` badge until verified against live regional accounts.
 
@@ -73,7 +72,7 @@ Regions marked `experimental` have complete URL and cookie routing contracts tes
 ```text
 +-----------------------------------------------------------------------+
 | React 19 + TypeScript + Tailwind v4 Frontend (frontend/src/)          |
-|   TransfersView | BackupsView | DownloadsView | SettingsModal         |
+|   TransfersView | BackupsView | DownloadsView | SettingsView          |
 +-----------------------------------+-----------------------------------+
                                     | Frontend Backend Seam (frontend/src/backend.ts)
                    +----------------+----------------+

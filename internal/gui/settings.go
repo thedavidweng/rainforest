@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 	"github.com/thedavidweng/rainforest/internal/credstore"
@@ -54,6 +55,11 @@ type DoctorReportDTO struct {
 	Region       string           `json:"region,omitempty"`
 	Evidence     string           `json:"evidence,omitempty"`
 	Checks       []DoctorCheckDTO `json:"checks"`
+}
+
+type DoctorOptions struct {
+	WriteProbe bool `json:"writeProbe,omitempty"`
+	Confirm    bool `json:"confirm,omitempty"`
 }
 
 func (s *Settings) Get(ctx context.Context) (*SettingsDTO, error) {
@@ -172,6 +178,17 @@ func (s *Settings) Update(ctx context.Context, in SettingsInput) (*SettingsDTO, 
 }
 
 func (s *Settings) Doctor(ctx context.Context) (*DoctorReportDTO, error) {
+	return s.runDoctor(ctx, false)
+}
+
+func (s *Settings) DoctorWithWriteProbe(ctx context.Context, confirm bool) (*DoctorReportDTO, error) {
+	if !confirm {
+		return nil, newError(ErrValidationFailed, "write probe requires explicit confirmation before creating and trashing a temporary remote folder", map[string]any{"field": "confirm"})
+	}
+	return s.runDoctor(ctx, true)
+}
+
+func (s *Settings) runDoctor(ctx context.Context, writeProbe bool) (*DoctorReportDTO, error) {
 	st, _, err := s.state.deps()
 	if err != nil {
 		return nil, err
@@ -245,6 +262,13 @@ func (s *Settings) Doctor(ctx context.Context) (*DoctorReportDTO, error) {
 				DoctorCheckDTO{
 					Grade:   4,
 					Name:    "search_read_probe",
+					Status:  "skipped",
+					OK:      true,
+					Message: "Skipped while offline.",
+				},
+				DoctorCheckDTO{
+					Grade:   5,
+					Name:    "write_probe",
 					Status:  "skipped",
 					OK:      true,
 					Message: "Skipped while offline.",
@@ -377,6 +401,65 @@ func (s *Settings) Doctor(ctx context.Context) (*DoctorReportDTO, error) {
 		Status:  "pass",
 		OK:      true,
 		Message: fmt.Sprintf("Search read probe succeeded (totalCount=%d).", searchPage.TotalCount),
+	})
+
+	if !writeProbe {
+		checks = append(checks, DoctorCheckDTO{
+			Grade:   5,
+			Name:    "write_probe",
+			Status:  "skipped",
+			OK:      true,
+			Message: "Write probe skipped (enable opt-in write probe with confirmation to test remote folder creation and trash).",
+		})
+		return &DoctorReportDTO{
+			Healthy:  true,
+			Region:   string(rc.Region),
+			Evidence: string(rc.Evidence),
+			Checks:   checks,
+		}, nil
+	}
+
+	probeName := fmt.Sprintf(".rainforest-doctor-probe-%d", time.Now().UTC().Unix())
+	created, createErr := client.CreateFolder(ctx, probeName, root.ID)
+	if createErr != nil {
+		checks = append(checks, DoctorCheckDTO{
+			Grade:   5,
+			Name:    "write_probe",
+			Status:  "fail",
+			OK:      false,
+			Message: aphotos.Redact(createErr.Error()),
+			Hint:    doctorHintForError(createErr),
+		})
+		return &DoctorReportDTO{
+			Healthy:  false,
+			Region:   string(rc.Region),
+			Evidence: string(rc.Evidence),
+			Checks:   checks,
+		}, nil
+	}
+	if trashErr := client.MoveToTrash(ctx, []string{created.ID}); trashErr != nil {
+		checks = append(checks, DoctorCheckDTO{
+			Grade:   5,
+			Name:    "write_probe",
+			Status:  "fail",
+			OK:      false,
+			Message: aphotos.Redact(trashErr.Error()),
+			Hint:    doctorHintForError(trashErr),
+		})
+		return &DoctorReportDTO{
+			Healthy:  false,
+			Region:   string(rc.Region),
+			Evidence: string(rc.Evidence),
+			Checks:   checks,
+		}, nil
+	}
+
+	checks = append(checks, DoctorCheckDTO{
+		Grade:   5,
+		Name:    "write_probe",
+		Status:  "pass",
+		OK:      true,
+		Message: fmt.Sprintf("Created and trashed temporary probe folder %s.", created.ID),
 	})
 
 	return &DoctorReportDTO{

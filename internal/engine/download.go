@@ -40,10 +40,11 @@ type DownloadItemSpec struct {
 }
 
 type DownloadJobRequest struct {
-	NodeIDs         []string           `json:"nodeIds,omitempty"`
-	Items           []DownloadItemSpec `json:"items,omitempty"`
-	ContainerNodeID string             `json:"containerNodeId,omitempty"`
-	DestDir         string             `json:"destDir"`
+	NodeIDs         []string               `json:"nodeIds,omitempty"`
+	Items           []DownloadItemSpec     `json:"items,omitempty"`
+	ContainerNodeID string                 `json:"containerNodeId,omitempty"`
+	DestDir         string                 `json:"destDir"`
+	ConflictPolicy  aphotos.ConflictPolicy `json:"conflictPolicy,omitempty"`
 }
 
 func (e *Engine) ListRecoverySources(ctx context.Context) (*RecoverySources, error) {
@@ -264,18 +265,29 @@ func (e *Engine) StartDownload(ctx context.Context, req DownloadJobRequest) (*st
 		})
 	}
 
+	conflictPolicy := req.ConflictPolicy
+	if conflictPolicy == "" {
+		if cfg, sErr := st.GetSettings(ctx); sErr == nil && cfg.DefaultConflictPolicy != "" {
+			conflictPolicy = cfg.DefaultConflictPolicy
+		}
+		if conflictPolicy == "" {
+			conflictPolicy = aphotos.ConflictSkip
+		}
+	}
+
 	summary := fmt.Sprintf("Recovery download (%d items)", len(items))
 	tr, err := st.CreateTransfer(ctx, store.Transfer{
-		ID:            trID,
-		Kind:          store.TransferKindDownload,
-		Stage:         store.StageQueued,
-		SourceSummary: summary,
-		DestNodeID:    strings.TrimSpace(req.ContainerNodeID),
-		DestLocalDir:  absDestDir,
-		BytesTotal:    totalBytes,
-		ItemsTotal:    len(items),
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		ID:             trID,
+		Kind:           store.TransferKindDownload,
+		Stage:          store.StageQueued,
+		SourceSummary:  summary,
+		DestNodeID:     strings.TrimSpace(req.ContainerNodeID),
+		DestLocalDir:   absDestDir,
+		ConflictPolicy: conflictPolicy,
+		BytesTotal:     totalBytes,
+		ItemsTotal:     len(items),
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}, items)
 	if err != nil {
 		return nil, err
@@ -291,7 +303,7 @@ func (e *Engine) launchDownloadWorkers(transferID string) {
 	ctrl := newTransferControl(cancel)
 
 	e.activeMu.Lock()
-	if existing, ok := e.active[transferID]; ok {
+	if existing, ok := e.active[transferID]; ok && existing == ctrl {
 		existing.setPaused(false)
 		e.activeMu.Unlock()
 		cancel()
@@ -305,8 +317,11 @@ func (e *Engine) launchDownloadWorkers(transferID string) {
 		defer e.bgWG.Done()
 		defer func() {
 			e.activeMu.Lock()
-			delete(e.active, transferID)
+			if e.active[transferID] == ctrl {
+				delete(e.active, transferID)
+			}
 			e.activeMu.Unlock()
+			close(ctrl.doneCh)
 			cancel()
 		}()
 		e.executeDownloadTransfer(runCtx, transferID, ctrl)
@@ -392,11 +407,55 @@ func (e *Engine) processSingleDownloadItem(
 		return
 	}
 
+	fileName := strings.TrimSpace(item.Name)
+	if fileName == "" {
+		fileName = item.RemoteNodeID
+	}
+
+	policy := tr.ConflictPolicy
+	if policy == "" {
+		policy = aphotos.ConflictSkip
+	}
+
+	if fileName != "" {
+		targetPath := filepath.Join(tr.DestLocalDir, fileName)
+		if existingInfo, statErr := os.Stat(targetPath); statErr == nil {
+			switch policy {
+			case aphotos.ConflictSkip:
+				item.Status = store.ItemStatusSkipped
+				item.LocalPath = targetPath
+				if item.Size <= 0 {
+					item.Size = existingInfo.Size()
+				}
+				item.BytesDone = item.Size
+				item.ErrorMessage = ""
+				item.UpdatedAt = time.Now().UTC()
+				_ = st.UpdateTransferItem(context.Background(), item)
+				if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {
+					e.emitTransferProgress(curTr, item)
+				}
+				return
+			case aphotos.ConflictFail:
+				item.Status = store.ItemStatusFailed
+				item.ErrorMessage = fmt.Sprintf("local file already exists: %s", fileName)
+				item.UpdatedAt = time.Now().UTC()
+				_ = st.UpdateTransferItem(context.Background(), item)
+				if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {
+					e.emitTransferProgress(curTr, item)
+				}
+				return
+			case aphotos.ConflictRename:
+				fileName = disambiguateLocalFileName(tr.DestLocalDir, fileName)
+				item.Name = fileName
+				item.LocalPath = filepath.Join(tr.DestLocalDir, fileName)
+			}
+		}
+	}
+
 	item.Status = store.ItemStatusRunning
 	item.UpdatedAt = time.Now().UTC()
 	_ = st.UpdateTransferItem(context.Background(), item)
 
-	fileName := item.Name
 	if fileName == item.RemoteNodeID {
 		fileName = ""
 	}
@@ -447,4 +506,16 @@ func (e *Engine) processSingleDownloadItem(
 	if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {
 		e.emitTransferProgress(curTr, item)
 	}
+}
+
+func disambiguateLocalFileName(destDir, fileName string) string {
+	ext := filepath.Ext(fileName)
+	stem := strings.TrimSuffix(fileName, ext)
+	for idx := 1; idx < 10000; idx++ {
+		cand := fmt.Sprintf("%s (%d)%s", stem, idx, ext)
+		if _, err := os.Stat(filepath.Join(destDir, cand)); errors.Is(err, os.ErrNotExist) {
+			return cand
+		}
+	}
+	return fmt.Sprintf("%s (%s)%s", stem, uuid.NewString()[:8], ext)
 }

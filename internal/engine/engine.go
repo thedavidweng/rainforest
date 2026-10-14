@@ -37,6 +37,7 @@ type activeTransferControl struct {
 	cancel   context.CancelFunc
 	paused   bool
 	resumeCh chan struct{}
+	doneCh   chan struct{}
 }
 
 func newTransferControl(cancel context.CancelFunc) *activeTransferControl {
@@ -46,6 +47,7 @@ func newTransferControl(cancel context.CancelFunc) *activeTransferControl {
 		cancel:   cancel,
 		paused:   false,
 		resumeCh: ch,
+		doneCh:   make(chan struct{}),
 	}
 }
 
@@ -96,8 +98,7 @@ type Engine struct {
 	active   map[string]*activeTransferControl
 
 	scanMu   sync.Mutex
-	scanning map[string]bool
-
+	scanning map[string]string
 	bgCancel context.CancelFunc
 	bgWG     sync.WaitGroup
 }
@@ -114,7 +115,7 @@ func New(cfg Config) *Engine {
 		observer:     cfg.Observer,
 		pollInterval: poll,
 		active:       make(map[string]*activeTransferControl),
-		scanning:     make(map[string]bool),
+		scanning:     make(map[string]string),
 	}
 }
 

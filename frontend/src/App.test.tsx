@@ -469,11 +469,11 @@ describe("View 4: Settings & Diagnostics", () => {
 
     await screen.findByRole("heading", { name: /account & session/i })
 
-    // Verify explicit region options include US, CA, UK, JP, DE, FR, IT, ES and never auto-default silently to US when unconfigured
+    // Verify explicit region options include US, CA, UK, JP and never auto-default silently to US when unconfigured
     const regionSelect = screen.getByLabelText(/marketplace region/i) as HTMLSelectElement
     expect(regionSelect.value).toBe("")
     const optionValues = Array.from(regionSelect.options).map((o) => o.value)
-    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp", "de", "fr", "it", "es"])
+    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp"])
 
     // Attempt cookie import with ambiguous cookies and no region selected -> shows explicit region error
     fireEvent.change(screen.getByLabelText(/session cookies/i), {

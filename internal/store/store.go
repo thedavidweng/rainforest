@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
+	"github.com/thedavidweng/rainforest/internal/credstore"
 	_ "modernc.org/sqlite"
 )
 
@@ -178,16 +179,7 @@ type Store struct {
 }
 
 func DefaultDBPath() string {
-	dir, err := os.UserConfigDir()
-	if err != nil || strings.TrimSpace(dir) == "" {
-		home, hErr := os.UserHomeDir()
-		if hErr == nil && strings.TrimSpace(home) != "" {
-			dir = filepath.Join(home, ".config")
-		} else {
-			dir = "."
-		}
-	}
-	return filepath.Join(dir, "rainforest", "state.db")
+	return filepath.Join(credstore.DefaultDataDir(), "state.db")
 }
 
 func Open(ctx context.Context, dbPath string) (*Store, error) {

@@ -235,6 +235,19 @@ func (e *Engine) RetryTransfer(ctx context.Context, transferID string) (*store.T
 	if e.Client() == nil {
 		return nil, ErrOffline
 	}
+
+	e.activeMu.Lock()
+	prevCtrl := e.active[transferID]
+	e.activeMu.Unlock()
+	if prevCtrl != nil {
+		prevCtrl.setPaused(false)
+		prevCtrl.cancel()
+		select {
+		case <-prevCtrl.doneCh:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
 	tr, err := st.GetTransfer(ctx, transferID)
 	if err != nil {
 		return nil, err
@@ -286,7 +299,7 @@ func (e *Engine) launchUploadWorkers(transferID string, checkRemoteBeforePost bo
 	ctrl := newTransferControl(cancel)
 
 	e.activeMu.Lock()
-	if existing, ok := e.active[transferID]; ok {
+	if existing, ok := e.active[transferID]; ok && existing == ctrl {
 		existing.setPaused(false)
 		e.activeMu.Unlock()
 		cancel()
@@ -300,8 +313,11 @@ func (e *Engine) launchUploadWorkers(transferID string, checkRemoteBeforePost bo
 		defer e.bgWG.Done()
 		defer func() {
 			e.activeMu.Lock()
-			delete(e.active, transferID)
+			if e.active[transferID] == ctrl {
+				delete(e.active, transferID)
+			}
 			e.activeMu.Unlock()
+			close(ctrl.doneCh)
 			cancel()
 		}()
 		e.executeUploadTransfer(runCtx, transferID, ctrl, checkRemoteBeforePost)
@@ -400,19 +416,18 @@ func (e *Engine) processSingleUploadItem(
 	sizeBefore := infoBefore.Size()
 	item.Size = sizeBefore
 
-	if item.MD5 == "" {
-		if md5Hex, hErr := computeFileMD5(item.LocalPath); hErr == nil {
-			item.MD5 = md5Hex
-		} else if errors.Is(hErr, errFileModifiedMidFlight) {
-			item.Status = store.ItemStatusSkipped
-			item.ErrorMessage = errFileModifiedMidFlight.Error()
-			item.UpdatedAt = time.Now().UTC()
-			_ = st.UpdateTransferItem(context.Background(), item)
-			return
-		}
-	}
-
 	if checkRemoteBeforePost {
+		if item.MD5 == "" {
+			if md5Hex, hErr := computeFileMD5(item.LocalPath); hErr == nil {
+				item.MD5 = md5Hex
+			} else if errors.Is(hErr, errFileModifiedMidFlight) {
+				item.Status = store.ItemStatusSkipped
+				item.ErrorMessage = errFileModifiedMidFlight.Error()
+				item.UpdatedAt = time.Now().UTC()
+				_ = st.UpdateTransferItem(context.Background(), item)
+				return
+			}
+		}
 		if existing, fErr := findRemoteNodeForItem(ctx, client, item, tr.DestNodeID); fErr == nil && existing != nil && strings.TrimSpace(existing.ID) != "" {
 			item.Status = store.ItemStatusConfirmed
 			item.RemoteNodeID = existing.ID

@@ -73,6 +73,7 @@ export interface DownloadInput {
   items?: DownloadItemInput[];
   containerNodeId?: string;
   destDir: string;
+  conflictPolicy?: string;
 }
 
 export interface DownloadItemInput {
@@ -342,9 +343,6 @@ export const Downloads = {
   listDestinations(): Promise<RecoverySourcesDTO | null> {
     return call("Downloads.ListDestinations");
   },
-  listSources(): Promise<RecoverySourcesDTO | null> {
-    return call("Downloads.ListSources");
-  },
   pickTargetDirectory(): Promise<string> {
     return call("Downloads.PickTargetDirectory");
   },
@@ -356,6 +354,9 @@ export const Downloads = {
 export const Settings = {
   doctor(): Promise<DoctorReportDTO | null> {
     return call("Settings.Doctor");
+  },
+  doctorWithWriteProbe(confirm: boolean): Promise<DoctorReportDTO | null> {
+    return call("Settings.DoctorWithWriteProbe", confirm);
   },
   get(): Promise<SettingsDTO | null> {
     return call("Settings.Get");
