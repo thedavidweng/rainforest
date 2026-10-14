@@ -202,6 +202,7 @@ export interface TransferItemDTO {
 export interface TransferListDTO {
   active: TransferDTO[];
   history: TransferDTO[];
+  warning?: string;
 }
 
 export interface TransferProgressEvent {

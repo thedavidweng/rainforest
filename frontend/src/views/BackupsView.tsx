@@ -90,7 +90,8 @@ export function BackupsView({
         data-testid="one-way-backup-banner"
         className="rounded-lg border border-emerald-500/30 bg-emerald-950/20 p-4 text-xs text-emerald-200"
       >
-        One-way incremental backup: deleting, moving, or renaming local files never deletes your Amazon Photos cloud copies.
+        One-way incremental backup: deleting, moving, or renaming local files never deletes your
+        Amazon Photos cloud copies.
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -272,7 +273,8 @@ export function BackupsView({
       <section className="space-y-3">
         {backupRules.length === 0 ? (
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-500">
-            No backup folders configured. Click &quot;Add Backup Folder&quot; to start one-way automatic backup.
+            No backup folders configured. Click &quot;Add Backup Folder&quot; to start one-way
+            automatic backup.
           </div>
         ) : (
           backupRules.map((rule) => (

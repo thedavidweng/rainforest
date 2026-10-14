@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -194,8 +195,7 @@ func TestStartUploadPauseResumeCancelAndRetryWithoutDuplicatePost(t *testing.T) 
 	p1 := filepath.Join(dir, "img1.png")
 	_, md51 := writePNGFile(t, p1, 16, 16)
 	p2 := filepath.Join(dir, "img2.png")
-	_, md52 := writePNGFile(t, p2, 16, 16)
-
+	size2, md52 := writePNGFile(t, p2, 16, 16)
 	var uploadCalls atomic.Int32
 	blockSecond := make(chan struct{})
 	var closeOnce sync.Once
@@ -221,7 +221,7 @@ func TestStartUploadPauseResumeCancelAndRetryWithoutDuplicatePost(t *testing.T) 
 						"kind": "FILE",
 						"contentProperties": map[string]any{
 							"md5":  md52,
-							"size": 100,
+							"size": size2,
 						},
 					}},
 				}), nil
@@ -465,12 +465,12 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		tf, err := st.GetTrackedFile(ctx, rule.ID, "p1.png")
-		if err == nil && tf.Status == store.ItemStatusConfirmed {
+		r, rErr := st.GetBackupRule(ctx, rule.ID)
+		if err == nil && tf.Status == store.ItemStatusConfirmed && rErr == nil && r.Status == store.BackupStatusActive {
 			break
 		}
 		time.Sleep(15 * time.Millisecond)
 	}
-
 	uploadMu.Lock()
 	if len(uploadedNames) != 1 || uploadedNames[0] != "p1.png" {
 		t.Fatalf("uploadedNames = %v, want [p1.png] (photos only)", uploadedNames)
@@ -500,12 +500,12 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 	}
 	for time.Now().Before(deadline) {
 		tf, err := st.GetTrackedFile(ctx, rule.ID, "v1.mp4")
-		if err == nil && tf.Status == store.ItemStatusConfirmed {
+		r, rErr := st.GetBackupRule(ctx, rule.ID)
+		if err == nil && tf.Status == store.ItemStatusConfirmed && rErr == nil && r.Status == store.BackupStatusActive {
 			break
 		}
 		time.Sleep(15 * time.Millisecond)
 	}
-
 	// Mid-write changing file: create changing.png that mutates during upload stream
 	changingPath := filepath.Join(backupDir, "changing.png")
 	writePNGFile(t, changingPath, 10, 10)
@@ -514,16 +514,28 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 			_ = os.WriteFile(changingPath, []byte("still-writing-more-bytes-mid-flight"), 0o644)
 		}
 	}
-	if _, err := eng.ScanNow(ctx, rule.ID); err != nil {
+	midTr, err := eng.ScanNow(ctx, rule.ID)
+	if err != nil {
 		t.Fatalf("ScanNow mid-write: %v", err)
 	}
 	mutateDuringUpload = nil
-
-	if tf, err := st.GetTrackedFile(ctx, rule.ID, "changing.png"); err == nil && tf.Status == store.ItemStatusConfirmed {
-		t.Fatalf("mid-write changing file must NEVER be marked confirmed, got %+v", tf)
+	if midTr == nil || midTr.Stage != store.StageUnconfirmed {
+		t.Fatalf("expected mid-write transfer to end in StageUnconfirmed, got %+v", midTr)
+	}
+	tfChanging, err := st.GetTrackedFile(ctx, rule.ID, "changing.png")
+	if err != nil || tfChanging.Status != store.ItemStatusUnconfirmed {
+		t.Fatalf("mid-write changing file must be tracked as unconfirmed (not skipped or confirmed), got %+v (err=%v)", tfChanging, err)
 	}
 
-	// Delete local files and remove backup directory -> MUST NEVER call trash/delete and must mark source_unavailable
+	// Subsequent scan while changing.png is unconfirmed in an open transfer must not auto-re-POST it
+	postsBeforeRescan := len(uploadedNames)
+	_, _ = eng.ScanNow(ctx, rule.ID)
+	if len(uploadedNames) != postsBeforeRescan {
+		t.Fatalf("expected unconfirmed file not to be re-POSTed on periodic scan, got uploads=%v", uploadedNames)
+	}
+
+	// Remove changing.png and photo1 -> MUST NEVER call trash/delete
+	_ = os.Remove(changingPath)
 	if err := os.Remove(photo1); err != nil {
 		t.Fatalf("Remove photo1: %v", err)
 	}
@@ -789,5 +801,167 @@ func TestCancelTransferAndBackupPauseResumeAndGlobalStop(t *testing.T) {
 	resumedRule, err := eng.ResumeBackupRule(ctx, rule.ID)
 	if err != nil || resumedRule.Paused || resumedRule.Status != store.BackupStatusActive {
 		t.Fatalf("ResumeBackupRule failed: %+v (err=%v)", resumedRule, err)
+	}
+}
+
+func TestReconcileRejectsSameNameSameSizeWithDifferentOrMissingMD5AndHandlesNilContentProperties(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	localMD5 := "11111111111111111111111111111111"
+	otherMD5 := "22222222222222222222222222222222"
+
+	client := newTestClient(t, aphotos.RegionUS, roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes" {
+			f := req.URL.Query().Get("filters")
+			if strings.Contains(f, "isRoot:true") {
+				return jsonResponse(http.StatusOK, map[string]any{
+					"count": 1,
+					"data":  []map[string]any{{"id": "root-1", "ownerId": "owner-1", "kind": "FOLDER", "isRoot": true}},
+				}), nil
+			}
+			if strings.Contains(f, localMD5) {
+				return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
+			}
+			if strings.Contains(f, "name:collision.jpg") {
+				return jsonResponse(http.StatusOK, map[string]any{
+					"count": 2,
+					"data": []map[string]any{
+						{
+							"id":   "node-nil-cp",
+							"name": "collision.jpg",
+							"kind": "FILE",
+						},
+						{
+							"id":   "node-diff-md5",
+							"name": "collision.jpg",
+							"kind": "FILE",
+							"contentProperties": map[string]any{
+								"size": 1024,
+								"md5":  otherMD5,
+							},
+						},
+					},
+				}), nil
+			}
+			return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
+		}
+		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes/album-nil/children" {
+			return jsonResponse(http.StatusOK, map[string]any{
+				"count": 1,
+				"data": []map[string]any{
+					{
+						"id":   "node-nil-dl",
+						"name": "nil_meta.mp4",
+						"kind": "FILE",
+					},
+				},
+			}), nil
+		}
+		if req.Method == http.MethodGet && strings.HasSuffix(req.URL.Path, "/contentRedirection") {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Disposition": []string{`attachment; filename="nil_meta.mp4"`}},
+				Body:       io.NopCloser(strings.NewReader("video-data")),
+			}, nil
+		}
+		return jsonResponse(http.StatusNotFound, nil), nil
+	}))
+
+	eng, st := newTestEngine(t, client)
+	now := time.Now().UTC()
+	_, err := st.CreateTransfer(ctx, store.Transfer{
+		ID:         "tr-same-size-diff-md5",
+		Kind:       store.TransferKindUpload,
+		Stage:      store.StageRunning,
+		BytesTotal: 1024,
+		ItemsTotal: 1,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}, []store.TransferItem{
+		{
+			ID:         "it-collision",
+			TransferID: "tr-same-size-diff-md5",
+			LocalPath:  "/nonexistent/collision.jpg",
+			Name:       "collision.jpg",
+			MediaType:  store.MediaTypePhoto,
+			Size:       1024,
+			MD5:        localMD5,
+			Status:     store.ItemStatusRunning,
+			UpdatedAt:  now,
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTransfer: %v", err)
+	}
+
+	if err := eng.ReconcileOnStartup(ctx); err != nil {
+		t.Fatalf("ReconcileOnStartup: %v", err)
+	}
+
+	items, err := st.ListTransferItems(ctx, "tr-same-size-diff-md5")
+	if err != nil || len(items) != 1 {
+		t.Fatalf("ListTransferItems: %v, %+v", err, items)
+	}
+	if items[0].Status != store.ItemStatusUnconfirmed {
+		t.Fatalf("expected item to stay unconfirmed when remote candidate has different MD5 or nil ContentProperties, got %+v", items[0])
+	}
+
+	// Also verify StartDownload with container node whose child has nil ContentProperties does not panic
+	dlTr, err := eng.StartDownload(ctx, engine.DownloadJobRequest{
+		ContainerNodeID: "album-nil",
+		DestDir:         t.TempDir(),
+	})
+	if err != nil {
+		t.Fatalf("StartDownload with nil ContentProperties: %v", err)
+	}
+	doneDL := waitForTransferTerminal(t, eng, dlTr.ID)
+	if doneDL.Stage != store.StageCompleted {
+		t.Fatalf("expected StageCompleted for nil ContentProperties download, got %+v", doneDL)
+	}
+}
+
+func TestBackupScanReportsPartialDirectoryWalkError(t *testing.T) {
+	if runtime.GOOS == "windows" || os.Getuid() == 0 {
+		t.Skip("skipping POSIX 0000 directory permission test on Windows or root")
+	}
+	t.Parallel()
+	ctx := context.Background()
+
+	client := newTestClient(t, aphotos.RegionUS, roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
+	}))
+	eng, st := newTestEngine(t, client)
+
+	backupDir := filepath.Join(t.TempDir(), "partial-scan")
+	lockedSub := filepath.Join(backupDir, "locked")
+	if err := os.MkdirAll(lockedSub, 0o700); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	if err := os.Chmod(lockedSub, 0o000); err != nil {
+		t.Fatalf("Chmod: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(lockedSub, 0o700) })
+
+	rule, err := eng.AddBackupRule(ctx, engine.BackupRuleInput{
+		LocalPath:     backupDir,
+		IncludeVideos: true,
+		ScheduleMode:  store.ScheduleInterval,
+		Paused:        true,
+	})
+	if err != nil {
+		t.Fatalf("AddBackupRule: %v", err)
+	}
+
+	_, scanErr := eng.ScanNow(ctx, rule.ID)
+	if scanErr == nil {
+		t.Fatal("expected ScanNow to return error when a subdirectory cannot be read")
+	}
+	updatedRule, err := st.GetBackupRule(ctx, rule.ID)
+	if err != nil {
+		t.Fatalf("GetBackupRule: %v", err)
+	}
+	if updatedRule.Status != store.BackupStatusError || updatedRule.LastError == "" {
+		t.Fatalf("expected rule status error with LastError populated, got %+v", updatedRule)
 	}
 }

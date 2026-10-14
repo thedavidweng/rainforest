@@ -185,17 +185,24 @@ func (e *Engine) StartDownload(ctx context.Context, req DownloadJobRequest) (*st
 				continue
 			}
 			seen[id] = struct{}{}
+			var expSize int64
+			var expMD5, contentType string
+			if node.ContentProperties != nil {
+				expSize = node.ContentProperties.Size
+				expMD5 = node.ContentProperties.MD5
+				contentType = node.ContentProperties.ContentType
+			}
 			mt := store.MediaTypePhoto
 			if m, ok := ClassifyMediaFile(node.Name); ok {
 				mt = m
-			} else if strings.HasPrefix(strings.ToLower(node.ContentProperties.ContentType), "video/") {
+			} else if strings.HasPrefix(strings.ToLower(contentType), "video/") {
 				mt = store.MediaTypeVideo
 			}
 			specs = append(specs, DownloadItemSpec{
 				NodeID:       id,
 				Name:         node.Name,
-				ExpectedSize: node.ContentProperties.Size,
-				ExpectedMD5:  node.ContentProperties.MD5,
+				ExpectedSize: expSize,
+				ExpectedMD5:  expMD5,
 				MediaType:    mt,
 			})
 		}
@@ -460,11 +467,12 @@ func (e *Engine) processSingleDownloadItem(
 		fileName = ""
 	}
 	res, dlErr := client.Download(ctx, aphotos.DownloadRequest{
-		NodeID:       item.RemoteNodeID,
-		DestDir:      tr.DestLocalDir,
-		FileName:     fileName,
-		ExpectedSize: item.Size,
-		ExpectedMD5:  item.MD5,
+		NodeID:         item.RemoteNodeID,
+		DestDir:        tr.DestLocalDir,
+		FileName:       fileName,
+		ExpectedSize:   item.Size,
+		ExpectedMD5:    item.MD5,
+		ConflictPolicy: policy,
 		Progress: func(p aphotos.TransferProgress) {
 			item.BytesDone = p.BytesTransferred
 			e.emitTransferProgress(tr, item)
@@ -472,8 +480,11 @@ func (e *Engine) processSingleDownloadItem(
 	})
 
 	switch {
-	case dlErr == nil && res != nil && res.Status == aphotos.TransferConfirmed:
+	case dlErr == nil && res != nil && (res.Status == aphotos.TransferConfirmed || res.Status == aphotos.TransferSkipped):
 		item.Status = store.ItemStatusConfirmed
+		if res.Status == aphotos.TransferSkipped {
+			item.Status = store.ItemStatusSkipped
+		}
 		if res.LocalPath != "" {
 			item.LocalPath = res.LocalPath
 		}
@@ -488,7 +499,6 @@ func (e *Engine) processSingleDownloadItem(
 			item.MD5 = res.MD5
 		}
 		item.ErrorMessage = ""
-
 	case errors.Is(dlErr, context.Canceled):
 		item.Status = store.ItemStatusCancelled
 		item.ErrorMessage = "cancelled"

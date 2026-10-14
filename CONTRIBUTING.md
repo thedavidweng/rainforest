@@ -17,17 +17,21 @@ Requires Go `1.27+` and Bun `1.4+` (automatically managed when using [mise](http
 ## Development Workflow
 
 ```bash
-# Run all quality gates: fmt, build, test, lint, conventions, bindings-check, frontend-check
+# Run all read-only quality gates: fmt-check, mod-tidy-check, vet, build, test, test-race, lint, conventions, bindings-check, frontend-check
 mise run check
 
 # Individual tasks
 mise run fmt             # Format Go code with gofumpt -extra -w .
+mise run fmt-check       # Verify Go code formatting
+mise run mod-tidy-check  # Verify go.mod and go.sum have no tidy drift
+mise run vet             # Run go vet ./...
 mise run build           # Compile all Go packages
 mise run test            # Run Go unit and contract tests
+mise run test-race       # Run Go tests with race detector
 mise run lint            # Run golangci-lint
 mise run conventions     # Check agent-file rules and <= 5% Go comment budget
 mise run bindings-check  # Verify frontend/src/mygo.ts matches MYGO_GENERATE output
-mise run frontend-check  # Run tsc, bun test (Happy-DOM), and vite build
+mise run frontend-check  # Run prettier --check, eslint, tsc, bun test, and vite build
 ```
 
 When modifying any method signature or DTO on `internal/gui` services (`Auth`, `Transfers`, `Backups`, `Downloads`, `Settings`), regenerate the TypeScript bindings and update the frontend adapters:
@@ -57,6 +61,10 @@ frontend/
     testing/memory-backend.ts   In-memory Backend implementation for Happy-DOM tests
     views/                      TransfersView, BackupsView, DownloadsView, SettingsView
 docs/
+  tutorials/                    Learning-oriented step-by-step tutorials
+  how-to/                       Task-oriented operational guides
+  reference/                    Supported platforms, settings, media types, states, regions
+  explanation/                  Product scope, architecture, backup safety, reconciliation, storage
   adr/                          Architecture Decision Records
   agents/                       Agent workflow, issue tracker, and domain conventions
 ```

@@ -1,12 +1,6 @@
 import { useState } from "react"
 
-import type {
-  AuthStatus,
-  Backend,
-  DoctorReportDTO,
-  SettingsDTO,
-  UsageSummary,
-} from "@/backend"
+import type { AuthStatus, Backend, DoctorReportDTO, SettingsDTO, UsageSummary } from "@/backend"
 import { errorMessageFrom, formatBytes } from "@/backend"
 
 export interface SettingsViewProps {
@@ -266,9 +260,7 @@ export function SettingsView({
       </section>
 
       <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-100">
-          Transfer &amp; Desktop Behavior
-        </h2>
+        <h2 className="text-lg font-semibold text-slate-100">Transfer &amp; Desktop Behavior</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
@@ -359,24 +351,27 @@ export function SettingsView({
           </div>
           <ul className="space-y-1 text-slate-400 list-disc list-inside">
             <li>
-              <strong className="text-slate-200">Pause Task</strong>: Pauses one active upload or download transfer in the queue; other transfers and backups continue.
+              <strong className="text-slate-200">Pause Task</strong>: Pauses one active upload or
+              download transfer in the queue; other transfers and backups continue.
             </li>
             <li>
-              <strong className="text-slate-200">Stop Backups</strong>: Halts background folder scans across all configured backup rules until resumed.
+              <strong className="text-slate-200">Stop Backups</strong>: Halts background folder
+              scans across all configured backup rules until resumed.
             </li>
             <li>
-              <strong className="text-slate-200">Close Window</strong>: Hides the window to the system tray (when enabled) while active transfers and backups continue running in the background.
+              <strong className="text-slate-200">Close Window</strong>: Hides the window to the
+              system tray (when enabled) while active transfers and backups continue running in the
+              background.
             </li>
             <li>
-              <strong className="text-slate-200">Quit Rainforest</strong>: Safely stops background workers and exits the application completely.
+              <strong className="text-slate-200">Quit Rainforest</strong>: Safely stops background
+              workers and exits the application completely.
             </li>
           </ul>
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          {settingsSavedMsg && (
-            <span className="text-xs text-emerald-400">{settingsSavedMsg}</span>
-          )}
+          {settingsSavedMsg && <span className="text-xs text-emerald-400">{settingsSavedMsg}</span>}
           <button
             type="button"
             onClick={() => void handleSaveSettings()}
@@ -392,7 +387,8 @@ export function SettingsView({
           <div>
             <h2 className="text-lg font-semibold text-slate-100">Doctor Diagnostics</h2>
             <p className="text-xs text-slate-400">
-              Graded connectivity, credential vault, region routing, read-probe, and opt-in write-probe diagnostics.
+              Graded connectivity, credential vault, region routing, read-probe, and opt-in
+              write-probe diagnostics.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -453,7 +449,8 @@ export function SettingsView({
       >
         <div className="font-semibold text-slate-300">About Rainforest</div>
         <p>
-          Rainforest is an independent, unofficial client and is not affiliated with or endorsed by Amazon.com, Inc.
+          Rainforest is an independent, unofficial client and is not affiliated with or endorsed by
+          Amazon.com, Inc.
         </p>
         <p>License: AGPL-3.0-only</p>
       </section>

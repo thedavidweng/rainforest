@@ -136,7 +136,12 @@ function evidenceForRegion(region: string): string {
 
 function inferRegionFromCookies(raw: string): string {
   const lower = raw.toLowerCase()
-  if (lower.includes("ubid-main") || lower.includes("ubid_main") || lower.includes("at-main") || lower.includes("at_main")) {
+  if (
+    lower.includes("ubid-main") ||
+    lower.includes("ubid_main") ||
+    lower.includes("at-main") ||
+    lower.includes("at_main")
+  ) {
     return "us"
   }
   for (const r of ["ca", "uk", "jp", "de", "fr", "it", "es"]) {
@@ -193,8 +198,7 @@ export class MemoryBackend implements Backend {
       rootNodeId: opts.auth?.rootNodeId ?? (authenticated ? "root-node-us" : undefined),
       ownerId: opts.auth?.ownerId ?? (authenticated ? "owner-1" : undefined),
       cookieKeys:
-        opts.auth?.cookieKeys ??
-        (configured ? ["at-main", "session-id", "ubid-main"] : undefined),
+        opts.auth?.cookieKeys ?? (configured ? ["at-main", "session-id", "ubid-main"] : undefined),
       vaultPath: opts.auth?.vaultPath ?? "/Users/alice/.config/rainforest/credentials.json",
       errorCode: opts.auth?.errorCode,
       errorMessage: opts.auth?.errorMessage,
@@ -202,7 +206,8 @@ export class MemoryBackend implements Backend {
 
     this.settingsState = {
       region: opts.settings?.region ?? defaultRegion,
-      evidence: opts.settings?.evidence ?? evidenceForRegion(opts.settings?.region ?? defaultRegion),
+      evidence:
+        opts.settings?.evidence ?? evidenceForRegion(opts.settings?.region ?? defaultRegion),
       maxMetadataConcurrency: opts.settings?.maxMetadataConcurrency ?? 4,
       maxUploadConcurrency: opts.settings?.maxUploadConcurrency ?? 2,
       defaultConflictPolicy: opts.settings?.defaultConflictPolicy ?? "skip",
@@ -259,7 +264,8 @@ export class MemoryBackend implements Backend {
     this.pickedDirectory = opts.pickedDirectory ?? "/Users/alice/Photos/Vacation"
     this.pickedCookieFile = opts.pickedCookieFile ?? "/Users/alice/Downloads/cookies.txt"
     this.pickedCookieContent =
-      opts.pickedCookieContent ?? "session-id=135-1111111-1111111; ubid-main=133-2222222-2222222; at-main=Atza|test"
+      opts.pickedCookieContent ??
+      "session-id=135-1111111-1111111; ubid-main=133-2222222-2222222; at-main=Atza|test"
 
     const defaultConfirmed: TransferItemDTO[] = [
       {
@@ -287,8 +293,7 @@ export class MemoryBackend implements Backend {
     this.recoveryState = {
       region: opts.recoverySources?.region ?? (defaultRegion || "us"),
       evidence:
-        opts.recoverySources?.evidence ??
-        (evidenceForRegion(defaultRegion || "us") || "verified"),
+        opts.recoverySources?.evidence ?? (evidenceForRegion(defaultRegion || "us") || "verified"),
       rootNodeId: opts.recoverySources?.rootNodeId ?? "root-node-us",
       confirmedItems: opts.recoverySources?.confirmedItems
         ? opts.recoverySources.confirmedItems.map((i) => ({ ...i }))
@@ -333,7 +338,8 @@ export class MemoryBackend implements Backend {
         throw {
           code: "CONFIG_ERROR",
           category: "config",
-          message: "region cannot be determined from cookies; select an explicit Amazon marketplace region",
+          message:
+            "region cannot be determined from cookies; select an explicit Amazon marketplace region",
           details: { field: "region" },
         } satisfies BackendError
       }
@@ -432,7 +438,8 @@ export class MemoryBackend implements Backend {
 
       const includeVideos = input.includeVideos ?? true
       const includePreviews = input.includePreviews ?? true
-      const policy = (input.conflictPolicy ?? "").trim() || this.settingsState.defaultConflictPolicy || "skip"
+      const policy =
+        (input.conflictPolicy ?? "").trim() || this.settingsState.defaultConflictPolicy || "skip"
 
       const expanded = this.expandCandidatePaths(rawPaths)
       const items: PlanItemDTO[] = []
@@ -665,8 +672,10 @@ export class MemoryBackend implements Backend {
         localPath,
         includeVideos: input.includeVideos,
         scheduleMode: input.scheduleMode?.trim() || "immediate",
-        intervalMinutes: input.intervalMinutes && input.intervalMinutes > 0 ? input.intervalMinutes : 30,
-        conflictPolicy: input.conflictPolicy?.trim() || this.settingsState.defaultConflictPolicy || "skip",
+        intervalMinutes:
+          input.intervalMinutes && input.intervalMinutes > 0 ? input.intervalMinutes : 30,
+        conflictPolicy:
+          input.conflictPolicy?.trim() || this.settingsState.defaultConflictPolicy || "skip",
         ...(input.destinationNodeId ? { destinationNodeId: input.destinationNodeId.trim() } : {}),
         paused,
         status: unavailable ? "source_unavailable" : paused ? "paused" : "active",
@@ -886,7 +895,8 @@ export class MemoryBackend implements Backend {
         } satisfies BackendError
       }
 
-      const policy = (input.conflictPolicy ?? "").trim() || this.settingsState.defaultConflictPolicy || "skip"
+      const policy =
+        (input.conflictPolicy ?? "").trim() || this.settingsState.defaultConflictPolicy || "skip"
       const bytesTotal = items.reduce((sum, it) => sum + it.size, 0)
       const tr: TransferDTO = {
         id,

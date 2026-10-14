@@ -967,3 +967,81 @@ func TestTransferControlsPickerAndExperimentalRegionCapability(t *testing.T) {
 		t.Fatalf("Backups.List: %v, %+v", err, rules)
 	}
 }
+
+func TestStartupReconciliationErrorSurfacedInTransferListAndNotification(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "state.db")
+	vaultPath := filepath.Join(dir, "credentials.json")
+
+	st, err := store.Open(ctx, dbPath)
+	if err != nil {
+		t.Fatalf("store.Open: %v", err)
+	}
+	now := time.Now().UTC()
+	_, err = st.CreateTransfer(ctx, store.Transfer{
+		ID:         "tr-interrupted",
+		Kind:       store.TransferKindUpload,
+		Stage:      store.StageRunning,
+		BytesTotal: 100,
+		ItemsTotal: 1,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}, []store.TransferItem{
+		{
+			ID:         "it-interrupted",
+			TransferID: "tr-interrupted",
+			Name:       "interrupted.jpg",
+			Size:       100,
+			MD5:        "33333333333333333333333333333333",
+			Status:     store.ItemStatusRunning,
+			UpdatedAt:  now,
+		},
+	})
+	_ = st.Close()
+	if err != nil {
+		t.Fatalf("CreateTransfer: %v", err)
+	}
+
+	cs := credstore.NewFileStore(vaultPath)
+	if _, err := cs.ImportCookies("session-id=140-111; ubid-main=130-222; at-main=Atza|tok", "us", credstore.HostOverrides{}); err != nil {
+		t.Fatalf("ImportCookies: %v", err)
+	}
+
+	var gotWarningNotif atomic.Bool
+	rt := roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(http.StatusUnauthorized, map[string]any{"message": "session expired"}), nil
+	})
+
+	svc, closeSvc, err := gui.Open(gui.Options{
+		DBPath:    dbPath,
+		VaultPath: vaultPath,
+		Transport: rt,
+		Emitter: func(name string, data any) {
+			if name == gui.EventNotification {
+				if ev, ok := data.(gui.NotificationEvent); ok && ev.Title == "Startup Recovery Warning" {
+					gotWarningNotif.Store(true)
+				}
+			}
+		},
+	})
+	if err != nil {
+		t.Fatalf("gui.Open: %v", err)
+	}
+	defer closeSvc()
+
+	if !gotWarningNotif.Load() {
+		t.Error("expected Startup Recovery Warning notification when ReconcileOnStartup encounters remote error")
+	}
+	list, err := svc.Transfers.List(ctx)
+	if err != nil {
+		t.Fatalf("Transfers.List: %v", err)
+	}
+	if list.Warning == "" {
+		t.Errorf("expected non-empty Warning on TransferListDTO when startup reconciliation fails, got %+v", list)
+	}
+	if len(list.History) != 1 || list.History[0].Stage != string(store.StageUnconfirmed) {
+		t.Errorf("expected interrupted transfer to remain persisted as unconfirmed in history, got %+v", list.History)
+	}
+}

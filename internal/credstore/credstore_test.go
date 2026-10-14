@@ -200,3 +200,33 @@ func TestStoreImportFileClearAndRedaction(t *testing.T) {
 		t.Fatalf("expected ErrNotConfigured after Clear, got %v", loadErr)
 	}
 }
+
+func TestResolveDataDirRefusesTempDirAndMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	validBase := t.TempDir()
+	// Note: t.TempDir() is inside os.TempDir(), so ResolveDataDir must reject paths inside os.TempDir()!
+	_, err := credstore.ResolveDataDir(filepath.Join(os.TempDir(), "rainforest"), nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "refusing temporary directory") {
+		t.Fatalf("expected ResolveDataDir to reject os.TempDir(), got %v", err)
+	}
+
+	_, err = credstore.ResolveDataDir(filepath.Join(validBase, "sub"), nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "refusing temporary directory") {
+		t.Fatalf("expected ResolveDataDir to reject subdirectory of os.TempDir(), got %v", err)
+	}
+
+	_, err = credstore.ResolveDataDir("", func() (string, error) {
+		return "", errors.New("no config dir")
+	}, func() (string, error) {
+		return "", errors.New("no home dir")
+	})
+	if err == nil || !strings.Contains(err.Error(), "cannot resolve persistent user data directory") {
+		t.Fatalf("expected error when both configDir and homeDir fail, got %v", err)
+	}
+
+	_, err = credstore.ResolveDataDir("relative/path", nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "refusing non-absolute") {
+		t.Fatalf("expected error on relative path, got %v", err)
+	}
+}

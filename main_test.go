@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"image/png"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -58,6 +60,13 @@ func TestNativeFilePickerEnvOverrides(t *testing.T) {
 	}
 }
 
+func TestResolveDesktopDataDirRejectsTempFallback(t *testing.T) {
+	_, err := resolveDesktopDataDir(filepath.Join(os.TempDir(), "rainforest"))
+	if err == nil {
+		t.Fatal("expected resolveDesktopDataDir to reject os.TempDir() fallback")
+	}
+}
+
 func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 	requiredFiles := []string{
 		"README.md",
@@ -68,10 +77,28 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 		"GLOSSARY.md",
 		"AGENTS.md",
 		"LICENSE",
+		"docs/tutorials/getting-started-upload.md",
+		"docs/tutorials/first-backup-rule.md",
+		"docs/how-to/configure-backups.md",
+		"docs/how-to/manage-transfer-queue.md",
+		"docs/how-to/recover-files.md",
+		"docs/how-to/resolve-unconfirmed-transfers.md",
+		"docs/how-to/troubleshooting-platform-and-permissions.md",
+		"docs/reference/platforms-and-packages.md",
+		"docs/reference/settings.md",
+		"docs/reference/supported-media-types.md",
+		"docs/reference/backup-and-transfer-states.md",
+		"docs/reference/regions.md",
+		"docs/explanation/product-scope.md",
+		"docs/explanation/architecture.md",
+		"docs/explanation/one-way-backup-and-file-safety.md",
+		"docs/explanation/reconciliation-and-recovery.md",
+		"docs/explanation/storage-and-credentials.md",
 		"docs/adr/0001-rainforest-architecture.md",
 		"docs/adr/0002-mygo-desktop-shell.md",
 		".github/workflows/ci.yml",
 		".github/workflows/release.yml",
+		".github/workflows/workflow-lint.yml",
 	}
 
 	contents := make(map[string]string, len(requiredFiles))
@@ -180,5 +207,53 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 		if !strings.Contains(release, snippet) {
 			t.Errorf(".github/workflows/release.yml missing required snippet %q", snippet)
 		}
+	}
+
+	linkRe := regexp.MustCompile(`\[[^\]]+\]\(([^)]+)\)`)
+	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			if d.Name() == ".git" || d.Name() == "node_modules" || d.Name() == "dist" || d.Name() == "build" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(d.Name(), ".md") {
+			return nil
+		}
+		if filepath.ToSlash(path) == "docs/agents/domain.md" {
+			return nil
+		}
+		raw, rErr := os.ReadFile(path)
+		if rErr != nil {
+			return rErr
+		}
+		matches := linkRe.FindAllStringSubmatch(string(raw), -1)
+		for _, m := range matches {
+			target := strings.TrimSpace(m[1])
+			if target == "" ||
+				strings.HasPrefix(target, "http://") ||
+				strings.HasPrefix(target, "https://") ||
+				strings.HasPrefix(target, "mailto:") ||
+				strings.HasPrefix(target, "#") {
+				continue
+			}
+			if idx := strings.Index(target, "#"); idx >= 0 {
+				target = target[:idx]
+			}
+			if target == "" {
+				continue
+			}
+			resolved := filepath.Join(filepath.Dir(path), target)
+			if _, statErr := os.Stat(resolved); statErr != nil {
+				t.Errorf("%s contains broken relative link %q (resolved: %s)", path, m[1], resolved)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("WalkDir markdown link check failed: %v", err)
 	}
 }

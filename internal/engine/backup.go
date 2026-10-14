@@ -280,12 +280,15 @@ func (e *Engine) runScheduledBackupScans(ctx context.Context) {
 }
 
 type backupCandidate struct {
-	relPath   string
-	absPath   string
-	name      string
-	mediaType store.MediaType
-	size      int64
-	mtimeNs   int64
+	relPath       string
+	absPath       string
+	name          string
+	mediaType     store.MediaType
+	size          int64
+	mtimeNs       int64
+	reconcileOnly bool
+	prevMD5       string
+	existingItem  *store.TransferItem
 }
 
 func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, error) {
@@ -342,9 +345,37 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 		trackedByRel[tf.RelPath] = tf
 	}
 
+	var openUnconfirmedByPath map[string]store.TransferItem
+	if reconTransfers, rErr := st.ListTransfersNeedingReconciliation(ctx); rErr == nil {
+		for i := range reconTransfers {
+			rt := &reconTransfers[i]
+			if rt.Kind != store.TransferKindBackup {
+				continue
+			}
+			if rItems, liErr := st.ListTransferItems(ctx, rt.ID); liErr == nil {
+				for j := range rItems {
+					it := rItems[j]
+					if it.Status == store.ItemStatusUnconfirmed && strings.TrimSpace(it.LocalPath) != "" {
+						if openUnconfirmedByPath == nil {
+							openUnconfirmedByPath = make(map[string]store.TransferItem)
+						}
+						openUnconfirmedByPath[it.LocalPath] = it
+					}
+				}
+			}
+		}
+	}
+
 	var candidates []backupCandidate
+	var scanWarnings []string
 	walkErr := filepath.WalkDir(rule.LocalPath, func(p string, d fs.DirEntry, wErr error) error {
 		if wErr != nil {
+			if p == rule.LocalPath {
+				return wErr
+			}
+			if !errors.Is(wErr, os.ErrNotExist) {
+				scanWarnings = append(scanWarnings, fmt.Sprintf("%s: %s", filepath.Base(p), formatErrMsg(wErr)))
+			}
 			return nil
 		}
 		if err := ctx.Err(); err != nil {
@@ -366,44 +397,141 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 
 		info, iErr := d.Info()
 		if iErr != nil {
+			if !errors.Is(iErr, os.ErrNotExist) {
+				scanWarnings = append(scanWarnings, fmt.Sprintf("%s: %s", d.Name(), formatErrMsg(iErr)))
+			}
 			return nil
 		}
 		rel, rErr := filepath.Rel(rule.LocalPath, p)
 		if rErr != nil {
+			scanWarnings = append(scanWarnings, fmt.Sprintf("%s: %s", d.Name(), formatErrMsg(rErr)))
 			return nil
 		}
 		rel = filepath.ToSlash(rel)
 
 		size := info.Size()
 		mtimeNs := info.ModTime().UnixNano()
+		var reconcileOnly bool
+		var prevMD5 string
+		var existingItem *store.TransferItem
 		if prev, ok := trackedByRel[rel]; ok {
 			if prev.Status == store.ItemStatusConfirmed && prev.Size == size && prev.MtimeNs == mtimeNs {
 				return nil
 			}
+			if prev.Status == store.ItemStatusUnconfirmed {
+				reconcileOnly = true
+				prevMD5 = prev.MD5
+				if ex, found := openUnconfirmedByPath[p]; found {
+					cp := ex
+					existingItem = &cp
+				}
+			}
 		}
 
 		candidates = append(candidates, backupCandidate{
-			relPath:   rel,
-			absPath:   p,
-			name:      d.Name(),
-			mediaType: mt,
-			size:      size,
-			mtimeNs:   mtimeNs,
+			relPath:       rel,
+			absPath:       p,
+			name:          d.Name(),
+			mediaType:     mt,
+			size:          size,
+			mtimeNs:       mtimeNs,
+			reconcileOnly: reconcileOnly,
+			prevMD5:       prevMD5,
+			existingItem:  existingItem,
 		})
 		return nil
 	})
 	if walkErr != nil {
-		_ = st.SetBackupRuleStatus(ctx, rule.ID, store.BackupStatusError, formatErrMsg(walkErr), &now)
+		status := store.BackupStatusError
+		if _, sErr := os.Stat(rule.LocalPath); sErr != nil {
+			status = store.BackupStatusSourceUnavailable
+		}
+		_ = st.SetBackupRuleStatus(ctx, rule.ID, status, formatErrMsg(walkErr), &now)
+		if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
+			e.emitBackupStatus(updated)
+		}
 		return nil, walkErr
 	}
 
-	// Local deletes/moves/renames are ignored; one-way backup never deletes remote cloud nodes.
+	var uploadCandidates []backupCandidate
+	var reconcileCandidates []backupCandidate
+	for _, c := range candidates {
+		if c.reconcileOnly {
+			reconcileCandidates = append(reconcileCandidates, c)
+		} else {
+			uploadCandidates = append(uploadCandidates, c)
+		}
+	}
+
+	client := e.Client()
+	if len(reconcileCandidates) > 0 && client != nil {
+		for _, rc := range reconcileCandidates {
+			probeItem := store.TransferItem{
+				LocalPath: rc.absPath,
+				Name:      rc.name,
+				Size:      rc.size,
+				MD5:       rc.prevMD5,
+			}
+			node, fErr := findRemoteNodeForItem(ctx, client, probeItem, rule.DestinationNodeID)
+			if fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
+				verifiedMD5 := rc.prevMD5
+				if node.ContentProperties != nil && strings.TrimSpace(node.ContentProperties.MD5) != "" {
+					verifiedMD5 = strings.ToLower(strings.TrimSpace(node.ContentProperties.MD5))
+				}
+				syncedAt := time.Now().UTC()
+				_ = st.UpsertTrackedFile(ctx, store.TrackedFile{
+					BackupRuleID: rule.ID,
+					RelPath:      rc.relPath,
+					AbsPath:      rc.absPath,
+					Size:         rc.size,
+					MtimeNs:      rc.mtimeNs,
+					MD5:          verifiedMD5,
+					RemoteNodeID: node.ID,
+					Status:       store.ItemStatusConfirmed,
+					LastSyncedAt: syncedAt,
+				})
+				if rc.existingItem != nil {
+					rc.existingItem.Status = store.ItemStatusConfirmed
+					rc.existingItem.RemoteNodeID = node.ID
+					rc.existingItem.MD5 = verifiedMD5
+					rc.existingItem.BytesDone = rc.existingItem.Size
+					rc.existingItem.ErrorMessage = ""
+					rc.existingItem.UpdatedAt = syncedAt
+					_ = st.UpdateTransferItem(ctx, *rc.existingItem)
+					if updTr, uErr := recomputeAndPersistTransfer(ctx, st, rc.existingItem.TransferID, ""); uErr == nil {
+						e.emitTransferStage(updTr)
+					}
+				}
+				continue
+			}
+			if rc.existingItem == nil {
+				uploadCandidates = append(uploadCandidates, rc)
+			} else {
+				scanWarnings = append(scanWarnings, fmt.Sprintf("%s: awaiting upload confirmation (will not auto-replay without manual retry)", rc.name))
+			}
+		}
+	} else if len(reconcileCandidates) > 0 && client == nil {
+		for _, rc := range reconcileCandidates {
+			scanWarnings = append(scanWarnings, fmt.Sprintf("%s: awaiting upload confirmation (offline)", rc.name))
+		}
+	}
+
+	candidates = uploadCandidates
+
 	if len(candidates) == 0 {
+		scanDone := time.Now().UTC()
+		if len(scanWarnings) > 0 {
+			warnMsg := strings.Join(scanWarnings, "; ")
+			_ = st.SetBackupRuleStatus(ctx, rule.ID, store.BackupStatusError, warnMsg, &scanDone)
+			if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
+				e.emitBackupStatus(updated)
+			}
+			return nil, fmt.Errorf("backup scan incomplete: %s", warnMsg)
+		}
 		finalStatus := store.BackupStatusActive
 		if rule.Paused {
 			finalStatus = store.BackupStatusPaused
 		}
-		scanDone := time.Now().UTC()
 		_ = st.SetBackupRuleStatus(ctx, rule.ID, finalStatus, "", &scanDone)
 		if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
 			e.emitBackupStatus(updated)
@@ -415,7 +543,6 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 		return candidates[i].relPath < candidates[j].relPath
 	})
 
-	client := e.Client()
 	if client == nil {
 		_ = st.SetBackupRuleStatus(ctx, rule.ID, store.BackupStatusError, ErrOffline.Error(), &now)
 		if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
@@ -436,11 +563,11 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 			Name:       c.name,
 			MediaType:  c.mediaType,
 			Size:       c.size,
+			MD5:        c.prevMD5,
 			Status:     store.ItemStatusQueued,
 			UpdatedAt:  now,
 		})
 	}
-
 	tr, err := st.CreateTransfer(ctx, store.Transfer{
 		ID:             trID,
 		Kind:           store.TransferKindBackup,
@@ -492,6 +619,9 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 
 	var errMu sync.Mutex
 	var lastRuleErr string
+	if len(scanWarnings) > 0 {
+		lastRuleErr = strings.Join(scanWarnings, "; ")
+	}
 	var wg sync.WaitGroup
 	for range workerCount {
 		wg.Add(1)
@@ -538,6 +668,12 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 	finalTr, _ := recomputeAndPersistTransfer(bgCtx, st, tr.ID, "")
 	e.emitTransferStage(finalTr)
 	scanDone := time.Now().UTC()
+	if lastRuleErr == "" && (finalTr.Stage == store.StageFailed || finalTr.Stage == store.StagePartial || finalTr.Stage == store.StageUnconfirmed) {
+		lastRuleErr = finalTr.ErrorMessage
+		if lastRuleErr == "" {
+			lastRuleErr = fmt.Sprintf("backup transfer finished in stage %s", finalTr.Stage)
+		}
+	}
 	finalRuleStatus := store.BackupStatusActive
 	if rule.Paused {
 		finalRuleStatus = store.BackupStatusPaused
@@ -547,6 +683,9 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 	_ = st.SetBackupRuleStatus(ctx, rule.ID, finalRuleStatus, lastRuleErr, &scanDone)
 	if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
 		e.emitBackupStatus(updated)
+	}
+	if len(scanWarnings) > 0 {
+		return &finalTr, fmt.Errorf("backup scan completed with errors: %s", strings.Join(scanWarnings, "; "))
 	}
 	return &finalTr, nil
 }
@@ -579,6 +718,44 @@ func (e *Engine) processSingleBackupItem(
 		return ""
 	}
 
+	if c.reconcileOnly {
+		probeItem := item
+		if probeItem.MD5 == "" {
+			probeItem.MD5 = c.prevMD5
+		}
+		if node, fErr := findRemoteNodeForItem(ctx, client, probeItem, rule.DestinationNodeID); fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
+			verifiedMD5 := probeItem.MD5
+			if node.ContentProperties != nil && strings.TrimSpace(node.ContentProperties.MD5) != "" {
+				verifiedMD5 = strings.ToLower(strings.TrimSpace(node.ContentProperties.MD5))
+			}
+			item.Status = store.ItemStatusConfirmed
+			item.RemoteNodeID = node.ID
+			item.MD5 = verifiedMD5
+			item.BytesDone = sizeBefore
+			item.ErrorMessage = ""
+			item.UpdatedAt = time.Now().UTC()
+			_ = st.UpdateTransferItem(bgCtx, item)
+			_ = st.UpsertTrackedFile(bgCtx, store.TrackedFile{
+				BackupRuleID: rule.ID,
+				RelPath:      c.relPath,
+				AbsPath:      c.absPath,
+				Size:         sizeBefore,
+				MtimeNs:      mtimeBefore,
+				MD5:          verifiedMD5,
+				RemoteNodeID: node.ID,
+				Status:       store.ItemStatusConfirmed,
+				LastSyncedAt: item.UpdatedAt,
+			})
+			return ""
+		}
+		item.Status = store.ItemStatusUnconfirmed
+		item.MD5 = c.prevMD5
+		item.ErrorMessage = "awaiting remote upload confirmation; will not auto-replay without manual retry"
+		item.UpdatedAt = time.Now().UTC()
+		_ = st.UpdateTransferItem(bgCtx, item)
+		return item.ErrorMessage
+	}
+
 	item.Status = store.ItemStatusRunning
 	item.UpdatedAt = time.Now().UTC()
 	_ = st.UpdateTransferItem(bgCtx, item)
@@ -594,20 +771,34 @@ func (e *Engine) processSingleBackupItem(
 		},
 	})
 
-	statAfter, afterErr := os.Stat(c.absPath)
-	if afterErr != nil || statAfter.Size() != sizeBefore || statAfter.ModTime().UnixNano() != mtimeBefore {
-		item.Status = store.ItemStatusSkipped
-		item.ErrorMessage = errFileModifiedMidFlight.Error()
-		item.UpdatedAt = time.Now().UTC()
-		_ = st.UpdateTransferItem(bgCtx, item)
-		return ""
-	}
-
 	md5Hex := ""
 	if res != nil {
 		md5Hex = res.MD5
 	}
 
+	statAfter, afterErr := os.Stat(c.absPath)
+	if afterErr != nil || statAfter.Size() != sizeBefore || statAfter.ModTime().UnixNano() != mtimeBefore {
+		item.Status = store.ItemStatusUnconfirmed
+		item.MD5 = md5Hex
+		if res != nil && strings.TrimSpace(res.NodeID) != "" {
+			item.RemoteNodeID = res.NodeID
+		}
+		item.ErrorMessage = errFileModifiedMidFlight.Error()
+		item.UpdatedAt = time.Now().UTC()
+		_ = st.UpdateTransferItem(bgCtx, item)
+		_ = st.UpsertTrackedFile(bgCtx, store.TrackedFile{
+			BackupRuleID: rule.ID,
+			RelPath:      c.relPath,
+			AbsPath:      c.absPath,
+			Size:         sizeBefore,
+			MtimeNs:      mtimeBefore,
+			MD5:          md5Hex,
+			RemoteNodeID: item.RemoteNodeID,
+			Status:       store.ItemStatusUnconfirmed,
+			LastSyncedAt: item.UpdatedAt,
+		})
+		return item.ErrorMessage
+	}
 	switch {
 	case res != nil && (res.Status == aphotos.TransferConfirmed || res.Status == aphotos.TransferSkipped):
 		item.Status = store.ItemStatusConfirmed

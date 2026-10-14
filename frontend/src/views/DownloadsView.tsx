@@ -103,11 +103,10 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
   return (
     <div data-testid="downloads-view" className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-100">
-          Recovery Download (Secondary)
-        </h2>
+        <h2 className="text-lg font-semibold text-slate-100">Recovery Download (Secondary)</h2>
         <p className="text-xs text-slate-400">
-          Restore original files from confirmed transfer records, verified albums/folders, or explicit remote node IDs.
+          Restore original files from confirmed transfer records, verified albums/folders, or
+          explicit remote node IDs.
         </p>
       </div>
 
@@ -179,9 +178,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
             type="button"
             onClick={() => setRecoveryMode("nodes")}
             className={`px-3 py-1.5 rounded font-medium ${
-              recoveryMode === "nodes"
-                ? "bg-emerald-600 text-white"
-                : "bg-slate-800 text-slate-300"
+              recoveryMode === "nodes" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
             }`}
           >
             Explicit Remote Node IDs
@@ -354,9 +351,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
                   <span className="text-slate-500">({formatBytes(it.size)})</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] text-slate-400">
-                    {it.remoteNodeId}
-                  </span>
+                  <span className="font-mono text-[11px] text-slate-400">{it.remoteNodeId}</span>
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-medium">
                     {it.status}
                   </span>

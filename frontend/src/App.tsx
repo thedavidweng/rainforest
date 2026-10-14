@@ -57,6 +57,9 @@ export function App({ backend }: AppProps) {
     try {
       const list = await backend.transfers.list()
       setTransferList(list)
+      if (list.warning) {
+        setGlobalError(list.warning)
+      }
     } catch (err) {
       setGlobalError(errorMessageFrom(err))
     }
@@ -69,12 +72,12 @@ export function App({ backend }: AppProps) {
     setPlanIncludeVideos(true)
     setPlanConflictPolicy("skip")
     setPlanDestNodeId("")
+    setUploadPlan(null)
     setPlanError(null)
   }, [])
 
   useEffect(() => {
     if (!pendingPaths || pendingPaths.length === 0) {
-      setUploadPlan(null)
       return
     }
     let live = true
@@ -134,15 +137,17 @@ export function App({ backend }: AppProps) {
 
       try {
         const list = await backend.transfers.list()
-        if (mounted) setTransferList(list)
+        if (mounted) {
+          setTransferList(list)
+          if (list.warning) {
+            setGlobalError(list.warning)
+          }
+        }
       } catch {
         // Offline or unconfigured state is handled via auth status banner
       }
       try {
-        const [rules, cfg] = await Promise.all([
-          backend.backups.list(),
-          backend.settings.get(),
-        ])
+        const [rules, cfg] = await Promise.all([backend.backups.list(), backend.settings.get()])
         if (mounted) {
           setBackupRules(rules)
           setSettingsState(cfg)
@@ -399,11 +404,7 @@ export function App({ backend }: AppProps) {
         )}
 
         {activeView === "downloads" && (
-          <DownloadsView
-            backend={backend}
-            auth={auth}
-            onRefreshTransfers={refreshTransfers}
-          />
+          <DownloadsView backend={backend} auth={auth} onRefreshTransfers={refreshTransfers} />
         )}
 
         {activeView === "settings" && (
