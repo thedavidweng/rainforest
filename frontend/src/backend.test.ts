@@ -121,7 +121,11 @@ describe("MemoryBackend", () => {
     backend.events.onTransferStage((tr) => stages.push(`${tr.id}:${tr.stage}`))
 
     const plan = await backend.transfers.planUpload({
-      paths: ["/Users/alice/Photos/IMG_0001.JPG", "/Users/alice/Photos/clip.mp4", "/Users/alice/Photos/notes.txt"],
+      paths: [
+        "/Users/alice/Photos/IMG_0001.JPG",
+        "/Users/alice/Photos/clip.mp4",
+        "/Users/alice/Photos/notes.txt",
+      ],
       conflictPolicy: "skip",
     })
     expect(plan.photoCount).toBe(1)
@@ -213,9 +217,7 @@ describe("MemoryBackend", () => {
     expect(updated.defaultConflictPolicy).toBe("rename")
     expect(updated.closeToTray).toBe(false)
 
-    await expect(
-      backend.settings.update({ maxUploadConcurrency: 99 }),
-    ).rejects.toMatchObject({
+    await expect(backend.settings.update({ maxUploadConcurrency: 99 })).rejects.toMatchObject({
       code: "VALIDATION_FAILED",
       category: "validation",
     })

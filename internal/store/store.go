@@ -179,13 +179,20 @@ type Store struct {
 }
 
 func DefaultDBPath() string {
-	return filepath.Join(credstore.DefaultDataDir(), "state.db")
+	dir := credstore.DefaultDataDir()
+	if dir == "" {
+		return ""
+	}
+	return filepath.Join(dir, "state.db")
 }
 
 func Open(ctx context.Context, dbPath string) (*Store, error) {
 	cleaned := strings.TrimSpace(dbPath)
 	if cleaned == "" {
 		cleaned = DefaultDBPath()
+	}
+	if cleaned == "" {
+		return nil, errors.New("cannot resolve persistent state database path: user data directory unavailable")
 	}
 	if cleaned != ":memory:" && !strings.HasPrefix(cleaned, "file:") {
 		cleaned = filepath.Clean(cleaned)

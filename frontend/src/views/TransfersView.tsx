@@ -144,10 +144,7 @@ export function TransfersView({
 
         <div className="space-y-1">
           <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-            <div
-              className="h-full bg-emerald-500 transition-all"
-              style={{ width: `${pct}%` }}
-            />
+            <div className="h-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
           </div>
           <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
             <span>
@@ -195,9 +192,7 @@ export function TransfersView({
                         {it.remoteNodeId}
                       </span>
                     )}
-                    {it.errorMessage && (
-                      <span className="text-rose-400">{it.errorMessage}</span>
-                    )}
+                    {it.errorMessage && <span className="text-rose-400">{it.errorMessage}</span>}
                   </div>
                 </div>
               ))
@@ -282,7 +277,8 @@ export function TransfersView({
           Drop photos, videos, or folders here for one-shot upload
         </h2>
         <p className="text-xs text-slate-400 mt-1">
-          Preflight summary lets you review file count, size, destination, and conflict handling before uploading.
+          Preflight summary lets you review file count, size, destination, and conflict handling
+          before uploading.
         </p>
         <div className="mt-4 flex items-center justify-center gap-3">
           <button
@@ -472,9 +468,7 @@ export function TransfersView({
           {transferList.history.length > 0 && (
             <button
               type="button"
-              onClick={() =>
-                void backend.transfers.clearHistory().then(() => onRefreshTransfers())
-              }
+              onClick={() => void backend.transfers.clearHistory().then(() => onRefreshTransfers())}
               className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300"
             >
               Clear History

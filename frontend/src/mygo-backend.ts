@@ -8,10 +8,15 @@ function extractBackendError(val: unknown, fallbackMessage: string): BackendErro
     return null
   }
   const category = "category" in val && typeof val.category === "string" ? val.category : "internal"
-  const message = "message" in val && typeof val.message === "string" ? val.message : fallbackMessage
-  const retryAfterMs = "retryAfterMs" in val && typeof val.retryAfterMs === "number" ? val.retryAfterMs : undefined
+  const message =
+    "message" in val && typeof val.message === "string" ? val.message : fallbackMessage
+  const retryAfterMs =
+    "retryAfterMs" in val && typeof val.retryAfterMs === "number" ? val.retryAfterMs : undefined
   const details =
-    "details" in val && typeof val.details === "object" && val.details !== null && !Array.isArray(val.details)
+    "details" in val &&
+    typeof val.details === "object" &&
+    val.details !== null &&
+    !Array.isArray(val.details)
       ? (val.details as Record<string, unknown>)
       : undefined
   return {
@@ -93,7 +98,10 @@ async function callRequired<T>(promise: Promise<T | null>, label: string): Promi
   return res
 }
 
-function safeSubscribe<T>(register: (cb: (payload: T) => void) => () => void, cb: (payload: T) => void): () => void {
+function safeSubscribe<T>(
+  register: (cb: (payload: T) => void) => () => void,
+  cb: (payload: T) => void,
+): () => void {
   if (!isMyGo()) {
     return () => {}
   }
@@ -108,8 +116,10 @@ export const mygoBackend: Backend = {
   auth: {
     status: () => callRequired(Auth.status(), "auth status"),
     importCookies: (input) => callRequired(Auth.importCookies(input), "auth status"),
-    importCookieFile: (path, region) => callRequired(Auth.importCookieFile(path, region), "auth status"),
-    pickAndImportCookieFile: (region) => callRequired(Auth.pickAndImportCookieFile(region), "auth status"),
+    importCookieFile: (path, region) =>
+      callRequired(Auth.importCookieFile(path, region), "auth status"),
+    pickAndImportCookieFile: (region) =>
+      callRequired(Auth.pickAndImportCookieFile(region), "auth status"),
     logout: () => callRequired(Auth.logout(), "auth status"),
     usage: () => callRequired(Auth.usage(), "usage summary"),
   },

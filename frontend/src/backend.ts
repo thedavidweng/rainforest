@@ -69,7 +69,12 @@ export function formatBytes(bytes: number): string {
 }
 
 export function errorMessageFrom(err: unknown): string {
-  if (typeof err === "object" && err !== null && "message" in err && typeof err.message === "string") {
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "message" in err &&
+    typeof err.message === "string"
+  ) {
     return err.message
   }
   if (err instanceof Error) return err.message

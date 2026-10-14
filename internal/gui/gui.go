@@ -43,16 +43,17 @@ type Services struct {
 }
 
 type appState struct {
-	mu              sync.RWMutex
-	opts            Options
-	store           *store.Store
-	credStore       credstore.Store
-	engine          *engine.Engine
-	emitter         Emitter
-	picker          FilePicker
-	tray            *TrayTracker
-	launchAtLoginFn func(enabled bool) error
-	notifiedStages  map[string]store.TransferStage
+	mu               sync.RWMutex
+	opts             Options
+	store            *store.Store
+	credStore        credstore.Store
+	engine           *engine.Engine
+	emitter          Emitter
+	picker           FilePicker
+	tray             *TrayTracker
+	launchAtLoginFn  func(enabled bool) error
+	notifiedStages   map[string]store.TransferStage
+	lastReconcileErr string
 }
 
 func NewEmptyServices() *Services {
@@ -151,7 +152,7 @@ func (s *Services) Init(opts Options) (func(), error) {
 	s.state.engine = eng
 	s.state.mu.Unlock()
 
-	_ = eng.ReconcileOnStartup(ctx)
+	s.state.recordReconcileResult(eng.ReconcileOnStartup(ctx))
 	eng.StartBackground(ctx)
 
 	return s.Close, nil
@@ -343,9 +344,38 @@ func (st *appState) reopen(ctx context.Context) error {
 
 	eng.SetClient(client)
 	if client != nil {
-		_ = eng.ReconcileOnStartup(ctx)
+		st.recordReconcileResult(eng.ReconcileOnStartup(ctx))
 	}
 	return nil
+}
+
+func (st *appState) recordReconcileResult(err error) {
+	if st == nil {
+		return
+	}
+	msg := ""
+	if err != nil {
+		msg = aphotos.Redact(err.Error())
+	}
+	st.mu.Lock()
+	st.lastReconcileErr = msg
+	st.mu.Unlock()
+	if msg != "" {
+		st.emit(EventNotification, NotificationEvent{
+			Title: "Startup Recovery Warning",
+			Body:  msg,
+			Level: "warning",
+		})
+	}
+}
+
+func (st *appState) reconcileWarning() string {
+	if st == nil {
+		return ""
+	}
+	st.mu.RLock()
+	defer st.mu.RUnlock()
+	return st.lastReconcileErr
 }
 
 func (st *appState) close() {

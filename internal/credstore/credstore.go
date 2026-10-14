@@ -50,24 +50,71 @@ func NewFileStore(path string) *FileStore {
 	if cleaned == "" {
 		cleaned = DefaultVaultPath()
 	}
-	return &FileStore{path: filepath.Clean(cleaned)}
+	if cleaned != "" {
+		cleaned = filepath.Clean(cleaned)
+	}
+	return &FileStore{path: cleaned}
+}
+
+func ResolveDataDir(primary string, configDirFn, homeDirFn func() (string, error)) (string, error) {
+	var raw string
+	if strings.TrimSpace(primary) != "" {
+		raw = strings.TrimSpace(primary)
+	} else {
+		if configDirFn == nil {
+			configDirFn = os.UserConfigDir
+		}
+		if homeDirFn == nil {
+			homeDirFn = os.UserHomeDir
+		}
+		if cfgDir, err := configDirFn(); err == nil && strings.TrimSpace(cfgDir) != "" {
+			raw = filepath.Join(strings.TrimSpace(cfgDir), "rainforest")
+		} else if homeDir, hErr := homeDirFn(); hErr == nil && strings.TrimSpace(homeDir) != "" {
+			raw = filepath.Join(strings.TrimSpace(homeDir), ".config", "rainforest")
+		}
+	}
+	if raw == "" {
+		return "", errors.New("cannot resolve persistent user data directory: neither user config directory nor home directory is available")
+	}
+	cleaned := filepath.Clean(raw)
+	if !filepath.IsAbs(cleaned) {
+		return "", fmt.Errorf("refusing non-absolute user data directory %q", cleaned)
+	}
+	tmpClean := filepath.Clean(os.TempDir())
+	if tmpClean != "" && tmpClean != "." && tmpClean != string(filepath.Separator) {
+		rel, rErr := filepath.Rel(tmpClean, cleaned)
+		if rErr == nil && (rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))) {
+			return "", fmt.Errorf("refusing temporary directory %q for persistent credentials and state", cleaned)
+		}
+	}
+	if err := os.MkdirAll(cleaned, 0o700); err != nil {
+		return "", fmt.Errorf("create persistent user data directory: %w", err)
+	}
+	if err := enforceDirPermissions(cleaned); err != nil {
+		return "", fmt.Errorf("secure persistent user data directory: %w", err)
+	}
+	return cleaned, nil
 }
 
 func DefaultDataDir() string {
-	dir, err := os.UserConfigDir()
-	if err != nil || strings.TrimSpace(dir) == "" {
-		home, hErr := os.UserHomeDir()
-		if hErr == nil && strings.TrimSpace(home) != "" {
-			dir = filepath.Join(home, ".config")
-		} else {
-			dir = "."
-		}
+	if dir, err := ResolveDataDir("", os.UserConfigDir, os.UserHomeDir); err == nil {
+		return dir
 	}
-	return filepath.Join(dir, "rainforest")
+	if dir, err := os.UserConfigDir(); err == nil && strings.TrimSpace(dir) != "" {
+		return filepath.Join(strings.TrimSpace(dir), "rainforest")
+	}
+	if home, err := os.UserHomeDir(); err == nil && strings.TrimSpace(home) != "" {
+		return filepath.Join(strings.TrimSpace(home), ".config", "rainforest")
+	}
+	return ""
 }
 
 func DefaultVaultPath() string {
-	return filepath.Join(DefaultDataDir(), "credentials.json")
+	dir := DefaultDataDir()
+	if dir == "" {
+		return ""
+	}
+	return filepath.Join(dir, "credentials.json")
 }
 
 func (s *FileStore) Path() string {
@@ -78,6 +125,9 @@ func (s *FileStore) Load() (Credentials, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.path == "" {
+		return Credentials{}, errors.New("credential vault path is not configured: persistent user data directory unavailable")
+	}
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -110,6 +160,9 @@ func (s *FileStore) Save(creds Credentials) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.path == "" {
+		return errors.New("credential vault path is not configured: persistent user data directory unavailable")
+	}
 	dir := filepath.Dir(s.path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("create credential directory: %w", err)

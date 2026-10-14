@@ -61,6 +61,7 @@ type StartUploadInput struct {
 type TransferListDTO struct {
 	Active  []TransferDTO `json:"active"`
 	History []TransferDTO `json:"history"`
+	Warning string        `json:"warning,omitempty"`
 }
 
 func (t *Transfers) PlanUpload(ctx context.Context, in UploadPlanInput) (*UploadPlanDTO, error) {
@@ -124,6 +125,7 @@ func (t *Transfers) List(ctx context.Context) (*TransferListDTO, error) {
 	return &TransferListDTO{
 		Active:  active,
 		History: history,
+		Warning: t.state.reconcileWarning(),
 	}, nil
 }
 

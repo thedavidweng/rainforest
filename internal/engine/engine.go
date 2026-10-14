@@ -243,6 +243,7 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 		return err
 	}
 	client := e.Client()
+	var firstRemoteErr error
 
 	for ti := range transfers {
 		tr := &transfers[ti]
@@ -260,7 +261,11 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 			}
 			if tr.Kind == store.TransferKindUpload || tr.Kind == store.TransferKindBackup {
 				if client != nil && (it.Status == store.ItemStatusRunning || it.Status == store.ItemStatusUnconfirmed) {
-					if node, fErr := findRemoteNodeForItem(ctx, client, *it, tr.DestNodeID); fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
+					node, fErr := findRemoteNodeForItem(ctx, client, *it, tr.DestNodeID)
+					if fErr != nil && firstRemoteErr == nil {
+						firstRemoteErr = fErr
+					}
+					if fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
 						it.Status = store.ItemStatusConfirmed
 						it.RemoteNodeID = node.ID
 						it.BytesDone = it.Size
@@ -295,11 +300,12 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 		}
 
 		updatedTr, rErr := recomputeAndPersistTransfer(ctx, st, tr.ID, "")
-		if rErr == nil {
-			e.emitTransferStage(updatedTr)
+		if rErr != nil {
+			return rErr
 		}
+		e.emitTransferStage(updatedTr)
 	}
-	return nil
+	return firstRemoteErr
 }
 
 func findRemoteNodeForItem(ctx context.Context, client *aphotos.Client, item store.TransferItem, parentNodeID string) (*aphotos.Node, error) {
@@ -312,45 +318,86 @@ func findRemoteNodeForItem(ctx context.Context, client *aphotos.Client, item sto
 			md5Hex = computed
 		}
 	}
+	if md5Hex == "" {
+		return nil, nil
+	}
 
-	if md5Hex != "" {
-		fb := aphotos.NewFilter().Kind(aphotos.NodeKindFile).Status(aphotos.NodeStatusAvailable).MD5(md5Hex)
-		page, err := client.QueryNodes(ctx, aphotos.NodeQueryOptions{
-			Filter: fb,
-			Limit:  5,
-		})
-		if err != nil {
-			return nil, err
+	parentID := strings.TrimSpace(parentNodeID)
+	name := strings.TrimSpace(item.Name)
+
+	matchesCandidate := func(cand *aphotos.Node) bool {
+		if cand == nil || strings.TrimSpace(cand.ID) == "" || cand.Status == aphotos.NodeStatusTrash {
+			return false
 		}
-		if len(page.Items) > 0 && strings.TrimSpace(page.Items[0].ID) != "" {
-			n := page.Items[0]
-			return &n, nil
+		if cand.ContentProperties == nil {
+			return false
+		}
+		candMD5 := strings.ToLower(strings.TrimSpace(cand.ContentProperties.MD5))
+		if candMD5 == "" || !strings.EqualFold(candMD5, md5Hex) {
+			return false
+		}
+		if item.Size > 0 && cand.ContentProperties.Size > 0 && cand.ContentProperties.Size != item.Size {
+			return false
+		}
+		if parentID != "" && len(cand.Parents) > 0 {
+			hasParent := false
+			for _, p := range cand.Parents {
+				if p == parentID {
+					hasParent = true
+					break
+				}
+			}
+			if !hasParent {
+				return false
+			}
+		}
+		return true
+	}
+
+	fb := aphotos.NewFilter().Kind(aphotos.NodeKindFile).Status(aphotos.NodeStatusAvailable).MD5(md5Hex)
+	if parentID != "" {
+		fb = fb.ParentID(parentID)
+	}
+	page, err := client.QueryNodes(ctx, aphotos.NodeQueryOptions{
+		Filter: fb,
+		Limit:  10,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for i := range page.Items {
+		cand := &page.Items[i]
+		if matchesCandidate(cand) && (name == "" || cand.Name == name) {
+			c := *cand
+			return &c, nil
+		}
+	}
+	for i := range page.Items {
+		cand := &page.Items[i]
+		if matchesCandidate(cand) {
+			c := *cand
+			return &c, nil
 		}
 	}
 
-	name := strings.TrimSpace(item.Name)
 	if name != "" {
-		fb := aphotos.NewFilter().Kind(aphotos.NodeKindFile).Status(aphotos.NodeStatusAvailable).NameExact(name)
-		if strings.TrimSpace(parentNodeID) != "" {
-			fb = fb.ParentID(strings.TrimSpace(parentNodeID))
+		nameFB := aphotos.NewFilter().Kind(aphotos.NodeKindFile).Status(aphotos.NodeStatusAvailable).NameExact(name)
+		if parentID != "" {
+			nameFB = nameFB.ParentID(parentID)
 		}
-		page, err := client.QueryNodes(ctx, aphotos.NodeQueryOptions{
-			Filter: fb,
-			Limit:  5,
+		namePage, nErr := client.QueryNodes(ctx, aphotos.NodeQueryOptions{
+			Filter: nameFB,
+			Limit:  10,
 		})
-		if err != nil {
-			return nil, err
+		if nErr != nil {
+			return nil, nErr
 		}
-		for i := range page.Items {
-			cand := &page.Items[i]
-			if strings.TrimSpace(cand.ID) == "" {
-				continue
+		for i := range namePage.Items {
+			cand := &namePage.Items[i]
+			if matchesCandidate(cand) {
+				c := *cand
+				return &c, nil
 			}
-			if item.Size > 0 && cand.ContentProperties.Size > 0 && cand.ContentProperties.Size != item.Size {
-				continue
-			}
-			c := *cand
-			return &c, nil
 		}
 	}
 

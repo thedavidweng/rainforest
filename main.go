@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/thedavidweng/rainforest/internal/autostart"
+	"github.com/thedavidweng/rainforest/internal/credstore"
 	"github.com/thedavidweng/rainforest/internal/gui"
 )
 
@@ -58,13 +59,18 @@ type desktopShell struct {
 	confirming atomic.Bool
 }
 
-func setupDesktop(svc *gui.Services) {
-	userDataDir, err := mygo.App.Path(mygo.PathUserData)
-	if err != nil || strings.TrimSpace(userDataDir) == "" {
-		userDataDir = filepath.Join(os.TempDir(), "rainforest")
-	}
-	_ = os.MkdirAll(userDataDir, 0o700)
+func resolveDesktopDataDir(primary string) (string, error) {
+	return credstore.ResolveDataDir(primary, os.UserConfigDir, os.UserHomeDir)
+}
 
+func setupDesktop(svc *gui.Services) {
+	primaryDir, _ := mygo.App.Path(mygo.PathUserData)
+	userDataDir, err := resolveDesktopDataDir(primaryDir)
+	if err != nil {
+		mygo.Dialog.Error("Rainforest Storage Error", err.Error())
+		mygo.App.Exit(1)
+		return
+	}
 	shell := &desktopShell{svc: svc}
 	autostartMgr := autostart.NewDefaultManager()
 	svc.SetFilePicker(newFilePicker())

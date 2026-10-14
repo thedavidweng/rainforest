@@ -15,7 +15,7 @@ export default {
     tagPrefix: "v",
     publicKey:
       process.env.MYGO_UPDATER_PUBLIC_KEY ||
-      "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
+      "Ykj6GObFAitTNBjip51D96NsOrUx1aUbP9j5yy+cJ8s=",
     changelog: "CHANGELOG.md",
   },
   macos: {
