@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	github.com/egoist/mygo v0.4.8
 	github.com/google/uuid v1.6.0
-	github.com/thedavidweng/amazon-photos v0.1.1
+	github.com/thedavidweng/amazon-photos v0.1.2
 	modernc.org/sqlite v1.60.1
 )
 
