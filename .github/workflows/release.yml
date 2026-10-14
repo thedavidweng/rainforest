@@ -129,7 +129,7 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           if [[ "$ARCHIVE_NAME" == *.zip ]]; then
-            (cd dist && zip -r "../release-assets/$ARCHIVE_NAME" .)
+            powershell -NoProfile -Command "Compress-Archive -Path 'dist/*' -DestinationPath 'release-assets/$ARCHIVE_NAME'"
           else
             tar -czf "release-assets/$ARCHIVE_NAME" -C dist .
           fi
