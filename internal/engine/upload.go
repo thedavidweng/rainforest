@@ -396,7 +396,7 @@ func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, c
 				if wErr := ctrl.waitIfPaused(ctx); wErr != nil {
 					return
 				}
-				e.processSingleUploadItem(ctx, st, client, destination, tr, items[idx], checkRemoteBeforePost)
+				e.processSingleUploadItem(ctx, st, client, destination, tr, items[idx], checkRemoteBeforePost, nil)
 			}
 		}()
 	}
@@ -419,6 +419,7 @@ func (e *Engine) processSingleUploadItem(
 	tr store.Transfer,
 	item store.TransferItem,
 	checkRemoteBeforePost bool,
+	tracked *store.TrackedFile,
 ) {
 	if client == nil || client != e.Client() {
 		item.Status = store.ItemStatusFailed
@@ -429,7 +430,7 @@ func (e *Engine) processSingleUploadItem(
 	}
 
 	if destination.Kind == string(aphotos.NodeKindVisualCollection) && item.RemoteNodeID != "" {
-		e.associateAlbum(ctx, st, client, destination, &item)
+		e.associateAlbum(ctx, st, client, destination, &item, tracked)
 		return
 	}
 
@@ -472,7 +473,7 @@ func (e *Engine) processSingleUploadItem(
 			item.ErrorMessage = ""
 			item.UpdatedAt = time.Now().UTC()
 			if destination.Kind == string(aphotos.NodeKindVisualCollection) {
-				e.associateAlbum(ctx, st, client, destination, &item)
+				e.associateAlbum(ctx, st, client, destination, &item, tracked)
 			}
 			_ = st.UpdateTransferItem(context.Background(), item)
 			if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {
@@ -501,7 +502,7 @@ func (e *Engine) processSingleUploadItem(
 		item.RemoteNodeID = res.NodeID
 		item.MD5 = res.MD5
 		item.BytesDone = item.Size
-		e.associateAlbum(ctx, st, client, destination, &item)
+		e.associateAlbum(ctx, st, client, destination, &item, tracked)
 		return
 	}
 
@@ -553,7 +554,7 @@ func (e *Engine) processSingleUploadItem(
 	}
 
 	if destination.Kind == string(aphotos.NodeKindVisualCollection) && item.RemoteNodeID != "" && (item.Status == store.ItemStatusConfirmed || item.Status == store.ItemStatusSkipped) {
-		e.associateAlbum(ctx, st, client, destination, &item)
+		e.associateAlbum(ctx, st, client, destination, &item, tracked)
 	}
 	item.UpdatedAt = time.Now().UTC()
 	_ = st.UpdateTransferItem(context.Background(), item)

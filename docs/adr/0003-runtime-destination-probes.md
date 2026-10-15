@@ -12,7 +12,7 @@ Regional protocol evidence cannot establish a current account's authorization to
 
 Use the same read-only destination probe in every supported marketplace. Preserve explicit IDs, require an exact AVAILABLE FOLDER or VISUAL_COLLECTION, and probe again before each execution batch. Keep protocol evidence separate from pending/readable/failed access status.
 
-Upload album media to the account root, persist its Node ID and album_pending state before adding membership, and retry membership using that ID. Bind transfer recovery and backup baselines to region, resolved account root, and target ID. Changing a backup target or source clears only its local baseline.
+Upload album media to the account root, persist its Node ID and album_pending state before adding membership (atomically with the tracked-file checkpoint for backups), and retry membership using that ID. Bind transfer recovery and backup baselines to region, resolved account root, and target ID. Changing a backup target or source clears only its local baseline.
 
 ## Consequences
 

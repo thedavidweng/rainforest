@@ -590,14 +590,6 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 		return candidates[i].relPath < candidates[j].relPath
 	})
 
-	if client == nil {
-		_ = st.SetBackupRuleStatus(ctx, rule.ID, store.BackupStatusError, ErrOffline.Error(), &now)
-		if updated, gErr := st.GetBackupRule(ctx, rule.ID); gErr == nil {
-			e.emitBackupStatus(updated)
-		}
-		return nil, ErrOffline
-	}
-
 	trID := uuid.NewString()
 	var totalBytes int64
 	items := make([]store.TransferItem, 0, len(candidates))
@@ -776,7 +768,8 @@ func (e *Engine) processSingleBackupItem(
 			return ""
 		}
 	}
-	e.processSingleUploadItem(ctx, st, client, destination, tr, item, c.reconcileOnly)
+	tracked := store.TrackedFile{BackupRuleID: rule.ID, RelPath: c.relPath, AbsPath: c.absPath, Size: c.size, MtimeNs: c.mtimeNs}
+	e.processSingleUploadItem(ctx, st, client, destination, tr, item, c.reconcileOnly, &tracked)
 	updated, err := st.GetTransferItem(bgCtx, item.ID)
 	if err != nil {
 		return formatErrMsg(err)

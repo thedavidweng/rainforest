@@ -1113,6 +1113,7 @@ func TestBackupAlbumRecoveryWithRemovedSource(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "photo.png")
 	_, hash := writePNGFile(t, path, 4, 4)
 	var uploads, patches atomic.Int32
+	var st *store.Store
 	var fail atomic.Bool
 	fail.Store(true)
 	client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -1132,6 +1133,15 @@ func TestBackupAlbumRecoveryWithRemovedSource(t *testing.T) {
 			_, _ = io.Copy(io.Discard, r.Body)
 			return jsonResponse(201, map[string]any{"id": "media", "kind": "FILE", "contentProperties": map[string]any{"md5": hash}}), nil
 		case r.Method == "PATCH":
+			rules, err := st.ListBackupRules(ctx)
+			if err != nil || len(rules) != 1 {
+				t.Errorf("rules at checkpoint: %v %v", rules, err)
+			} else {
+				checkpoint, err := st.GetTrackedFile(ctx, rules[0].ID, "photo.png")
+				if err != nil || checkpoint.RemoteNodeID != "media" || checkpoint.Status != store.ItemStatusAlbumPending {
+					t.Errorf("backup media checkpoint must precede membership write: %+v %v", checkpoint, err)
+				}
+			}
 			if r.URL.Path != "/drive/v1/nodes/album/children" {
 				t.Errorf("wrong album endpoint: %s", r.URL.Path)
 			}

@@ -124,11 +124,11 @@ func (e *Engine) bindDestination(ctx context.Context, key string, d DestinationC
 	return e.Store().BindDestination(ctx, key, string(d.Region)+":"+d.rootID+":"+d.DestinationNodeID)
 }
 
-func (e *Engine) associateAlbum(ctx context.Context, st *store.Store, client *aphotos.Client, d DestinationCapability, item *store.TransferItem) {
+func (e *Engine) associateAlbum(ctx context.Context, st *store.Store, client *aphotos.Client, d DestinationCapability, item *store.TransferItem, tracked *store.TrackedFile) {
 	item.Status = store.ItemStatusAlbumPending
 	item.ErrorMessage = "Media uploaded; album membership pending. Retry only associates the saved media Node ID."
 	item.UpdatedAt = time.Now().UTC()
-	if err := st.UpdateTransferItem(context.Background(), *item); err != nil {
+	if err := st.SaveAlbumCheckpoint(context.Background(), *item, tracked); err != nil {
 		item.ErrorMessage = formatErrMsg(err)
 		return
 	}

@@ -597,10 +597,14 @@ func (s *Store) DeleteBackupRule(ctx context.Context, id string) error {
 }
 
 func (s *Store) UpsertTrackedFile(ctx context.Context, tf TrackedFile) error {
+	return upsertTrackedFile(ctx, s.db, tf)
+}
+
+func upsertTrackedFile(ctx context.Context, db sqlExecutor, tf TrackedFile) error {
 	if tf.LastSyncedAt.IsZero() {
 		tf.LastSyncedAt = time.Now().UTC()
 	}
-	_, err := s.db.ExecContext(ctx, `
+	_, err := db.ExecContext(ctx, `
 		INSERT INTO tracked_files (
 			backup_rule_id, rel_path, abs_path, size, mtime_ns,
 			md5, remote_node_id, status, last_synced_at
@@ -948,10 +952,14 @@ func (s *Store) ListTransferItems(ctx context.Context, transferID string) ([]Tra
 }
 
 func (s *Store) UpdateTransferItem(ctx context.Context, item TransferItem) error {
+	return updateTransferItem(ctx, s.db, item)
+}
+
+func updateTransferItem(ctx context.Context, db sqlExecutor, item TransferItem) error {
 	if item.UpdatedAt.IsZero() {
 		item.UpdatedAt = time.Now().UTC()
 	}
-	res, err := s.db.ExecContext(ctx, `
+	res, err := db.ExecContext(ctx, `
 		UPDATE transfer_items SET
 			local_path = ?,
 			name = ?,

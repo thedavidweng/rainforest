@@ -31,7 +31,7 @@ Reference for Rainforest's backup rule states, transfer job stages, and individu
 |---|---|
 | `queued` | Waiting in the transfer queue. |
 | `running` | Currently streaming upload or download bytes. |
-| `confirmed` | Upload returned HTTP `200`/`201` with a verified remote `nodeId` (and stable local `size`/`mtime_ns`), or reconciled by matching remote MD5; or download passed size and MD5 verification. |
+| `confirmed` | Upload returned HTTP `200`/`201` with a verified remote `nodeId` (and stable local `size`/`mtime_ns`), or reconciled by matching remote MD5; album media additionally requires a successful membership response and retains its committed media ID even if the source changes; or download passed size and MD5 verification. |
 | `skipped` | Upload `--on-conflict skip` verified an existing remote node with matching MD5, or download `--on-conflict skip` preserved an existing local file. |
 | `album_pending` | Media Node ID saved; album membership failed or is pending. Retry associates only, without uploading media again. Counted in `itemsUnconfirmed` for queue totals. |
 | `unconfirmed` | Commit state could not be proven (interrupted mid-flight, missing remote node ID, conflict candidate lacking MD5, or local file mutated during upload). |
