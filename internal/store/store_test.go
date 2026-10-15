@@ -2,12 +2,14 @@ package store_test
 
 import (
 	"context"
+	"database/sql"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 	"github.com/thedavidweng/rainforest/internal/store"
+	_ "modernc.org/sqlite"
 )
 
 func TestStoreSettingsRoundTrip(t *testing.T) {
@@ -237,5 +239,81 @@ func TestStoreTransfersAndItemsLifecycle(t *testing.T) {
 	}
 	if len(confirmed) != 1 || confirmed[0].RemoteNodeID != "remote-node-1" {
 		t.Fatalf("unexpected confirmed items: %+v", confirmed)
+	}
+}
+
+func TestStoreKeepFolderStructureAndRemoteDirRoundTrip(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	st, err := store.Open(ctx, filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer func() { _ = st.Close() }()
+
+	rule, err := st.CreateBackupRule(ctx, store.BackupRule{ID: "r1", LocalPath: "/src", KeepFolderStructure: true})
+	if err != nil || !rule.KeepFolderStructure {
+		t.Fatalf("CreateBackupRule: %+v, %v", rule, err)
+	}
+	if err := st.UpsertTrackedFile(ctx, store.TrackedFile{BackupRuleID: "r1", RelPath: "a.jpg", AbsPath: "/src/a.jpg", Status: store.ItemStatusConfirmed, LastSyncedAt: time.Now().UTC()}); err != nil {
+		t.Fatalf("track: %v", err)
+	}
+	rule.KeepFolderStructure = false
+	updated, err := st.UpdateBackupRule(ctx, rule)
+	if err != nil || updated.KeepFolderStructure {
+		t.Fatalf("UpdateBackupRule: %+v, %v", updated, err)
+	}
+	files, _ := st.ListTrackedFiles(ctx, "r1")
+	if len(files) != 0 {
+		t.Errorf("changing KeepFolderStructure must reset tracked files, got %d", len(files))
+	}
+
+	now := time.Now().UTC()
+	if _, err := st.CreateTransfer(ctx, store.Transfer{ID: "t1", Kind: store.TransferKindUpload, Stage: store.StageQueued}, []store.TransferItem{
+		{ID: "i1", Name: "a.jpg", RemoteDir: "Trips/sub", Status: store.ItemStatusQueued, UpdatedAt: now},
+	}); err != nil {
+		t.Fatalf("CreateTransfer: %v", err)
+	}
+	it, err := st.GetTransferItem(ctx, "i1")
+	if err != nil || it.RemoteDir != "Trips/sub" {
+		t.Fatalf("GetTransferItem: %+v, %v", it, err)
+	}
+	it.Status = store.ItemStatusConfirmed
+	if err := st.UpdateTransferItem(ctx, it); err != nil {
+		t.Fatal(err)
+	}
+	if again, _ := st.GetTransferItem(ctx, "i1"); again.RemoteDir != "Trips/sub" {
+		t.Errorf("RemoteDir lost on update: %+v", again)
+	}
+}
+
+func TestStoreOpensDatabaseCreatedBeforeFolderColumns(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	dbPath := filepath.Join(t.TempDir(), "state.db")
+	raw, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []string{
+		`CREATE TABLE backup_rules (id TEXT PRIMARY KEY, local_path TEXT NOT NULL, include_videos INTEGER NOT NULL DEFAULT 1, schedule_mode TEXT NOT NULL DEFAULT 'immediate', interval_minutes INTEGER NOT NULL DEFAULT 15, conflict_policy TEXT NOT NULL DEFAULT 'skip', destination_node_id TEXT NOT NULL DEFAULT '', paused INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'active', last_scan_at TEXT NOT NULL DEFAULT '', last_error TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+		`INSERT INTO backup_rules (id, local_path, created_at, updated_at) VALUES ('r', '/x', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`,
+		`CREATE TABLE transfers (id TEXT PRIMARY KEY, kind TEXT NOT NULL, stage TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+		`CREATE TABLE transfer_items (id TEXT PRIMARY KEY, transfer_id TEXT NOT NULL, name TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+	} {
+		if _, err := raw.Exec(q); err != nil {
+			t.Fatalf("%s: %v", q, err)
+		}
+	}
+	_ = raw.Close()
+
+	st, err := store.Open(ctx, dbPath)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer func() { _ = st.Close() }()
+	r, err := st.GetBackupRule(ctx, "r")
+	if err != nil || !r.KeepFolderStructure {
+		t.Errorf("GetBackupRule: %+v, %v", r, err)
 	}
 }

@@ -60,10 +60,10 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.tag_name || github.ref }}
 
-      - name: Install Go and Bun via mise
+      - name: Install Go via mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
-          install_args: go bun
+          install_args: go
           cache: false
 
       - name: Verify release tag matches mygo.config.ts version
@@ -72,23 +72,15 @@ jobs:
           TAG: ${{ inputs.tag_name || github.ref_name }}
         run: |
           set -euo pipefail
-          cfg_ver=$(bun -e 'import cfg from "./mygo.config.ts"; console.log(cfg.version)')
+          cfg_ver=$(grep -E '^[[:space:]]*version:' mygo.config.ts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
           if [[ "$TAG" == v* ]] && [[ "$TAG" != "v${cfg_ver}" ]]; then
             echo "::error title=Version mismatch::Tag $TAG does not match mygo.config.ts version v${cfg_ver}"
             exit 1
           fi
 
-      - name: Install frontend dependencies
-        run: bun install --cwd frontend --frozen-lockfile
-
       - name: Run pre-release tests
         run: |
           go test -race ./...
-          bun run --cwd frontend fmt-check
-          bun run --cwd frontend lint
-          bun run --cwd frontend typecheck
-          bun --cwd frontend test
-          bun run --cwd frontend build
 
       - name: Build MyGo desktop bundle (${{ matrix.target }})
         shell: bash
@@ -113,7 +105,7 @@ jobs:
           else
             FLAGS+=(-skip-dmg -skip-notarize)
           fi
-          bun frontend/node_modules/mygo-cli/bin/mygo.js build "${FLAGS[@]}"
+          go tool mygo build "${FLAGS[@]}"
           if [[ -n "${MYGO_UPDATER_PRIVATE_KEY:-}" ]]; then
             manifest="dist/${DIR_NAME}/update-${DIR_NAME}.json"
             test -s "$manifest"

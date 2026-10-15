@@ -8,16 +8,15 @@ Thank you for your interest in contributing to **Rainforest**!
 git clone https://github.com/thedavidweng/rainforest.git
 cd rainforest
 mise install
-bun install --cwd frontend
 mise run check
 ```
 
-Requires Go `1.27+` and Bun `1.4+` (automatically managed when using [mise](https://mise.jdx.dev/)).
+Requires Go `1.27+` (automatically managed when using [mise](https://mise.jdx.dev/)). The MyGo CLI is pinned as a Go tool: run it as `go tool mygo`. There is no Node or bun toolchain.
 
 ## Development Workflow
 
 ```bash
-# Run all read-only quality gates: fmt-check, mod-tidy-check, vet, build, test, test-race, lint, conventions, bindings-check, frontend-check
+# Run all read-only quality gates: fmt-check, mod-tidy-check, vet, build, test, test-race, lint, conventions, i18n-check
 mise run check
 
 # Individual tasks
@@ -30,22 +29,28 @@ mise run test            # Run Go unit and contract tests
 mise run test-race       # Run Go tests with race detector
 mise run lint            # Run golangci-lint
 mise run conventions     # Check agent-file rules and <= 5% Go comment budget
-mise run bindings-check  # Verify frontend/src/mygo.ts matches MYGO_GENERATE output
-mise run frontend-check  # Run prettier --check, eslint, tsc, bun test, and vite build
+mise run i18n-check      # Verify locales/catalog_gen.go matches `go tool mygo generate`
+mise run icons           # Sync internal/view/icons from icons.txt
 ```
 
-When modifying any method signature or DTO on `internal/gui` services (`Auth`, `Transfers`, `Backups`, `Downloads`, `Settings`), regenerate the TypeScript bindings and update the frontend adapters:
+When modifying any method signature or DTO on `internal/gui` services (`Auth`, `Transfers`, `Backups`, `Downloads`, `Settings`), update the matching pages in `internal/view` and their tests. Views call the services directly, so there are no bindings to regenerate.
+
+When editing `locales/*.json` (keep `en` and `zh-Hans` in sync), regenerate the typed accessors:
 
 ```bash
-MYGO_GENERATE=frontend/src/mygo.ts go run .
+go tool mygo generate
 ```
 
-Then update `frontend/src/mygo-backend.ts` and `frontend/src/testing/memory-backend.ts` to match.
+View tests run headless with `ui.NewTester` against real `gui.Services` backed by temporary SQLite databases and stub HTTP transports (see `internal/view/harness_test.go`).
+
+## Icons
+
+Icons are [Phosphor](https://phosphoricons.com) SVGs in `internal/view/icons/`, pinned by `internal/view/icons/icons.txt` (first line is the `@phosphor-icons/core` version, then one `weight name` line per icon, such as `regular folder` or `fill house`; non-regular weights are saved as `<name>-<weight>.svg`). To add one, append its line to `icons.txt`, run `mise run icons`, and commit the downloaded SVG. Never hand-edit the SVGs; `TestIconsMatchManifest` fails if the manifest and files differ.
 
 ## Project Structure
 
 ```text
-main.go                         Thin MyGo v0.4.8 desktop shell & entrypoint
+main.go                         Thin MyGo desktop shell & entrypoint (window, tray, notifications, file pickers)
 tray_icon.go                    Embedded 32x32 PNG tray icon
 mygo.config.ts                  MyGo CLI configuration
 internal/
@@ -53,13 +58,9 @@ internal/
   store/                        SQLite persistence (settings, backup_rules, tracked_files, transfers)
   engine/                       Upload planner, transfer queue, one-way backup scanner, reconciliation
   gui/                          Framework-neutral GUI facade, DTOs, error sanitizer, tray/quit state
-frontend/
-  src/
-    backend.ts                  Frontend Backend interface & BackendError contract
-    mygo-backend.ts             Production MyGo IPC adapter
-    mygo.ts                     Generated MyGo TypeScript bindings (do not hand-edit)
-    testing/memory-backend.ts   In-memory Backend implementation for Happy-DOM tests
-    views/                      TransfersView, BackupsView, DownloadsView, SettingsView
+  view/                         Native MyGo UI (mygo/ui): Welcome, Upload, Activity, Backup, Restore, Settings
+    icons/                      Embedded Phosphor SVGs (MIT)
+locales/                        en / zh-Hans ICU catalogs and generated accessors
 docs/
   tutorials/                    Learning-oriented step-by-step tutorials
   how-to/                       Task-oriented operational guides
@@ -72,16 +73,16 @@ docs/
 ## Engineering Rules
 
 1. **Strict Product Scope**: Rainforest is a desktop upload, one-way folder backup, transfer queue, and lightweight recovery download client. Do not add web-gallery pages (no cloud photo wall, timeline browser, AI search, album/folder CRUD manager, or trash UI).
-2. **Framework Isolation**: `internal/credstore`, `internal/store`, `internal/engine`, and `internal/gui` must **never** import `github.com/egoist/mygo`. MyGo imports belong only in the root desktop shell (`main.go`).
+2. **Framework Isolation**: `internal/credstore`, `internal/store`, `internal/engine`, `internal/core`, and `internal/gui` must **never** import MyGo. `internal/view` imports only `github.com/egoist/mygo/ui`; the root `github.com/egoist/mygo` package belongs only in the root desktop shell (`main.go`).
 3. **One-Way Backup Safety**: Local file deletion, move, rename, or offline external drives (`source_unavailable`) must never trigger remote cloud deletion (`MoveToTrash`). Uncertain uploads must be marked `unconfirmed` and reconciled before retry.
-4. **Test-First & Offline Determinism**: Write Go tests against injected `http.RoundTripper` mocks and SQLite temp DBs, and frontend tests against `MemoryBackend`. Never require live Amazon credentials in CI or commit real session cookies.
+4. **Test-First & Offline Determinism**: Write Go tests against injected `http.RoundTripper` mocks and SQLite temp DBs, and view tests against `ui.NewTester`. Never require live Amazon credentials in CI or commit real session cookies.
 5. **Comment Budget & Single Agent File**: Keep code self-explanatory (`<= 5%` comment lines in non-test Go files). `AGENTS.md` is the only allowed agent instruction file.
 6. **Secret Redaction**: All user-visible error messages and diagnostic outputs must pass through `aphotos.Redact`.
 
 ## Pull Requests
 
 1. Fork the repository and create a topic branch.
-2. Add or update unit/contract tests in Go (`internal/...`, `main_test.go`) and TypeScript (`frontend/src/**/*.test.tsx`).
+2. Add or update unit/contract tests in Go (`internal/...`, `main_test.go`) and views (`internal/view/*_test.go`).
 3. Ensure `mise run check` passes with zero warnings and `git diff --exit-code` is clean.
 4. Open a pull request referencing the relevant issue.
 

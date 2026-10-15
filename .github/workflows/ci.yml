@@ -26,12 +26,10 @@ jobs:
       - name: Install toolchain via mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
-          install_args: go gofumpt golangci-lint bun
-      - name: Install frontend dependencies
-        run: bun install --cwd frontend --frozen-lockfile
+          install_args: go gofumpt golangci-lint
       - name: Run quality gates
         run: mise run check
-      - name: Verify no uncommitted changes or bindings drift
+      - name: Verify no uncommitted changes or generated drift
         run: git diff --exit-code
       - name: Build and smoke test rainforest binary
         run: |
@@ -63,25 +61,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Go and Bun via mise
+      - name: Install Go via mise
         uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
-          install_args: go bun
-      - name: Install frontend dependencies
-        run: bun install --cwd frontend --frozen-lockfile
-      - name: Run frontend fmt-check, lint, typecheck, tests, and production bundle build
-        run: |
-          bun run --cwd frontend fmt-check
-          bun run --cwd frontend lint
-          bun run --cwd frontend typecheck
-          bun --cwd frontend test
-          bun run --cwd frontend build
+          install_args: go
       - name: Run Go tests and race detector
         run: |
           go test ./...
           go test -race ./...
       - name: Package desktop build via MyGo (dry run)
-        run: bun frontend/node_modules/mygo-cli/bin/mygo.js build -platform "${{ matrix.platform }}" -skip-dmg -skip-notarize -o dist
+        run: go tool mygo build -platform "${{ matrix.platform }}" -skip-dmg -skip-notarize -o dist
       - name: Verify packaged artifacts and SHA-256
         env:
           ARCHIVE_NAME: ${{ matrix.archive_name }}

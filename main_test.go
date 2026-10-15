@@ -24,7 +24,7 @@ func TestTrayIconValidPNG(t *testing.T) {
 }
 
 func TestNativeFilePickerEnvOverrides(t *testing.T) {
-	picker := newFilePicker()
+	picker := &nativeFilePicker{}
 	ctx := context.Background()
 
 	tmpDir := t.TempDir()
@@ -161,7 +161,7 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 		"mise run check",
 		"AGPL-3.0-only",
 		"internal/gui",
-		"MYGO_GENERATE",
+		"go tool mygo",
 	} {
 		if !strings.Contains(contributing, snippet) {
 			t.Errorf("CONTRIBUTING.md missing required snippet %q", snippet)
@@ -188,7 +188,6 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 		"macos-latest",
 		"windows-latest",
 		"go test ./...",
-		"bun --cwd frontend test",
 	} {
 		if !strings.Contains(ci, snippet) {
 			t.Errorf(".github/workflows/ci.yml missing required snippet %q", snippet)
@@ -198,7 +197,7 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 	release := contents[".github/workflows/release.yml"]
 	for _, snippet := range []string{
 		"v*",
-		"bun frontend/node_modules/mygo-cli/bin/mygo.js build",
+		"go tool mygo build",
 		"sha256",
 		"darwin",
 		"linux",

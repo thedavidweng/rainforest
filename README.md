@@ -1,4 +1,8 @@
-# Rainforest
+<p align="center">
+  <img src="docs/assets/icon-256.png" width="128" height="128" alt="Rainforest app icon">
+</p>
+
+<h1 align="center">Rainforest</h1>
 
 <p align="center">
   <a href="https://github.com/thedavidweng/rainforest/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/thedavidweng/rainforest/ci.yml?branch=main&style=flat-square&label=ci" alt="CI"></a>
@@ -11,15 +15,15 @@
 
 **Rainforest** is a lightweight, cross-platform desktop client for **one-time upload, one-way automatic folder backup, transfer queue monitoring, and verified recovery download** for Amazon Photos—**NOT** a web gallery clone.
 
-Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (`CGO_ENABLED=0`), Rainforest layers a React + TypeScript interface over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` using native HttpOnly Cookie capture for web sign-in ([MyGo #343](https://github.com/egoist/mygo/issues/343)), shared English/Simplified Chinese i18n catalogs, and local upload previews ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
+Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (`CGO_ENABLED=0`), Rainforest layers a native Go interface (`internal/view`, built on `mygo/ui`) over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` using native HttpOnly Cookie capture for web sign-in ([MyGo #343](https://github.com/egoist/mygo/issues/343)), shared English/Simplified Chinese i18n catalogs, and local upload previews ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
 
 ## Sign in
 
-Open **Settings**, choose your Amazon marketplace, and click **Sign in to Amazon**.
+On first launch, choose your Amazon marketplace on the Welcome screen and click **Sign in with Amazon**.
 Complete Amazon's password/MFA steps in the separate Amazon window; Rainforest
 captures the session natively and checks read access before saving it. Cancel or
 failure keeps the current account. Manual Cookie import is under the advanced
-section. See [sign-in help](docs/how-to/sign-in.md).
+section (**Other ways to sign in**). See [sign-in help](docs/how-to/sign-in.md).
 
 The interface follows the system language (English or Simplified Chinese) using
 MyGo 0.5's built-in i18n, independently of your Amazon marketplace.
@@ -38,21 +42,18 @@ MyGo 0.5's built-in i18n, independently of your Amazon marketplace.
 
 Download the latest installer or archive for your platform (`macOS` Apple Silicon / Intel, `Windows` x64 / ARM64, `Linux` x64 / ARM64 `.deb` or `.tar.gz` with `install.sh`) from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases).
 
-The macOS v0.1.0 release contains `.app` archives, not a `.dmg` installer. The inspected Apple Silicon bundle is ad-hoc signed, without a Developer ID signature or stapled notarization ticket. First-install Gatekeeper approval and the complete in-app update flow have not been verified. See [release acceptance status](docs/reference/platforms-and-packages.md#v010-release-acceptance).
-
 ### Build from Source
 
 ```bash
 git clone https://github.com/thedavidweng/rainforest.git
 cd rainforest
 mise install
-bun install --cwd frontend
 
-# Run all read-only Go, bindings drift, and frontend quality gates
+# Run all read-only Go and i18n quality gates
 mise run check
 
 # Package desktop bundle via MyGo
-bunx mygo build -skip-dmg -skip-notarize
+go tool mygo build -skip-dmg -skip-notarize
 ```
 
 ## Documentation
@@ -83,7 +84,7 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 ### Explanation (Understanding-Oriented)
 
 - [Rainforest Product Scope and Boundaries](docs/explanation/product-scope.md)
-- [MyGo, React, and Go SDK Architecture](docs/explanation/architecture.md)
+- [MyGo Native UI and Go SDK Architecture](docs/explanation/architecture.md)
 - [One-Way Backup and File Safety Design](docs/explanation/one-way-backup-and-file-safety.md)
 - [Upload Reconciliation, Deduplication, and Recovery](docs/explanation/reconciliation-and-recovery.md)
 - [Local Data and Credential Storage Model](docs/explanation/storage-and-credentials.md)
@@ -91,7 +92,8 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 ### Project & Architecture Records
 
 - [ADR 0001: Rainforest Core Engine & State Store](docs/adr/0001-rainforest-architecture.md)
-- [ADR 0002: MyGo Desktop Shell & Frontend Seam](docs/adr/0002-mygo-desktop-shell.md)
+- [ADR 0002: MyGo Desktop Shell](docs/adr/0002-mygo-desktop-shell.md)
+- [ADR 0005: Native MyGo UI](docs/adr/0005-native-ui.md)
 - [Domain Context](CONTEXT.md) & [Glossary](GLOSSARY.md)
 - [Contributing](CONTRIBUTING.md) & [Security Policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
@@ -99,7 +101,7 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 ## Acknowledgments & Credits
 
 - [`thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) (MIT) — Go SDK (`pkg/aphotos`) and CLI
-- [`thedavidweng/tg-drive`](https://github.com/thedavidweng/tg-drive) (AGPL-3.0-only) — Architectural inspiration for the GUI facade and frontend testing seam
+- [`thedavidweng/tg-drive`](https://github.com/thedavidweng/tg-drive) (AGPL-3.0-only) — Architectural inspiration for the GUI facade and testing seam
 - [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (MIT) — Pure-Go desktop application framework
 - Upstream Amazon Photos protocol research: [`trevorhobenshield/amazon_photos`](https://github.com/trevorhobenshield/amazon_photos), [`kpfitzgerald/amazon-photos-mcp`](https://github.com/kpfitzgerald/amazon-photos-mcp), and [`vanessa/immich-amazon-sync`](https://github.com/vanessa/immich-amazon-sync)
 

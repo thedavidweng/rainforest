@@ -20,6 +20,8 @@
 ## Architectural Sources of Truth
 
 - Core engine, SQLite state store, one-way backup & reconciliation architecture: `docs/adr/0001-rainforest-architecture.md`
-- MyGo desktop shell and frontend `Backend` seam: `docs/adr/0002-mygo-desktop-shell.md`; current MyGo v0.5.1 runtime and localization: `docs/adr/0004-web-sign-in-and-native-i18n.md`
+- MyGo desktop shell: `docs/adr/0002-mygo-desktop-shell.md`; MyGo v0.5.1 web sign-in and localization: `docs/adr/0004-web-sign-in-and-native-i18n.md`
+- Native MyGo UI in `internal/view`: `docs/adr/0005-native-ui.md`
+- Mirrored folder structure and read-only destination picker: `docs/adr/0006-mirrored-folder-structure.md`
 - Domain terms: `GLOSSARY.md`
 - Agent & repository rules: `AGENTS.md`

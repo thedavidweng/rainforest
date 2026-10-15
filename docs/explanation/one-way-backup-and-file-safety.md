@@ -8,7 +8,7 @@ Two-way synchronization engines must decide whether a missing local file was int
 
 Rainforest enforces a strict one-way invariant:
 
-- Backup rules (`internal/engine/backup.go`) only call `GetRoot`, `QueryNodes`, and `UploadFile`.
+- Backup rules (`internal/engine/backup.go`) only call `GetRoot`, `QueryNodes`, `CreateFolder` (to mirror local subfolders), and `UploadFile`.
 - Neither `internal/engine` nor `internal/gui` ever invokes `MoveToTrash` or any remote deletion endpoint during uploads, backup scans, or rule removal.
 - Deleting, moving, or renaming a local file has zero effect on files already confirmed in Amazon Photos.
 

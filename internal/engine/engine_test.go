@@ -177,8 +177,11 @@ func TestPlanUploadCountsMediaPreviewAndDestinationCapability(t *testing.T) {
 			if it.Width != 48 || it.Height != 32 {
 				t.Errorf("sunset.png dimensions = %dx%d, want 48x32", it.Width, it.Height)
 			}
-			if !strings.HasPrefix(it.ThumbnailDataURL, "data:image/png;base64,") {
-				t.Errorf("expected local data URL thumbnail on sunset.png, got %q", it.ThumbnailDataURL)
+			if _, _, err := image.Decode(bytes.NewReader(it.Thumbnail)); err != nil {
+				t.Errorf("expected decodable thumbnail on sunset.png: %v", err)
+			}
+			if it.RemoteDir != "drop/sub" {
+				t.Errorf("sunset.png RemoteDir = %q, want drop/sub", it.RemoteDir)
 			}
 		}
 	}

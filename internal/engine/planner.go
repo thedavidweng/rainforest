@@ -1,16 +1,10 @@
 package engine
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	"image/png"
 	"io"
 	"io/fs"
 	"os"
@@ -24,7 +18,6 @@ import (
 
 const (
 	maxThumbnailSourceBytes = 20 * 1024 * 1024
-	maxThumbnailDimension   = 128
 	maxPlanPreviewThumbs    = 32
 )
 
@@ -74,32 +67,35 @@ func ClassifyMediaFile(name string) (store.MediaType, bool) {
 }
 
 type PlanItem struct {
-	LocalPath        string          `json:"localPath"`
-	Name             string          `json:"name"`
-	MediaType        store.MediaType `json:"mediaType"`
-	Size             int64           `json:"size"`
-	Width            int             `json:"width,omitempty"`
-	Height           int             `json:"height,omitempty"`
-	ThumbnailDataURL string          `json:"thumbnailDataUrl,omitempty"`
+	LocalPath string          `json:"localPath"`
+	Name      string          `json:"name"`
+	MediaType store.MediaType `json:"mediaType"`
+	Size      int64           `json:"size"`
+	Width     int             `json:"width,omitempty"`
+	Height    int             `json:"height,omitempty"`
+	Thumbnail []byte          `json:"-"`
+	RemoteDir string          `json:"remoteDir,omitempty"`
 }
 
 type UploadPlan struct {
-	SourceSummary      string                 `json:"sourceSummary"`
-	PhotoCount         int                    `json:"photoCount"`
-	VideoCount         int                    `json:"videoCount"`
-	TotalCount         int                    `json:"totalCount"`
-	TotalBytes         int64                  `json:"totalBytes"`
-	SkippedUnsupported int                    `json:"skippedUnsupported"`
-	ConflictPolicy     aphotos.ConflictPolicy `json:"conflictPolicy"`
-	Destination        DestinationCapability  `json:"destination"`
-	Items              []PlanItem             `json:"items"`
+	SourceSummary       string                 `json:"sourceSummary"`
+	PhotoCount          int                    `json:"photoCount"`
+	VideoCount          int                    `json:"videoCount"`
+	TotalCount          int                    `json:"totalCount"`
+	TotalBytes          int64                  `json:"totalBytes"`
+	SkippedUnsupported  int                    `json:"skippedUnsupported"`
+	ConflictPolicy      aphotos.ConflictPolicy `json:"conflictPolicy"`
+	KeepFolderStructure bool                   `json:"keepFolderStructure"`
+	Destination         DestinationCapability  `json:"destination"`
+	Items               []PlanItem             `json:"items"`
 }
 
 type PlanOptions struct {
-	DestinationNodeID string
-	ConflictPolicy    aphotos.ConflictPolicy
-	IncludeVideos     *bool
-	IncludePreviews   bool
+	DestinationNodeID   string
+	ConflictPolicy      aphotos.ConflictPolicy
+	IncludeVideos       *bool
+	IncludePreviews     bool
+	KeepFolderStructure *bool
 }
 
 func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOptions) (*UploadPlan, error) {
@@ -131,6 +127,7 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 	}
 
 	seen := make(map[string]struct{})
+	hasDirectory := false
 	var items []PlanItem
 	var photoCount, videoCount, skipped int
 	var totalBytes int64
@@ -163,8 +160,8 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 				skipped++
 				continue
 			}
-			it := buildPlanItem(absPath, info, mt, opts.IncludePreviews && thumbsGenerated < maxPlanPreviewThumbs)
-			if it.ThumbnailDataURL != "" {
+			it := e.buildPlanItem(absPath, info, mt, opts.IncludePreviews && thumbsGenerated < maxPlanPreviewThumbs)
+			if len(it.Thumbnail) > 0 {
 				thumbsGenerated++
 			}
 			items = append(items, it)
@@ -177,6 +174,7 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 			continue
 		}
 
+		hasDirectory = true
 		walkErr := filepath.WalkDir(absPath, func(p string, d fs.DirEntry, wErr error) error {
 			if wErr != nil {
 				return wErr
@@ -210,8 +208,9 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 			if iErr != nil {
 				return iErr
 			}
-			it := buildPlanItem(p, fInfo, mt, opts.IncludePreviews && thumbsGenerated < maxPlanPreviewThumbs)
-			if it.ThumbnailDataURL != "" {
+			it := e.buildPlanItem(p, fInfo, mt, opts.IncludePreviews && thumbsGenerated < maxPlanPreviewThumbs)
+			it.RemoteDir = mirroredRemoteDir(absPath, p)
+			if len(it.Thumbnail) > 0 {
 				thumbsGenerated++
 			}
 			items = append(items, it)
@@ -233,18 +232,29 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 	})
 
 	destCap := e.ProbeDestination(ctx, opts.DestinationNodeID)
+	keepStructure := hasDirectory
+	if opts.KeepFolderStructure != nil {
+		keepStructure = *opts.KeepFolderStructure
+	}
+	keepStructure = keepStructure && destCap.StructureSupported
+	if !keepStructure {
+		for i := range items {
+			items[i].RemoteDir = ""
+		}
+	}
 	summary := summarizePaths(paths, len(items))
 
 	return &UploadPlan{
-		SourceSummary:      summary,
-		PhotoCount:         photoCount,
-		VideoCount:         videoCount,
-		TotalCount:         len(items),
-		TotalBytes:         totalBytes,
-		SkippedUnsupported: skipped,
-		ConflictPolicy:     conflict,
-		Destination:        destCap,
-		Items:              items,
+		SourceSummary:       summary,
+		PhotoCount:          photoCount,
+		VideoCount:          videoCount,
+		TotalCount:          len(items),
+		TotalBytes:          totalBytes,
+		SkippedUnsupported:  skipped,
+		ConflictPolicy:      conflict,
+		KeepFolderStructure: keepStructure,
+		Destination:         destCap,
+		Items:               items,
 	}, nil
 }
 
@@ -258,72 +268,39 @@ func summarizePaths(paths []string, itemCount int) string {
 	return fmt.Sprintf("%d selected paths (%d items)", len(paths), itemCount)
 }
 
-func buildPlanItem(absPath string, info os.FileInfo, mt store.MediaType, wantPreview bool) PlanItem {
+func (e *Engine) buildPlanItem(absPath string, info os.FileInfo, mt store.MediaType, wantPreview bool) PlanItem {
 	item := PlanItem{
 		LocalPath: absPath,
 		Name:      info.Name(),
 		MediaType: mt,
 		Size:      info.Size(),
 	}
-	if !wantPreview || mt != store.MediaTypePhoto || info.Size() <= 0 || info.Size() > maxThumbnailSourceBytes {
+	if !wantPreview || mt != store.MediaTypePhoto {
 		return item
 	}
-
-	f, err := os.Open(absPath)
+	thumb, err := e.LocalThumbnail(absPath)
 	if err != nil {
 		return item
 	}
-	defer func() { _ = f.Close() }()
-
-	cfg, _, err := image.DecodeConfig(f)
-	if err != nil {
-		return item
-	}
-	item.Width = cfg.Width
-	item.Height = cfg.Height
-
-	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > 8192 || cfg.Height > 8192 {
-		return item
-	}
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		return item
-	}
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return item
-	}
-
-	thumb := downscaleNearest(img, maxThumbnailDimension)
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, thumb); err != nil {
-		return item
-	}
-	item.ThumbnailDataURL = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+	item.Width = thumb.Width
+	item.Height = thumb.Height
+	item.Thumbnail = thumb.Data
 	return item
 }
 
-func downscaleNearest(src image.Image, maxDim int) image.Image {
-	b := src.Bounds()
-	w := b.Dx()
-	h := b.Dy()
-	if w <= maxDim && h <= maxDim {
-		return src
+func mirroredRemoteDir(selectedRoot, filePath string) string {
+	rel, err := filepath.Rel(selectedRoot, filepath.Dir(filePath))
+	if err != nil {
+		return ""
 	}
-	dstW := maxDim
-	dstH := max(1, (h*maxDim)/w)
-	if h > w {
-		dstH = maxDim
-		dstW = max(1, (w*maxDim)/h)
+	var parts []string
+	if base := filepath.Base(selectedRoot); base != "." && base != string(filepath.Separator) {
+		parts = append(parts, base)
 	}
-	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-	for y := range dstH {
-		srcY := b.Min.Y + (y*h)/dstH
-		for x := range dstW {
-			srcX := b.Min.X + (x*w)/dstW
-			dst.Set(x, y, src.At(srcX, srcY))
-		}
+	if rel != "." {
+		parts = append(parts, filepath.ToSlash(rel))
 	}
-	return dst
+	return strings.Join(parts, "/")
 }
 
 func computeFileMD5(path string) (string, error) {

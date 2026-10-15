@@ -13,6 +13,8 @@ See `CONTEXT.md` for full domain context and architectural pointers.
 - **Destination Probe** — Read-only validation of an exact target under current credentials; `pending`, `readable`, or `failed`, independent of regional evidence.
 - **AlbumPending** — Uploaded media has a saved Node ID but album membership has not succeeded; retries associate that ID without uploading again.
 - **BackupRule** — A one-way automatic backup configuration for a local folder (`include_videos`, `schedule_mode`, `interval_minutes`, `conflict_policy`, `destination_node_id`, `status`).
+- **KeepFolderStructure** — Upload and backup option, on by default, that mirrors local subfolders under a folder destination; album destinations stay flat.
+- **Mirrored folder** — Remote folder found or created by exact name to match a local subfolder; its relative path is stored per item as `remote_dir`.
 - **TrackedFile** — Local file baseline (`rel_path`, `size`, `mtime_ns`, `md5`, `remote_node_id`, `status`) used to detect new or modified files during incremental backup scans.
 - **SourceUnavailable** — Backup rule state (`source_unavailable`) entered when the local source directory is missing or on a disconnected volume.
 - **ReconcileOnStartup** — Startup pass that checks `running` or `unconfirmed` items against remote MD5/name metadata to promote completed uploads to `confirmed` or mark interrupted ones for safe retry.

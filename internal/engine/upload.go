@@ -14,11 +14,12 @@ import (
 )
 
 type UploadJobRequest struct {
-	Plan              *UploadPlan
-	Paths             []string
-	DestinationNodeID string
-	ConflictPolicy    aphotos.ConflictPolicy
-	IncludeVideos     *bool
+	Plan                *UploadPlan
+	Paths               []string
+	DestinationNodeID   string
+	ConflictPolicy      aphotos.ConflictPolicy
+	IncludeVideos       *bool
+	KeepFolderStructure *bool
 }
 
 func (e *Engine) StartUpload(ctx context.Context, req UploadJobRequest) (*store.Transfer, error) {
@@ -34,10 +35,11 @@ func (e *Engine) StartUpload(ctx context.Context, req UploadJobRequest) (*store.
 	if plan == nil {
 		var err error
 		plan, err = e.PlanUpload(ctx, req.Paths, PlanOptions{
-			DestinationNodeID: req.DestinationNodeID,
-			ConflictPolicy:    req.ConflictPolicy,
-			IncludeVideos:     req.IncludeVideos,
-			IncludePreviews:   false,
+			DestinationNodeID:   req.DestinationNodeID,
+			ConflictPolicy:      req.ConflictPolicy,
+			IncludeVideos:       req.IncludeVideos,
+			IncludePreviews:     false,
+			KeepFolderStructure: req.KeepFolderStructure,
 		})
 		if err != nil {
 			return nil, err
@@ -59,7 +61,12 @@ func (e *Engine) StartUpload(ctx context.Context, req UploadJobRequest) (*store.
 	trID := uuid.NewString()
 	items := make([]store.TransferItem, 0, len(plan.Items))
 	for _, pi := range plan.Items {
+		remoteDir := pi.RemoteDir
+		if !destination.StructureSupported {
+			remoteDir = ""
+		}
 		items = append(items, store.TransferItem{
+			RemoteDir:  remoteDir,
 			ID:         uuid.NewString(),
 			TransferID: trID,
 			LocalPath:  pi.LocalPath,
@@ -458,7 +465,7 @@ func (e *Engine) processSingleUploadItem(
 				return
 			}
 		}
-		existing, fErr := findRemoteNodeForItem(ctx, client, item, destination.parentID)
+		existing, fErr := findExistingInDestination(ctx, client, destination, item)
 		if fErr != nil {
 			item.Status = store.ItemStatusUnconfirmed
 			item.ErrorMessage = formatErrMsg(fErr)
@@ -487,9 +494,21 @@ func (e *Engine) processSingleUploadItem(
 	item.UpdatedAt = time.Now().UTC()
 	_ = st.UpdateTransferItem(context.Background(), item)
 
+	parentID, _, pErr := destination.uploadParent(ctx, item.RemoteDir, true)
+	if pErr != nil {
+		item.Status = store.ItemStatusFailed
+		if errors.Is(pErr, context.Canceled) {
+			item.Status = store.ItemStatusCancelled
+		}
+		item.ErrorMessage = "Cannot prepare destination folder: " + formatErrMsg(pErr)
+		item.UpdatedAt = time.Now().UTC()
+		_ = st.UpdateTransferItem(context.Background(), item)
+		return
+	}
+
 	res, upErr := client.UploadFile(ctx, item.LocalPath, aphotos.UploadOptions{
 		Name:            item.Name,
-		ParentNodeID:    destination.parentID,
+		ParentNodeID:    parentID,
 		AutoResolveRoot: false,
 		ConflictPolicy:  tr.ConflictPolicy,
 		Progress: func(p aphotos.TransferProgress) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,22 +10,18 @@ import (
 	"sync/atomic"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
 	"github.com/thedavidweng/rainforest/internal/autostart"
 	"github.com/thedavidweng/rainforest/internal/credstore"
 	"github.com/thedavidweng/rainforest/internal/gui"
+	"github.com/thedavidweng/rainforest/internal/view"
 	"github.com/thedavidweng/rainforest/locales"
 )
 
 var version = "0.1.0"
 
-var (
-	EventTransferStage    = mygo.NewEvent[gui.TransferDTO](gui.EventTransferStage)
-	EventTransferProgress = mygo.NewEvent[gui.TransferProgressEvent](gui.EventTransferProgress)
-	EventBackupStatus     = mygo.NewEvent[gui.BackupRuleDTO](gui.EventBackupStatus)
-	EventAuthChanged      = mygo.NewEvent[gui.AuthStatus](gui.EventAuthChanged)
-	EventFilesDropped     = mygo.NewEvent[gui.FilesDroppedEvent](gui.EventFilesDropped)
-	EventNotification     = mygo.NewEvent[gui.NotificationEvent](gui.EventNotification)
-)
+//go:embed resources/icon.png
+var appIcon []byte
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
@@ -36,11 +33,6 @@ func main() {
 	mygo.App.SetVersion(version)
 
 	svc := gui.NewEmptyServices()
-	mygo.BindAs("Auth", svc.Auth)
-	mygo.BindAs("Transfers", svc.Transfers)
-	mygo.BindAs("Backups", svc.Backups)
-	mygo.BindAs("Downloads", svc.Downloads)
-	mygo.BindAs("Settings", svc.Settings)
 
 	mygo.App.WhenReady(func() {
 		setupDesktop(svc)
@@ -55,6 +47,7 @@ func main() {
 type desktopShell struct {
 	svc        *gui.Services
 	win        *mygo.Window
+	app        atomic.Pointer[view.App]
 	tray       *mygo.Tray
 	quitting   atomic.Bool
 	confirming atomic.Bool
@@ -74,7 +67,8 @@ func setupDesktop(svc *gui.Services) {
 	}
 	shell := &desktopShell{svc: svc}
 	autostartMgr := autostart.NewDefaultManager()
-	svc.SetFilePicker(newFilePicker())
+	picker := &nativeFilePicker{}
+	svc.SetFilePicker(picker)
 	svc.SetEmitter(shell.handleEvent)
 	svc.SetLaunchAtLoginHook(autostartMgr.SetEnabled)
 
@@ -83,7 +77,7 @@ func setupDesktop(svc *gui.Services) {
 		VaultPath:       filepath.Join(userDataDir, "credentials.json"),
 		BrowserLogin:    browserLogin,
 		Emitter:         shell.handleEvent,
-		Picker:          newFilePicker(),
+		Picker:          picker,
 		LaunchAtLoginFn: autostartMgr.SetEnabled,
 	}); err != nil {
 		mygo.Dialog.Error(locales.StartupError(), err.Error())
@@ -91,28 +85,24 @@ func setupDesktop(svc *gui.Services) {
 		return
 	}
 
-	win := mygo.NewWindow(mygo.WindowOptions{
-		Title:     "Rainforest",
-		URL:       "/",
-		Width:     1040,
-		Height:    720,
-		MinWidth:  820,
-		MinHeight: 560,
-		StateKey:  "main",
+	var win *mygo.Window
+	app := view.New(svc, view.Options{Update: func(f func()) { win.Update(f) }, Version: version, Icon: appIcon})
+	win = mygo.NewWindow(mygo.WindowOptions{
+		Title:         "Rainforest",
+		Width:         1080,
+		Height:        720,
+		MinWidth:      860,
+		MinHeight:     580,
+		StateKey:      "main",
+		TitleBarStyle: mygo.TitleBarHidden,
+		Vibrancy:      mygo.VibrancySidebar,
+		Content:       ui.View(app.View),
 	})
 	shell.win = win
+	picker.win.Store(win)
+	shell.app.Store(app)
+	app.Start()
 	mygo.App.OnLocaleChanged(func(_ string) { shell.rebuildTrayMenu() })
-
-	win.OnFileDrop(func(e *mygo.FileDropEvent) {
-		if e == nil || len(e.Paths) == 0 {
-			return
-		}
-		_ = EventFilesDropped.Broadcast(gui.FilesDroppedEvent{
-			Paths: e.Paths,
-			X:     e.X,
-			Y:     e.Y,
-		})
-	})
 
 	tray, trayErr := mygo.NewTray(mygo.TrayOptions{
 		Icon:           trayIconPNG,
@@ -179,32 +169,14 @@ func (d *desktopShell) showWindow() {
 }
 
 func (d *desktopShell) handleEvent(name string, data any) {
+	if app := d.app.Load(); app != nil {
+		app.HandleEvent(name, data)
+	}
 	switch name {
-	case gui.EventTransferStage:
-		if v, ok := data.(gui.TransferDTO); ok {
-			_ = EventTransferStage.Broadcast(v)
-			d.rebuildTrayMenu()
-		}
-	case gui.EventTransferProgress:
-		if v, ok := data.(gui.TransferProgressEvent); ok {
-			_ = EventTransferProgress.Broadcast(v)
-			d.rebuildTrayMenu()
-		}
-	case gui.EventBackupStatus:
-		if v, ok := data.(gui.BackupRuleDTO); ok {
-			_ = EventBackupStatus.Broadcast(v)
-		}
-	case gui.EventAuthChanged:
-		if v, ok := data.(gui.AuthStatus); ok {
-			_ = EventAuthChanged.Broadcast(v)
-		}
-	case gui.EventFilesDropped:
-		if v, ok := data.(gui.FilesDroppedEvent); ok {
-			_ = EventFilesDropped.Broadcast(v)
-		}
+	case gui.EventTransferStage, gui.EventTransferProgress:
+		d.rebuildTrayMenu()
 	case gui.EventNotification:
 		if v, ok := data.(gui.NotificationEvent); ok {
-			_ = EventNotification.Broadcast(v)
 			if d.notificationsEnabled() {
 				n := mygo.NewNotification(mygo.NotificationOptions{
 					ID:    v.TransferID,
@@ -320,13 +292,11 @@ func (d *desktopShell) confirmQuit() {
 	mygo.App.Quit()
 }
 
-type nativeFilePicker struct{}
-
-func newFilePicker() gui.FilePicker {
-	return nativeFilePicker{}
+type nativeFilePicker struct {
+	win atomic.Pointer[mygo.Window]
 }
 
-func (nativeFilePicker) PickCookieFile(ctx context.Context) (string, error) {
+func (p *nativeFilePicker) PickCookieFile(ctx context.Context) (string, error) {
 	if v, ok := os.LookupEnv("RAINFOREST_PICK_FILES"); ok {
 		if strings.TrimSpace(v) == "" {
 			return "", nil
@@ -335,7 +305,7 @@ func (nativeFilePicker) PickCookieFile(ctx context.Context) (string, error) {
 		return strings.TrimSpace(parts[0]), nil
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Parent:   mygo.CallerWindow(ctx),
+		Parent:   p.win.Load(),
 		Title:    locales.SelectCookieFile(),
 		Multiple: false,
 		Filters: []mygo.FileFilter{
@@ -349,7 +319,7 @@ func (nativeFilePicker) PickCookieFile(ctx context.Context) (string, error) {
 	return paths[0], nil
 }
 
-func (nativeFilePicker) PickFiles(ctx context.Context) ([]string, error) {
+func (p *nativeFilePicker) PickFiles(ctx context.Context) ([]string, error) {
 	if v, ok := os.LookupEnv("RAINFOREST_PICK_FILES"); ok {
 		if strings.TrimSpace(v) == "" {
 			return []string{}, nil
@@ -357,7 +327,7 @@ func (nativeFilePicker) PickFiles(ctx context.Context) ([]string, error) {
 		return strings.Split(v, string(os.PathListSeparator)), nil
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Parent:   mygo.CallerWindow(ctx),
+		Parent:   p.win.Load(),
 		Title:    locales.SelectUploadFiles(),
 		Multiple: true,
 	})
@@ -367,7 +337,7 @@ func (nativeFilePicker) PickFiles(ctx context.Context) ([]string, error) {
 	return paths, nil
 }
 
-func (nativeFilePicker) PickDirectory(ctx context.Context, title string) (string, error) {
+func (p *nativeFilePicker) PickDirectory(ctx context.Context, title string) (string, error) {
 	if v, ok := os.LookupEnv("RAINFOREST_PICK_DIR"); ok {
 		return strings.TrimSpace(v), nil
 	}
@@ -383,7 +353,7 @@ func (nativeFilePicker) PickDirectory(ctx context.Context, title string) (string
 		title = locales.SelectFolder()
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Parent:            mygo.CallerWindow(ctx),
+		Parent:            p.win.Load(),
 		Title:             title,
 		Directory:         true,
 		Multiple:          false,

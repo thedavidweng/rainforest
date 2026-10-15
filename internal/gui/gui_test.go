@@ -526,6 +526,13 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 				},
 			}), nil
 
+		case req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes/root-us":
+			return jsonResponse(http.StatusOK, map[string]any{"id": "root-us", "isRoot": true, "kind": "FOLDER", "status": "AVAILABLE"}), nil
+		case req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes/folder-2026":
+			return jsonResponse(http.StatusOK, map[string]any{"id": "folder-2026", "name": "2026 Trips", "kind": "FOLDER", "status": "AVAILABLE", "parents": []string{"root-us"}}), nil
+		case req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes/folder-2026/children":
+			return jsonResponse(http.StatusOK, map[string]any{"count": 1, "data": []map[string]any{{"id": "folder-q1", "name": "Q1", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+
 		case req.Method == http.MethodPost && req.URL.Path == "/drive/v1/nodes":
 			return jsonResponse(http.StatusCreated, map[string]any{
 				"id":   "probe-folder-1",
@@ -610,8 +617,8 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 	if plan.PhotoCount != 1 || plan.SkippedUnsupported != 1 || len(plan.Items) != 1 {
 		t.Fatalf("unexpected UploadPlanDTO: %+v", plan)
 	}
-	if !strings.HasPrefix(plan.Items[0].ThumbnailDataURL, "data:image/png;base64,") {
-		t.Errorf("expected local preview thumbnail in plan item, got %q", plan.Items[0].ThumbnailDataURL)
+	if _, format, err := image.Decode(bytes.NewReader(plan.Items[0].Thumbnail)); err != nil || format == "" {
+		t.Errorf("expected decodable local preview thumbnail in plan item: %v", err)
 	}
 
 	upTr, err := svc.Transfers.StartUpload(ctx, gui.StartUploadInput{
@@ -655,6 +662,30 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 	}
 	if scanTr == nil || scanTr.Stage != string(store.StageCompleted) || scanTr.ItemsDone != 1 {
 		t.Fatalf("unexpected backup scan transfer: %+v", scanTr)
+	}
+
+	if !rule.KeepFolderStructure {
+		t.Errorf("backup rules keep folder structure by default: %+v", rule)
+	}
+	tracked, err := svc.Backups.Files(ctx, rule.ID)
+	if err != nil || len(tracked) != 1 || tracked[0].RelPath != "camera.png" || tracked[0].Status != string(store.ItemStatusConfirmed) || tracked[0].RemoteNodeID != "node-camera" {
+		t.Fatalf("Backups.Files = %+v, %v", tracked, err)
+	}
+	recent, err := svc.Transfers.RecentUploads(ctx, 10)
+	if err != nil || len(recent) != 2 {
+		t.Fatalf("Transfers.RecentUploads = %+v, %v", recent, err)
+	}
+	for _, r := range recent {
+		if _, _, dErr := image.Decode(bytes.NewReader(r.Thumbnail)); dErr != nil || r.RemoteNodeID == "" || r.Name == "" {
+			t.Errorf("recent upload %+v: thumbnail decode: %v", r, dErr)
+		}
+	}
+	if last, err := svc.Transfers.LastUploadAt(ctx); err != nil || last == "" {
+		t.Errorf("LastUploadAt = %q, %v", last, err)
+	}
+	listing, err := svc.Transfers.ListFolders(ctx, "folder-2026")
+	if err != nil || listing.Name != "2026 Trips" || len(listing.Path) != 2 || listing.Path[0].Name != "" || len(listing.Folders) != 1 || listing.Folders[0].ID != "folder-q1" {
+		t.Fatalf("Transfers.ListFolders = %+v, %v", listing, err)
 	}
 
 	pausedRule, err := svc.Backups.Pause(ctx, rule.ID)

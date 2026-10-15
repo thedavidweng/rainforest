@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted. Superseded in part by [ADR 0005](0005-native-ui.md): the frontend, generated TypeScript bindings, and `Backend` seam no longer exist.
 
 ## Context
 

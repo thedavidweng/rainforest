@@ -18,13 +18,14 @@ import (
 )
 
 type BackupRuleInput struct {
-	LocalPath         string                 `json:"localPath"`
-	IncludeVideos     bool                   `json:"includeVideos"`
-	ScheduleMode      store.ScheduleMode     `json:"scheduleMode"`
-	IntervalMinutes   int                    `json:"intervalMinutes"`
-	ConflictPolicy    aphotos.ConflictPolicy `json:"conflictPolicy"`
-	DestinationNodeID string                 `json:"destinationNodeId"`
-	Paused            bool                   `json:"paused"`
+	LocalPath           string                 `json:"localPath"`
+	IncludeVideos       bool                   `json:"includeVideos"`
+	ScheduleMode        store.ScheduleMode     `json:"scheduleMode"`
+	IntervalMinutes     int                    `json:"intervalMinutes"`
+	ConflictPolicy      aphotos.ConflictPolicy `json:"conflictPolicy"`
+	DestinationNodeID   string                 `json:"destinationNodeId"`
+	Paused              bool                   `json:"paused"`
+	KeepFolderStructure *bool                  `json:"keepFolderStructure,omitempty"`
 }
 
 func (e *Engine) ListBackupRules(ctx context.Context) ([]store.BackupRule, error) {
@@ -60,17 +61,18 @@ func (e *Engine) AddBackupRule(ctx context.Context, input BackupRuleInput) (stor
 
 	now := time.Now().UTC()
 	rule, err := st.CreateBackupRule(ctx, store.BackupRule{
-		ID:                uuid.NewString(),
-		LocalPath:         absPath,
-		IncludeVideos:     input.IncludeVideos,
-		ScheduleMode:      input.ScheduleMode,
-		IntervalMinutes:   input.IntervalMinutes,
-		ConflictPolicy:    input.ConflictPolicy,
-		DestinationNodeID: destinationID,
-		Paused:            input.Paused,
-		Status:            status,
-		CreatedAt:         now,
-		UpdatedAt:         now,
+		ID:                  uuid.NewString(),
+		LocalPath:           absPath,
+		IncludeVideos:       input.IncludeVideos,
+		ScheduleMode:        input.ScheduleMode,
+		IntervalMinutes:     input.IntervalMinutes,
+		ConflictPolicy:      input.ConflictPolicy,
+		DestinationNodeID:   destinationID,
+		Paused:              input.Paused,
+		KeepFolderStructure: input.KeepFolderStructure == nil || *input.KeepFolderStructure,
+		Status:              status,
+		CreatedAt:           now,
+		UpdatedAt:           now,
 	})
 	if err != nil {
 		return store.BackupRule{}, err
@@ -134,6 +136,9 @@ func (e *Engine) UpdateBackupRule(ctx context.Context, ruleID string, input Back
 	existing.ConflictPolicy = input.ConflictPolicy
 	existing.DestinationNodeID = destinationID
 	existing.Paused = input.Paused
+	if input.KeepFolderStructure != nil {
+		existing.KeepFolderStructure = *input.KeepFolderStructure
+	}
 	existing.Status = status
 	existing.UpdatedAt = time.Now().UTC()
 
@@ -522,8 +527,9 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 				Name:      rc.name,
 				Size:      rc.size,
 				MD5:       rc.prevMD5,
+				RemoteDir: backupRemoteDir(rule, destination, rc.relPath),
 			}
-			node, fErr := findRemoteNodeForItem(ctx, client, probeItem, destination.parentID)
+			node, fErr := findExistingInDestination(ctx, client, destination, probeItem)
 			if fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
 				verifiedMD5 := rc.prevMD5
 				if node.ContentProperties != nil && strings.TrimSpace(node.ContentProperties.MD5) != "" {
@@ -604,6 +610,7 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 			MediaType:    c.mediaType,
 			Size:         c.size,
 			MD5:          c.prevMD5,
+			RemoteDir:    backupRemoteDir(rule, destination, c.relPath),
 			RemoteNodeID: c.remoteNodeID,
 			Status:       store.ItemStatusQueued,
 			UpdatedAt:    now,
@@ -781,4 +788,11 @@ func (e *Engine) processSingleBackupItem(
 		return formatErrMsg(err)
 	}
 	return updated.ErrorMessage
+}
+
+func backupRemoteDir(rule store.BackupRule, d DestinationCapability, relPath string) string {
+	if !rule.KeepFolderStructure || !d.StructureSupported {
+		return ""
+	}
+	return remoteDirFromLocalRel(relPath)
 }
