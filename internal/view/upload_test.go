@@ -142,6 +142,7 @@ func TestNewReviewRejectsPreviousPlan(t *testing.T) {
 	for _, fn := range old {
 		fn()
 	}
+	h.drain()
 	if got := h.app.pages.review.plan; got == nil || got.TotalCount != 2 {
 		t.Fatalf("previous review replaced current plan (expected two files)")
 	}

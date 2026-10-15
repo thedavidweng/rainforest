@@ -258,3 +258,19 @@ func TestAuthEventBeforeImportReturnClearsWelcomeState(t *testing.T) {
 		t.Fatal("auth event left welcome busy or retained cookies")
 	}
 }
+
+func TestAccountChangeClearsCachedAccountLists(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	h.app.files["old-rule"] = &filesState{}
+	h.app.items["old-transfer"] = &itemsState{}
+	h.app.active, h.app.history = sampleTransfers()[:1], sampleTransfers()[1:]
+	h.app.rules = []gui.BackupRuleDTO{{ID: "old-rule"}}
+	h.app.transfersLoaded, h.app.rulesLoaded = true, true
+	st := h.app.auth
+	st.OwnerID, st.RootNodeID = "new-owner", "new-root"
+	h.app.setAuth(st)
+	if len(h.app.files)+len(h.app.items)+len(h.app.active)+len(h.app.history)+len(h.app.rules) != 0 || h.app.transfersLoaded || h.app.rulesLoaded {
+		t.Fatal("previous account data remains visible before the new account refresh completes")
+	}
+}

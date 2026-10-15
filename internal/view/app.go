@@ -169,6 +169,13 @@ func (a *App) setAuth(st gui.AuthStatus) {
 	if changed {
 		a.authSeq++
 		a.welcomeUI = welcomeState{}
+		a.settingsUI = settingsState{}
+		a.backup = backupState{}
+		a.files = map[string]*filesState{}
+		a.items = map[string]*itemsState{}
+		a.active, a.history, a.transferWarning = nil, nil, ""
+		a.transfersLoaded = false
+		a.rules, a.rulesLoaded = nil, false
 		a.pages = pageState{}
 		a.picker = pickerState{}
 		a.restore = restoreState{}
@@ -192,9 +199,6 @@ func (a *App) setAuth(st gui.AuthStatus) {
 		a.recovery, a.recoveryState = nil, loadIdle
 		a.probes = map[string]*probeState{}
 		a.folders = map[string]*folderState{}
-		a.files = map[string]*filesState{}
-		a.items = map[string]*itemsState{}
-		a.recent, a.lastUpload = nil, ""
 		a.router.Replace("/upload")
 	}
 }

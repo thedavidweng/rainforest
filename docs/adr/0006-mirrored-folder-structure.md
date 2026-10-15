@@ -21,7 +21,10 @@ Amazon Photos.
 3. Mirroring applies to folder destinations only. Album destinations stay flat
    and report `StructureSupported=false`.
 4. `KeepFolderStructure` is true by default for uploads and new backup rules.
-   Existing rules retain their flat layout and tracked-file baseline on upgrade.
+   When upgrading a database without the folder-structure column, existing rules
+   retain their flat layout and tracked-file baseline. Databases that already
+   contain the column retain their saved choices: no migration marker can
+   distinguish previously defaulted values from explicitly enabled mirroring.
    Turning it off uploads flat. Changing it on a rule clears the rule's local
    baseline.
 5. The relative remote directory is stored per item in `transfer_items.remote_dir`
