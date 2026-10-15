@@ -42,6 +42,7 @@ type App struct {
 	router  *ui.Router
 	toasts  []ui.Toast
 
+	authSeq    int
 	authLoaded bool
 	auth       gui.AuthStatus
 
@@ -113,9 +114,14 @@ func (a *App) Start() {
 }
 
 func (a *App) do(work func(ctx context.Context) func()) {
+	seq := a.authSeq
 	a.spawn(func() {
 		if apply := work(context.Background()); apply != nil {
-			a.update(apply)
+			a.update(func() {
+				if a.authSeq == seq {
+					apply()
+				}
+			})
 		}
 	})
 }
@@ -159,10 +165,19 @@ func (a *App) HandleEvent(name string, data any) {
 
 func (a *App) setAuth(st gui.AuthStatus) {
 	was := a.signedIn()
+	changed := a.auth.Authenticated != st.Authenticated || a.auth.OwnerID != st.OwnerID || a.auth.RootNodeID != st.RootNodeID || a.auth.Region != st.Region
+	if changed {
+		a.authSeq++
+		a.welcomeUI = welcomeState{}
+		a.pages = pageState{}
+		a.picker = pickerState{}
+		a.restore = restoreState{}
+		a.recent, a.lastUpload = nil, ""
+	}
 	a.auth = st
 	a.authLoaded = true
 	switch now := a.signedIn(); {
-	case now && !was:
+	case now && (!was || changed):
 		a.usageState = loadIdle
 		a.usage = nil
 		a.probes = map[string]*probeState{}

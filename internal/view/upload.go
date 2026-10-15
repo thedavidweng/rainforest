@@ -55,7 +55,7 @@ func (a *App) openUploadReview(paths []string) {
 	}
 	a.pages.review = reviewState{
 		open: true, paths: paths, includeVideos: true, conflict: conflict,
-		keepFolders: true, hasFolder: containsDirectory(paths),
+		keepFolders: true, seq: a.pages.review.seq,
 	}
 	a.replan()
 }
@@ -83,12 +83,13 @@ func (a *App) replan() {
 		KeepFolderStructure: &keepFolders,
 	}
 	a.do(func(ctx context.Context) func() {
+		hasFolder := containsDirectory(in.Paths)
 		plan, err := a.svc.Transfers.PlanUpload(ctx, in)
 		return func() {
 			if r.seq != seq {
 				return
 			}
-			r.loading = false
+			r.loading, r.hasFolder = false, hasFolder
 			if err != nil {
 				r.plan, r.err = nil, errMessage(err)
 				return

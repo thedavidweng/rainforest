@@ -21,6 +21,7 @@ func (a *App) View(c *ui.Context) {
 		a.mainShell(c)
 	}
 	a.flushToasts(c)
+	toastViewport(c)
 }
 
 func dragStrip(c *ui.Context) {

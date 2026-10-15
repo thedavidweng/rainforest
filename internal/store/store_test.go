@@ -313,7 +313,7 @@ func TestStoreOpensDatabaseCreatedBeforeFolderColumns(t *testing.T) {
 	}
 	defer func() { _ = st.Close() }()
 	r, err := st.GetBackupRule(ctx, "r")
-	if err != nil || !r.KeepFolderStructure {
+	if err != nil || r.KeepFolderStructure {
 		t.Errorf("GetBackupRule: %+v, %v", r, err)
 	}
 }

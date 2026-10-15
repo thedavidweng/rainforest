@@ -330,7 +330,7 @@ func (s *Store) migrate(ctx context.Context) error {
 		}
 	}
 	for _, c := range []struct{ table, column, ddl string }{
-		{"backup_rules", "keep_folder_structure", "INTEGER NOT NULL DEFAULT 1"},
+		{"backup_rules", "keep_folder_structure", "INTEGER NOT NULL DEFAULT 0"},
 		{"transfer_items", "remote_dir", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := s.ensureColumn(ctx, c.table, c.column, c.ddl); err != nil {

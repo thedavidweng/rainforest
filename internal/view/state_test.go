@@ -3,6 +3,7 @@ package view
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/png"
 	"testing"
@@ -116,7 +117,7 @@ func TestCallTransferReportsErrorsAndAppliesResults(t *testing.T) {
 	if !thenCalled || len(h.app.active) != 1 || h.app.active[0].ID != "t1" {
 		t.Errorf("active = %+v, then = %v", h.app.active, thenCalled)
 	}
-	h.wantText("Call failed")
+	h.wantText(locales.In("en").ErrorSignIn())
 }
 
 func TestUpdateSettingsFailureRefreshes(t *testing.T) {
@@ -199,5 +200,61 @@ func TestToastActionRunsCallback(t *testing.T) {
 	}
 	if !ran {
 		t.Error("toast action did not run")
+	}
+}
+
+func TestErrorToastMapsNetworkDiagnostics(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	h.app.toastError(fmt.Errorf("connection refused: private upstream details"))
+	h.tt.Frame()
+	h.wantText(locales.In("en").ErrorNetwork())
+	h.noText("connection refused: private upstream details")
+}
+
+func TestFolderPickerMapsNetworkDiagnostics(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	h.app.openPicker("", func(string) {})
+	h.app.folders[""] = &folderState{state: loadFailed, err: "connection refused: private upstream details"}
+	h.tt.Frame()
+	h.wantText(locales.In("en").ErrorNetwork())
+	h.noText("connection refused: private upstream details")
+}
+
+func TestAccountChangeRejectsPendingUIResults(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	h.app.do(func(context.Context) func() {
+		return func() { h.app.recent = []gui.RecentUploadDTO{{Name: "old-account.jpg"}} }
+	})
+	pending := h.queue
+	h.queue = nil
+	st := h.app.auth
+	st.OwnerID, st.RootNodeID = "new-owner", "new-root"
+	h.app.setAuth(st)
+	for _, fn := range pending {
+		fn()
+	}
+	if len(h.app.recent) != 0 {
+		t.Fatalf("old account result crossed account boundary: %+v", h.app.recent)
+	}
+}
+
+func TestAuthEventBeforeImportReturnClearsWelcomeState(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	h.app.welcomeUI.cookies = "private cookies"
+	h.app.welcomeUI.signingIn = true
+	st := h.app.auth
+	st.OwnerID = "imported-owner"
+	h.app.runImport(func(context.Context) (*gui.AuthStatus, error) {
+		h.app.HandleEvent(gui.EventAuthChanged, st)
+		return &st, nil
+	})
+	h.drain()
+	w := h.app.welcomeUI
+	if w.importing || w.signingIn || w.cookies != "" {
+		t.Fatal("auth event left welcome busy or retained cookies")
 	}
 }

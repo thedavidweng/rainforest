@@ -223,3 +223,24 @@ func TestRestoreSurfacesLoadFailureWithRetry(t *testing.T) {
 	h.wantText("boom")
 	h.wantText(locales.CommonRetry())
 }
+
+func TestRestorePickerCanChooseRoot(t *testing.T) {
+	h := openRestore(t, recoveryFixture())
+	if err := h.tt.Click(locales.RestoreSourceContainer()); err != nil {
+		t.Fatal(err)
+	}
+	h.drain()
+	h.chooseRestoreDest(t.TempDir())
+	if err := h.tt.Click(locales.RestoreBrowseFolders()); err != nil {
+		t.Fatal(err)
+	}
+	h.drain()
+	if err := h.tt.Click(locales.PickerChoose()); err != nil {
+		t.Fatal(err)
+	}
+	h.drain()
+	in, ok := h.app.restoreRequest(nil)
+	if !ok || in.ContainerNodeID != "root-us-1" {
+		t.Fatalf("root request=%+v ready=%v", in, ok)
+	}
+}
