@@ -15,11 +15,15 @@ func (a *App) View(c *ui.Context) {
 	switch {
 	case !a.authLoaded:
 		a.loading(c)
+	case !a.signedIn() && a.router.Path() == "/settings":
+		dragStrip(c)
+		ui.Column(c).Fill().Padding(max(c.TitleBar().Height, headerHeight), 0, 0).Children(func() { a.router.View(c, a.route(c)).Grow(1) })
 	case !a.signedIn():
 		a.welcomeShell(c)
 	default:
 		a.mainShell(c)
 	}
+	a.aboutDialog(c)
 	a.flushToasts(c)
 	toastViewport(c)
 }
@@ -103,20 +107,15 @@ func (a *App) sidebar(c *ui.Context) {
 	}
 	col.Children(func() {
 		ui.Box(c).Height(max(c.TitleBar().Height, headerHeight)).Shrink(0).DragWindow()
-		a.lockup(c, m)
+		sidebarLeaf(c)
 		a.navItems(c, m)
 		a.accountBlock(c, m)
 	})
 }
 
-func (a *App) lockup(c *ui.Context, m locales.Messages) {
-	t := c.Theme()
-	ui.Row(c).Gap(12).Padding(4, 28, 20).DragWindow().Children(func() {
-		a.logoTile(c, 32)
-		ui.Column(c).Children(func() {
-			ui.Text(c, "Rainforest").FontSize(18).FontWeight(700).SingleLine()
-			ui.Text(c, m.AppTagline()).FontSize(12).TextColor(t.TextMuted).SingleLine()
-		})
+func sidebarLeaf(c *ui.Context) {
+	ui.Row(c).Justify(ui.Center).Padding(2, 0, 22).DragWindow().Children(func() {
+		ui.Icon(c, iconBrandLeaf).FontSize(44).TextColor(c.Theme().Text).Rotate(22)
 	})
 }
 

@@ -32,6 +32,8 @@ func TestShellShowsSidebarAndNavigates(t *testing.T) {
 		h.wantText(label)
 	}
 	h.wantText("amazon.com")
+	h.noText("Rainforest")
+	h.noText(locales.AppTagline())
 	h.wantText(locales.AccountUsage(5, "10.0 KB"))
 	h.noText(locales.WelcomeTitle())
 

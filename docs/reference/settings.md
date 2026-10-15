@@ -39,3 +39,32 @@ For contributors: edit both `locales/*.json` catalogs, run
 `go tool mygo generate`, and run `mise run check`. Generated
 `locales/catalog_gen.go` is committed and checked for drift by
 `mise run i18n-check`.
+
+
+## Language Controls and Desktop Menus
+
+The welcome screen, Settings, and View → Language let users select English,
+Simplified Chinese, or Follow System. MyGo persists the language preference and
+refreshes native views and system menu roles. Custom app and tray labels rebuild
+on `OnLocaleChanged`. Amazon marketplace and recovery selections retain their IDs
+when the interface language changes.
+
+The macOS application menu provides About, Settings, Services, Hide, Hide Others,
+Show All, and Quit. About uses MyGo's native macOS panel; Windows and Linux use an
+in-app dialog with the same version, copyright, license, disclaimer, and source.
+Settings and About are accessible before signing in.
+
+| Action | macOS | Windows / Linux |
+|---|---|---|
+| Settings | ⌘, | Ctrl+, |
+| Quit | ⌘Q | Ctrl+Q |
+| Upload files | ⌘O | Ctrl+O |
+| Upload folder | ⇧⌘O | Ctrl+Shift+O |
+| Upload / Activity / Backup / Restore | ⌘1–4 | Ctrl+1–4 |
+| Close window | ⌘W | Ctrl+W |
+| Minimize | ⌘M | Ctrl+M |
+| Full screen | ⌃⌘F | F11 |
+| Help | Help menu | F1 |
+
+Edit and Window menus use MyGo roles, including native editing shortcuts. Closing
+retains the configured close-to-tray behavior; Quit retains transfer confirmation.

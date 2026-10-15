@@ -271,5 +271,17 @@
   "selectUploadFolder": "选择要上传的文件夹",
   "selectBackupFolder": "选择要备份的文件夹",
   "selectDownloadFolder": "选择下载目标目录",
-  "quitMessage": "{transfers, plural, =0 {当前没有正在运行的传输。} other {当前有 # 个传输正在运行。}}已启用 {backups, number} 条文件夹备份规则。“暂停任务”暂停单个传输；“停止备份”暂停扫描。启用托盘选项时关闭窗口会继续后台运行。“退出 Rainforest”停止后台任务并退出。"
+  "quitMessage": "{transfers, plural, =0 {当前没有正在运行的传输。} other {当前有 # 个传输正在运行。}}已启用 {backups, number} 条文件夹备份规则。“暂停任务”暂停单个传输；“停止备份”暂停扫描。启用托盘选项时关闭窗口会继续后台运行。“退出 Rainforest”停止后台任务并退出。",
+  "languageTitle": "语言",
+  "languageSystem": "跟随系统",
+  "menuFile": "文件",
+  "menuView": "显示",
+  "menuHelp": "帮助",
+  "menuSettings": "设置…",
+  "menuAbout": "关于 Rainforest",
+  "menuUploadFiles": "上传文件…",
+  "menuUploadFolder": "上传文件夹…",
+  "menuHelpGuide": "Rainforest 帮助",
+  "menuReportIssue": "反馈问题…",
+  "aboutCopyright": "版权所有 © 2026 Davy Weng 及贡献者"
 }

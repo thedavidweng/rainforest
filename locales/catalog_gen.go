@@ -2773,3 +2773,123 @@ func QuitMessage(transfers int, backups int) string {
 func (msgs Messages) QuitMessage(transfers int, backups int) string {
 	return Catalog.Format(msgs.locale, "quitMessage", map[string]any{"transfers": transfers, "backups": backups})
 }
+
+// LanguageTitle says "Language"
+// in the language the app shows.
+func LanguageTitle() string { return In(i18n.Locale()).LanguageTitle() }
+
+// LanguageTitle says "Language"
+// in the language of msgs.
+func (msgs Messages) LanguageTitle() string {
+	return Catalog.Format(msgs.locale, "languageTitle", nil)
+}
+
+// LanguageSystem says "Follow System"
+// in the language the app shows.
+func LanguageSystem() string { return In(i18n.Locale()).LanguageSystem() }
+
+// LanguageSystem says "Follow System"
+// in the language of msgs.
+func (msgs Messages) LanguageSystem() string {
+	return Catalog.Format(msgs.locale, "languageSystem", nil)
+}
+
+// MenuFile says "File"
+// in the language the app shows.
+func MenuFile() string { return In(i18n.Locale()).MenuFile() }
+
+// MenuFile says "File"
+// in the language of msgs.
+func (msgs Messages) MenuFile() string {
+	return Catalog.Format(msgs.locale, "menuFile", nil)
+}
+
+// MenuView says "View"
+// in the language the app shows.
+func MenuView() string { return In(i18n.Locale()).MenuView() }
+
+// MenuView says "View"
+// in the language of msgs.
+func (msgs Messages) MenuView() string {
+	return Catalog.Format(msgs.locale, "menuView", nil)
+}
+
+// MenuHelp says "Help"
+// in the language the app shows.
+func MenuHelp() string { return In(i18n.Locale()).MenuHelp() }
+
+// MenuHelp says "Help"
+// in the language of msgs.
+func (msgs Messages) MenuHelp() string {
+	return Catalog.Format(msgs.locale, "menuHelp", nil)
+}
+
+// MenuSettings says "Settings…"
+// in the language the app shows.
+func MenuSettings() string { return In(i18n.Locale()).MenuSettings() }
+
+// MenuSettings says "Settings…"
+// in the language of msgs.
+func (msgs Messages) MenuSettings() string {
+	return Catalog.Format(msgs.locale, "menuSettings", nil)
+}
+
+// MenuAbout says "About Rainforest"
+// in the language the app shows.
+func MenuAbout() string { return In(i18n.Locale()).MenuAbout() }
+
+// MenuAbout says "About Rainforest"
+// in the language of msgs.
+func (msgs Messages) MenuAbout() string {
+	return Catalog.Format(msgs.locale, "menuAbout", nil)
+}
+
+// MenuUploadFiles says "Upload Files…"
+// in the language the app shows.
+func MenuUploadFiles() string { return In(i18n.Locale()).MenuUploadFiles() }
+
+// MenuUploadFiles says "Upload Files…"
+// in the language of msgs.
+func (msgs Messages) MenuUploadFiles() string {
+	return Catalog.Format(msgs.locale, "menuUploadFiles", nil)
+}
+
+// MenuUploadFolder says "Upload Folder…"
+// in the language the app shows.
+func MenuUploadFolder() string { return In(i18n.Locale()).MenuUploadFolder() }
+
+// MenuUploadFolder says "Upload Folder…"
+// in the language of msgs.
+func (msgs Messages) MenuUploadFolder() string {
+	return Catalog.Format(msgs.locale, "menuUploadFolder", nil)
+}
+
+// MenuHelpGuide says "Rainforest Help"
+// in the language the app shows.
+func MenuHelpGuide() string { return In(i18n.Locale()).MenuHelpGuide() }
+
+// MenuHelpGuide says "Rainforest Help"
+// in the language of msgs.
+func (msgs Messages) MenuHelpGuide() string {
+	return Catalog.Format(msgs.locale, "menuHelpGuide", nil)
+}
+
+// MenuReportIssue says "Report an Issue…"
+// in the language the app shows.
+func MenuReportIssue() string { return In(i18n.Locale()).MenuReportIssue() }
+
+// MenuReportIssue says "Report an Issue…"
+// in the language of msgs.
+func (msgs Messages) MenuReportIssue() string {
+	return Catalog.Format(msgs.locale, "menuReportIssue", nil)
+}
+
+// AboutCopyright says "Copyright © 2026 Davy Weng and contributors"
+// in the language the app shows.
+func AboutCopyright() string { return In(i18n.Locale()).AboutCopyright() }
+
+// AboutCopyright says "Copyright © 2026 Davy Weng and contributors"
+// in the language of msgs.
+func (msgs Messages) AboutCopyright() string {
+	return Catalog.Format(msgs.locale, "aboutCopyright", nil)
+}

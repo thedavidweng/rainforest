@@ -28,8 +28,15 @@ type settingsState struct {
 func (a *App) settingsPage(c *ui.Context, r *ui.Route) {
 	m := tr(c)
 	r.Title(m.SettingsTitle())
-	pageFrame(c, m.SettingsTitle(), m.SettingsSubtitle(), nil, func() {
-		section(c, m.SettingsAccount(), func() { a.accountCard(c, m) })
+	pageFrame(c, m.SettingsTitle(), m.SettingsSubtitle(), func() {
+		if !a.signedIn() && secondaryButton(c, nil, m.CommonClose(), false).Clicked() {
+			a.router.Replace("/upload")
+		}
+	}, func() {
+		section(c, m.LanguageTitle(), func() { card(c, func() { settingRow(c, m.LanguageTitle(), "", func() { a.languageControl(c, m) }) }) })
+		if a.signedIn() {
+			section(c, m.SettingsAccount(), func() { a.accountCard(c, m) })
+		}
 		if a.settings != nil {
 			section(c, m.SettingsTransfers(), func() { a.transfersCard(c, m) })
 			section(c, m.SettingsComputer(), func() { a.computerCard(c, m) })
@@ -283,6 +290,7 @@ func (a *App) aboutCard(c *ui.Context, m locales.Messages) {
 				}
 			})
 		})
+		ui.Text(c, m.AboutCopyright()).FontSize(12).TextColor(t.TextMuted)
 		ui.Text(c, m.SettingsAboutDisclaimer()).TextColor(t.TextMuted)
 		ui.Row(c).Gap(6).Children(func() {
 			ui.Text(c, m.SettingsLicense()).FontSize(12).TextColor(t.TextMuted)
@@ -315,4 +323,37 @@ func checkTitle(name string) string {
 		return spaced
 	}
 	return strings.ToUpper(spaced[:1]) + spaced[1:]
+}
+
+func (a *App) languageControl(c *ui.Context, m locales.Messages) {
+	tags := []string{"en", "zh-Hans", ""}
+	labels := []string{"English", "简体中文", m.LanguageSystem()}
+	current := m.LanguageSystem()
+	for i, tag := range tags {
+		if tag == c.Locale() {
+			current = labels[i]
+		}
+	}
+	if outlined(c, ui.Select(c, &current, labels)).Label(m.LanguageTitle()).Width(controlWidth).Changed() {
+		for i, label := range labels {
+			if current == label {
+				a.setLocale(tags[i])
+				break
+			}
+		}
+	}
+}
+
+func (a *App) aboutDialog(c *ui.Context) {
+	m := tr(c)
+	ui.DialogBase(c, &a.aboutOpen, func(backdrop, panel ui.Element) {
+		dialogFrame(c, backdrop, panel, 480)
+		ui.Column(c).Padding(24).Gap(16).Children(func() {
+			ui.Text(c, m.MenuAbout()).FontSize(20).FontWeight(700)
+			a.aboutCard(c, m)
+			if secondaryButton(c, nil, m.CommonClose(), false).Clicked() {
+				a.aboutOpen = false
+			}
+		})
+	})
 }

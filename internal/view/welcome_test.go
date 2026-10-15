@@ -44,7 +44,7 @@ func TestWelcomeShowsMarketplaceAndFooter(t *testing.T) {
 func TestWelcomeWarnsForExperimentalMarketplace(t *testing.T) {
 	h := newHarness(t, false)
 	h.start()
-	h.app.welcomeUI.region = regionLabel(locales.In("en"), "jp")
+	h.app.welcomeUI.region = "jp"
 	h.app.welcomeUI.picked = true
 	h.tt.Frame()
 	h.wantText(locales.WelcomeExperimental())
@@ -156,4 +156,16 @@ func TestWelcomeRendersInChinese(t *testing.T) {
 	h.wantText(zh.WelcomeSignIn())
 	h.wantText(zh.WelcomeFooter())
 	h.wantText(regionLabel(zh, "us"))
+}
+
+func TestWelcomeLanguageChangePreservesMarketplace(t *testing.T) {
+	h := newHarness(t, false)
+	h.start()
+	h.app.welcomeUI.region, h.app.welcomeUI.picked = "jp", true
+	h.tt.SetLocale("zh-Hans")
+	h.drain()
+	h.wantText(regionLabel(locales.In("zh-Hans"), "jp"))
+	if h.app.welcomeUI.region != "jp" {
+		t.Fatal("marketplace changed")
+	}
 }

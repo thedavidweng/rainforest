@@ -273,20 +273,31 @@ func (a *App) restoreChoices(m locales.Messages) []restoreChoice {
 func (a *App) restoreContainerCard(c *ui.Context, m locales.Messages, choices []restoreChoice) {
 	t := c.Theme()
 	rs := &a.restore
+	current := ""
 	labels := make([]string, len(choices))
 	for i := range choices {
 		labels[i] = choices[i].label
+		if choices[i].id == rs.container {
+			current = choices[i].label
+		}
 	}
 	card(c, func() {
 		if len(labels) > 0 {
 			var picker ui.Element
 			if len(labels) > comboboxThreshold {
-				picker = ui.Combobox(c, &rs.container, labels).Placeholder(m.RestoreContainerPlaceholder())
+				picker = ui.Combobox(c, &current, labels).Placeholder(m.RestoreContainerPlaceholder())
 			} else {
-				picker = outlined(c, ui.Select(c, &rs.container, labels))
+				picker = outlined(c, ui.Select(c, &current, labels))
 			}
 			if picker.Label(m.RestoreSourceContainer()).MaxWidth(420).Changed() {
 				rs.folderID = ""
+				rs.container = ""
+				for _, ch := range choices {
+					if ch.label == current {
+						rs.container = ch.id
+						break
+					}
+				}
 			}
 		}
 		a.restoreBrowseRow(c, m)
@@ -379,7 +390,7 @@ func (a *App) restoreRequest(choices []restoreChoice) (in gui.DownloadInput, ok 
 		in.ContainerNodeID = rs.folderID
 		ok = rs.folderID != ""
 		for _, ch := range choices {
-			if rs.folderID == "" && ch.label == rs.container {
+			if rs.folderID == "" && ch.id == rs.container {
 				in.ContainerNodeID, ok = ch.id, true
 			}
 		}
@@ -405,7 +416,7 @@ func (a *App) restoreFooter(c *ui.Context, m locales.Messages, choices []restore
 			label = m.RestoreDownloadFolder()
 		}
 		for _, ch := range choices {
-			if rs.folderID == "" && ch.label == rs.container {
+			if rs.folderID == "" && ch.id == rs.container {
 				label = m.RestoreDownloadFolder()
 				if ch.album {
 					label = m.RestoreDownloadAlbum()
