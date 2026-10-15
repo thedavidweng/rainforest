@@ -13,16 +13,18 @@ import (
 )
 
 type DestinationCapability struct {
-	Region            aphotos.Region         `json:"region"`
-	Evidence          aphotos.EvidenceStatus `json:"evidence"`
-	DestinationNodeID string                 `json:"destinationNodeId"`
-	Name              string                 `json:"name"`
-	Kind              string                 `json:"kind"`
-	Status            string                 `json:"status"`
-	Message           string                 `json:"message"`
-	rootID            string
-	parentID          string
-	err               error
+	Region             aphotos.Region         `json:"region"`
+	Evidence           aphotos.EvidenceStatus `json:"evidence"`
+	DestinationNodeID  string                 `json:"destinationNodeId"`
+	Name               string                 `json:"name"`
+	Kind               string                 `json:"kind"`
+	Status             string                 `json:"status"`
+	Message            string                 `json:"message"`
+	StructureSupported bool                   `json:"structureSupported"`
+	rootID             string
+	parentID           string
+	folders            *folderResolver
+	err                error
 }
 
 func (e *Engine) ProbeDestination(ctx context.Context, id string) DestinationCapability {
@@ -84,6 +86,8 @@ func (e *Engine) probeDestination(ctx context.Context, client *aphotos.Client, i
 				d.parentID = node.ID
 			}
 			d.Status = "readable"
+			d.StructureSupported = node.Kind == aphotos.NodeKindFolder
+			d.folders = newFolderResolver(client, d.parentID)
 			d.Message = "Target is readable. Upload and album membership are confirmed separately."
 			if d.Name == "" && d.DestinationNodeID == "" {
 				d.Name = "Account root"

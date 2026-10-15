@@ -97,6 +97,8 @@ type Engine struct {
 	activeMu sync.Mutex
 	active   map[string]*activeTransferControl
 
+	thumbs thumbnailCache
+
 	scanMu   sync.Mutex
 	scanning map[string]string
 	bgCancel context.CancelFunc
@@ -285,7 +287,7 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 			}
 			if tr.Kind == store.TransferKindUpload || tr.Kind == store.TransferKindBackup {
 				if destinationReadable && (it.Status == store.ItemStatusRunning || it.Status == store.ItemStatusUnconfirmed) {
-					node, fErr := findRemoteNodeForItem(ctx, client, *it, destination.parentID)
+					node, fErr := findExistingInDestination(ctx, client, destination, *it)
 					if fErr != nil && firstRemoteErr == nil {
 						firstRemoteErr = fErr
 					}

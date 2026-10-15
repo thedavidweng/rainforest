@@ -1,6 +1,0 @@
-[install]
-exact = true
-
-[test]
-root = "./src"
-preload = ["./src/testing/setup.ts"]

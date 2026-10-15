@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Updates the framework version and authentication UI in ADR 0002.
+Accepted. Updates the framework version and authentication UI in ADR 0002. Superseded in part by [ADR 0005](0005-native-ui.md): the React UI and TypeScript catalogs were replaced by native views.
 
 ## Context
 

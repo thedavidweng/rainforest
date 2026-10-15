@@ -14,50 +14,55 @@ type Transfers struct {
 }
 
 type UploadPlanInput struct {
-	Paths             []string `json:"paths"`
-	DestinationNodeID string   `json:"destinationNodeId,omitempty"`
-	ConflictPolicy    string   `json:"conflictPolicy,omitempty"`
-	IncludeVideos     *bool    `json:"includeVideos,omitempty"`
-	IncludePreviews   *bool    `json:"includePreviews,omitempty"`
+	Paths               []string `json:"paths"`
+	DestinationNodeID   string   `json:"destinationNodeId,omitempty"`
+	ConflictPolicy      string   `json:"conflictPolicy,omitempty"`
+	IncludeVideos       *bool    `json:"includeVideos,omitempty"`
+	IncludePreviews     *bool    `json:"includePreviews,omitempty"`
+	KeepFolderStructure *bool    `json:"keepFolderStructure,omitempty"`
 }
 
 type DestinationCapabilityDTO struct {
-	Region            string `json:"region"`
-	Evidence          string `json:"evidence"`
-	Name              string `json:"name"`
-	Kind              string `json:"kind"`
-	Status            string `json:"status"`
-	DestinationNodeID string `json:"destinationNodeId,omitempty"`
-	Message           string `json:"message"`
+	Region             string `json:"region"`
+	Evidence           string `json:"evidence"`
+	Name               string `json:"name"`
+	Kind               string `json:"kind"`
+	Status             string `json:"status"`
+	DestinationNodeID  string `json:"destinationNodeId,omitempty"`
+	Message            string `json:"message"`
+	StructureSupported bool   `json:"structureSupported"`
 }
 
 type PlanItemDTO struct {
-	LocalPath        string `json:"localPath"`
-	Name             string `json:"name"`
-	MediaType        string `json:"mediaType"`
-	Size             int64  `json:"size"`
-	Width            int    `json:"width,omitempty"`
-	Height           int    `json:"height,omitempty"`
-	ThumbnailDataURL string `json:"thumbnailDataUrl,omitempty"`
+	LocalPath string `json:"localPath"`
+	Name      string `json:"name"`
+	MediaType string `json:"mediaType"`
+	Size      int64  `json:"size"`
+	Width     int    `json:"width,omitempty"`
+	Height    int    `json:"height,omitempty"`
+	Thumbnail []byte `json:"thumbnail,omitempty"`
+	RemoteDir string `json:"remoteDir,omitempty"`
 }
 
 type UploadPlanDTO struct {
-	SourceSummary      string                   `json:"sourceSummary"`
-	PhotoCount         int                      `json:"photoCount"`
-	VideoCount         int                      `json:"videoCount"`
-	TotalCount         int                      `json:"totalCount"`
-	TotalBytes         int64                    `json:"totalBytes"`
-	SkippedUnsupported int                      `json:"skippedUnsupported"`
-	ConflictPolicy     string                   `json:"conflictPolicy"`
-	Destination        DestinationCapabilityDTO `json:"destination"`
-	Items              []PlanItemDTO            `json:"items"`
+	SourceSummary       string                   `json:"sourceSummary"`
+	PhotoCount          int                      `json:"photoCount"`
+	VideoCount          int                      `json:"videoCount"`
+	TotalCount          int                      `json:"totalCount"`
+	TotalBytes          int64                    `json:"totalBytes"`
+	SkippedUnsupported  int                      `json:"skippedUnsupported"`
+	ConflictPolicy      string                   `json:"conflictPolicy"`
+	KeepFolderStructure bool                     `json:"keepFolderStructure"`
+	Destination         DestinationCapabilityDTO `json:"destination"`
+	Items               []PlanItemDTO            `json:"items"`
 }
 
 type StartUploadInput struct {
-	Paths             []string `json:"paths"`
-	DestinationNodeID string   `json:"destinationNodeId,omitempty"`
-	ConflictPolicy    string   `json:"conflictPolicy,omitempty"`
-	IncludeVideos     *bool    `json:"includeVideos,omitempty"`
+	Paths               []string `json:"paths"`
+	DestinationNodeID   string   `json:"destinationNodeId,omitempty"`
+	ConflictPolicy      string   `json:"conflictPolicy,omitempty"`
+	IncludeVideos       *bool    `json:"includeVideos,omitempty"`
+	KeepFolderStructure *bool    `json:"keepFolderStructure,omitempty"`
 }
 
 type TransferListDTO struct {
@@ -76,7 +81,7 @@ func (t *Transfers) ProbeDestination(ctx context.Context, id string) (*Destinati
 }
 
 func toDestinationDTO(d engine.DestinationCapability) DestinationCapabilityDTO {
-	return DestinationCapabilityDTO{Region: string(d.Region), Evidence: string(d.Evidence), Name: d.Name, Kind: d.Kind, Status: d.Status, DestinationNodeID: d.DestinationNodeID, Message: d.Message}
+	return DestinationCapabilityDTO{Region: string(d.Region), Evidence: string(d.Evidence), Name: d.Name, Kind: d.Kind, Status: d.Status, DestinationNodeID: d.DestinationNodeID, Message: d.Message, StructureSupported: d.StructureSupported}
 }
 
 func (t *Transfers) PlanUpload(ctx context.Context, in UploadPlanInput) (*UploadPlanDTO, error) {
@@ -89,10 +94,11 @@ func (t *Transfers) PlanUpload(ctx context.Context, in UploadPlanInput) (*Upload
 		includePreviews = *in.IncludePreviews
 	}
 	plan, err := eng.PlanUpload(ctx, in.Paths, engine.PlanOptions{
-		DestinationNodeID: in.DestinationNodeID,
-		ConflictPolicy:    aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
-		IncludeVideos:     in.IncludeVideos,
-		IncludePreviews:   includePreviews,
+		DestinationNodeID:   in.DestinationNodeID,
+		ConflictPolicy:      aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
+		IncludeVideos:       in.IncludeVideos,
+		IncludePreviews:     includePreviews,
+		KeepFolderStructure: in.KeepFolderStructure,
 	})
 	if err != nil {
 		return nil, toError(err)
@@ -106,10 +112,11 @@ func (t *Transfers) StartUpload(ctx context.Context, in StartUploadInput) (*Tran
 		return nil, err
 	}
 	tr, err := eng.StartUpload(ctx, engine.UploadJobRequest{
-		Paths:             in.Paths,
-		DestinationNodeID: in.DestinationNodeID,
-		ConflictPolicy:    aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
-		IncludeVideos:     in.IncludeVideos,
+		Paths:               in.Paths,
+		DestinationNodeID:   in.DestinationNodeID,
+		ConflictPolicy:      aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
+		IncludeVideos:       in.IncludeVideos,
+		KeepFolderStructure: in.KeepFolderStructure,
 	})
 	if err != nil {
 		return nil, toError(err)
@@ -270,25 +277,27 @@ func toUploadPlanDTO(p *engine.UploadPlan) *UploadPlanDTO {
 	for i := range p.Items {
 		it := &p.Items[i]
 		items = append(items, PlanItemDTO{
-			LocalPath:        it.LocalPath,
-			Name:             it.Name,
-			MediaType:        string(it.MediaType),
-			Size:             it.Size,
-			Width:            it.Width,
-			Height:           it.Height,
-			ThumbnailDataURL: it.ThumbnailDataURL,
+			LocalPath: it.LocalPath,
+			Name:      it.Name,
+			MediaType: string(it.MediaType),
+			Size:      it.Size,
+			Width:     it.Width,
+			Height:    it.Height,
+			Thumbnail: it.Thumbnail,
+			RemoteDir: it.RemoteDir,
 		})
 	}
 	return &UploadPlanDTO{
-		SourceSummary:      p.SourceSummary,
-		PhotoCount:         p.PhotoCount,
-		VideoCount:         p.VideoCount,
-		TotalCount:         p.TotalCount,
-		TotalBytes:         p.TotalBytes,
-		SkippedUnsupported: p.SkippedUnsupported,
-		ConflictPolicy:     string(p.ConflictPolicy),
-		Destination:        toDestinationDTO(p.Destination),
-		Items:              items,
+		SourceSummary:       p.SourceSummary,
+		PhotoCount:          p.PhotoCount,
+		VideoCount:          p.VideoCount,
+		TotalCount:          p.TotalCount,
+		TotalBytes:          p.TotalBytes,
+		SkippedUnsupported:  p.SkippedUnsupported,
+		ConflictPolicy:      string(p.ConflictPolicy),
+		KeepFolderStructure: p.KeepFolderStructure,
+		Destination:         toDestinationDTO(p.Destination),
+		Items:               items,
 	}
 }
 
@@ -331,4 +340,88 @@ func toTransferItemDTO(it store.TransferItem) TransferItemDTO {
 		ErrorMessage: aphotos.Redact(it.ErrorMessage),
 		UpdatedAt:    formatTimeISO(it.UpdatedAt),
 	}
+}
+
+type RecentUploadDTO struct {
+	Name         string `json:"name"`
+	MediaType    string `json:"mediaType"`
+	LocalPath    string `json:"localPath"`
+	RemoteNodeID string `json:"remoteNodeId"`
+	UpdatedAt    string `json:"updatedAt"`
+	Thumbnail    []byte `json:"thumbnail,omitempty"`
+}
+
+type FolderRefDTO struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type FolderListingDTO struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Path      []FolderRefDTO `json:"path"`
+	Folders   []FolderRefDTO `json:"folders"`
+	Truncated bool           `json:"truncated"`
+}
+
+func (t *Transfers) RecentUploads(ctx context.Context, limit int) ([]RecentUploadDTO, error) {
+	_, eng, err := t.state.deps()
+	if err != nil {
+		return nil, err
+	}
+	recent, err := eng.RecentUploads(ctx, limit)
+	if err != nil {
+		return nil, toError(err)
+	}
+	out := make([]RecentUploadDTO, 0, len(recent))
+	for i := range recent {
+		it := recent[i].Item
+		out = append(out, RecentUploadDTO{
+			Name:         it.Name,
+			MediaType:    string(it.MediaType),
+			LocalPath:    it.LocalPath,
+			RemoteNodeID: it.RemoteNodeID,
+			UpdatedAt:    formatTimeISO(it.UpdatedAt),
+			Thumbnail:    recent[i].Thumbnail,
+		})
+	}
+	return out, nil
+}
+
+func (t *Transfers) LastUploadAt(ctx context.Context) (string, error) {
+	_, eng, err := t.state.deps()
+	if err != nil {
+		return "", err
+	}
+	at, err := eng.LastUploadAt(ctx)
+	if err != nil {
+		return "", toError(err)
+	}
+	return formatOptionalTimeISO(at), nil
+}
+
+func (t *Transfers) ListFolders(ctx context.Context, parentID string) (*FolderListingDTO, error) {
+	_, eng, err := t.state.deps()
+	if err != nil {
+		return nil, err
+	}
+	l, err := eng.ListFolders(ctx, parentID)
+	if err != nil {
+		return nil, toError(err)
+	}
+	return &FolderListingDTO{
+		ID:        l.Folder.ID,
+		Name:      l.Folder.Name,
+		Path:      toFolderRefDTOs(l.Path),
+		Folders:   toFolderRefDTOs(l.Children),
+		Truncated: l.Truncated,
+	}, nil
+}
+
+func toFolderRefDTOs(in []engine.FolderRef) []FolderRefDTO {
+	out := make([]FolderRefDTO, 0, len(in))
+	for _, f := range in {
+		out = append(out, FolderRefDTO{ID: f.ID, Name: f.Name})
+	}
+	return out
 }

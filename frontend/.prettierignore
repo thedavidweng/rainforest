@@ -1,6 +1,0 @@
-dist
-node_modules
-bun.lock
-src/mygo.ts
-
-src/locales.ts

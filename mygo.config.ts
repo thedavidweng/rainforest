@@ -5,12 +5,7 @@ export default {
   version: "0.1.0",
   copyright: "Copyright (C) 2026 Davy Weng and contributors",
   main: ".",
-  devCommand: "bun run --cwd frontend dev",
-  devUrl: "http://localhost:5173",
-  buildCommand: "bun run --cwd frontend build",
-  frontendDist: "frontend/dist",
   i18n: { dir: "locales", source: "en" },
-  bindings: "frontend/src/mygo.ts",
   updates: {
     github: "thedavidweng/rainforest",
     tagPrefix: "v",

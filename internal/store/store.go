@@ -110,19 +110,20 @@ func DefaultSettings() Settings {
 }
 
 type BackupRule struct {
-	ID                string                 `json:"id"`
-	LocalPath         string                 `json:"localPath"`
-	IncludeVideos     bool                   `json:"includeVideos"`
-	ScheduleMode      ScheduleMode           `json:"scheduleMode"`
-	IntervalMinutes   int                    `json:"intervalMinutes"`
-	ConflictPolicy    aphotos.ConflictPolicy `json:"conflictPolicy"`
-	DestinationNodeID string                 `json:"destinationNodeId"`
-	Paused            bool                   `json:"paused"`
-	Status            BackupStatus           `json:"status"`
-	LastScanAt        *time.Time             `json:"lastScanAt,omitempty"`
-	LastError         string                 `json:"lastError,omitempty"`
-	CreatedAt         time.Time              `json:"createdAt"`
-	UpdatedAt         time.Time              `json:"updatedAt"`
+	ID                  string                 `json:"id"`
+	LocalPath           string                 `json:"localPath"`
+	IncludeVideos       bool                   `json:"includeVideos"`
+	ScheduleMode        ScheduleMode           `json:"scheduleMode"`
+	IntervalMinutes     int                    `json:"intervalMinutes"`
+	ConflictPolicy      aphotos.ConflictPolicy `json:"conflictPolicy"`
+	DestinationNodeID   string                 `json:"destinationNodeId"`
+	Paused              bool                   `json:"paused"`
+	KeepFolderStructure bool                   `json:"keepFolderStructure"`
+	Status              BackupStatus           `json:"status"`
+	LastScanAt          *time.Time             `json:"lastScanAt,omitempty"`
+	LastError           string                 `json:"lastError,omitempty"`
+	CreatedAt           time.Time              `json:"createdAt"`
+	UpdatedAt           time.Time              `json:"updatedAt"`
 }
 
 type TrackedFile struct {
@@ -172,6 +173,7 @@ type TransferItem struct {
 	BytesDone    int64      `json:"bytesDone"`
 	ErrorMessage string     `json:"errorMessage,omitempty"`
 	UpdatedAt    time.Time  `json:"updatedAt"`
+	RemoteDir    string     `json:"remoteDir,omitempty"`
 }
 
 type Store struct {
@@ -260,6 +262,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			conflict_policy TEXT NOT NULL DEFAULT 'skip',
 			destination_node_id TEXT NOT NULL DEFAULT '',
 			paused INTEGER NOT NULL DEFAULT 0,
+			keep_folder_structure INTEGER NOT NULL DEFAULT 1,
 			status TEXT NOT NULL DEFAULT 'active',
 			last_scan_at TEXT NOT NULL DEFAULT '',
 			last_error TEXT NOT NULL DEFAULT '',
@@ -313,6 +316,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			bytes_done INTEGER NOT NULL DEFAULT 0,
 			error_message TEXT NOT NULL DEFAULT '',
 			updated_at TEXT NOT NULL,
+			remote_dir TEXT NOT NULL DEFAULT '',
 			FOREIGN KEY (transfer_id) REFERENCES transfers(id) ON DELETE CASCADE
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_transfer_items_transfer_id ON transfer_items(transfer_id);`,
@@ -324,6 +328,46 @@ func (s *Store) migrate(ctx context.Context) error {
 		if _, err := s.db.ExecContext(ctx, q); err != nil {
 			return fmt.Errorf("migrate sqlite schema: %w", err)
 		}
+	}
+	for _, c := range []struct{ table, column, ddl string }{
+		{"backup_rules", "keep_folder_structure", "INTEGER NOT NULL DEFAULT 1"},
+		{"transfer_items", "remote_dir", "TEXT NOT NULL DEFAULT ''"},
+	} {
+		if err := s.ensureColumn(ctx, c.table, c.column, c.ddl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Store) ensureColumn(ctx context.Context, table, column, ddl string) error {
+	rows, err := s.db.QueryContext(ctx, "PRAGMA table_info("+table+")")
+	if err != nil {
+		return fmt.Errorf("inspect %s: %w", table, err)
+	}
+	found := false
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, typ string
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &dflt, &pk); err != nil {
+			_ = rows.Close()
+			return fmt.Errorf("inspect %s: %w", table, err)
+		}
+		if name == column {
+			found = true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return err
+	}
+	_ = rows.Close()
+	if found {
+		return nil
+	}
+	if _, err := s.db.ExecContext(ctx, "ALTER TABLE "+table+" ADD COLUMN "+column+" "+ddl); err != nil {
+		return fmt.Errorf("add %s.%s: %w", table, column, err)
 	}
 	return nil
 }
@@ -431,9 +475,9 @@ func (s *Store) CreateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO backup_rules (
 			id, local_path, include_videos, schedule_mode, interval_minutes,
-			conflict_policy, destination_node_id, paused, status,
+			conflict_policy, destination_node_id, paused, keep_folder_structure, status,
 			last_scan_at, last_error, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		rule.ID,
 		rule.LocalPath,
@@ -443,6 +487,7 @@ func (s *Store) CreateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 		string(rule.ConflictPolicy),
 		strings.TrimSpace(rule.DestinationNodeID),
 		boolToInt(rule.Paused),
+		boolToInt(rule.KeepFolderStructure),
 		string(rule.Status),
 		formatTimePtr(rule.LastScanAt),
 		aphotos.Redact(rule.LastError),
@@ -481,10 +526,11 @@ func (s *Store) UpdateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 	}
 	defer func() { _ = tx.Rollback() }()
 	var previousDestination, previousPath string
-	if err := tx.QueryRowContext(ctx, `SELECT destination_node_id, local_path FROM backup_rules WHERE id = ?`, rule.ID).Scan(&previousDestination, &previousPath); err != nil {
+	var previousKeep int
+	if err := tx.QueryRowContext(ctx, `SELECT destination_node_id, local_path, keep_folder_structure FROM backup_rules WHERE id = ?`, rule.ID).Scan(&previousDestination, &previousPath, &previousKeep); err != nil {
 		return BackupRule{}, err
 	}
-	if previousDestination != strings.TrimSpace(rule.DestinationNodeID) || previousPath != rule.LocalPath {
+	if previousDestination != strings.TrimSpace(rule.DestinationNodeID) || previousPath != rule.LocalPath || (previousKeep != 0) != rule.KeepFolderStructure {
 		if _, err := tx.ExecContext(ctx, `DELETE FROM tracked_files WHERE backup_rule_id = ?`, rule.ID); err != nil {
 			return BackupRule{}, err
 		}
@@ -501,6 +547,7 @@ func (s *Store) UpdateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 			conflict_policy = ?,
 			destination_node_id = ?,
 			paused = ?,
+			keep_folder_structure = ?,
 			status = ?,
 			last_scan_at = ?,
 			last_error = ?,
@@ -514,6 +561,7 @@ func (s *Store) UpdateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 		string(rule.ConflictPolicy),
 		strings.TrimSpace(rule.DestinationNodeID),
 		boolToInt(rule.Paused),
+		boolToInt(rule.KeepFolderStructure),
 		string(rule.Status),
 		formatTimePtr(rule.LastScanAt),
 		aphotos.Redact(rule.LastError),
@@ -550,7 +598,7 @@ func (s *Store) SetBackupRuleStatus(ctx context.Context, id string, status Backu
 func (s *Store) GetBackupRule(ctx context.Context, id string) (BackupRule, error) {
 	row := s.db.QueryRowContext(ctx, `
 		SELECT id, local_path, include_videos, schedule_mode, interval_minutes,
-		       conflict_policy, destination_node_id, paused, status,
+		       conflict_policy, destination_node_id, paused, keep_folder_structure, status,
 		       last_scan_at, last_error, created_at, updated_at
 		FROM backup_rules WHERE id = ?
 	`, id)
@@ -564,7 +612,7 @@ func (s *Store) GetBackupRule(ctx context.Context, id string) (BackupRule, error
 func (s *Store) ListBackupRules(ctx context.Context) ([]BackupRule, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, local_path, include_videos, schedule_mode, interval_minutes,
-		       conflict_policy, destination_node_id, paused, status,
+		       conflict_policy, destination_node_id, paused, keep_folder_structure, status,
 		       last_scan_at, last_error, created_at, updated_at
 		FROM backup_rules ORDER BY created_at ASC, id ASC
 	`)
@@ -767,8 +815,8 @@ func (s *Store) CreateTransfer(ctx context.Context, tr Transfer, items []Transfe
 		_, err = tx.ExecContext(ctx, `
 			INSERT INTO transfer_items (
 				id, transfer_id, local_path, name, media_type, size,
-				md5, remote_node_id, status, bytes_done, error_message, updated_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				md5, remote_node_id, status, bytes_done, error_message, updated_at, remote_dir
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 			it.ID,
 			it.TransferID,
@@ -782,6 +830,7 @@ func (s *Store) CreateTransfer(ctx context.Context, tr Transfer, items []Transfe
 			it.BytesDone,
 			aphotos.Redact(it.ErrorMessage),
 			formatTime(it.UpdatedAt),
+			it.RemoteDir,
 		)
 		if err != nil {
 			return Transfer{}, fmt.Errorf("insert transfer item: %w", err)
@@ -919,7 +968,7 @@ func (s *Store) ListTransfersNeedingReconciliation(ctx context.Context) ([]Trans
 func (s *Store) GetTransferItem(ctx context.Context, itemID string) (TransferItem, error) {
 	row := s.db.QueryRowContext(ctx, `
 		SELECT id, transfer_id, local_path, name, media_type, size,
-		       md5, remote_node_id, status, bytes_done, error_message, updated_at
+		       md5, remote_node_id, status, bytes_done, error_message, updated_at, remote_dir
 		FROM transfer_items WHERE id = ?
 	`, itemID)
 	it, err := scanTransferItem(row)
@@ -932,7 +981,7 @@ func (s *Store) GetTransferItem(ctx context.Context, itemID string) (TransferIte
 func (s *Store) ListTransferItems(ctx context.Context, transferID string) ([]TransferItem, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, transfer_id, local_path, name, media_type, size,
-		       md5, remote_node_id, status, bytes_done, error_message, updated_at
+		       md5, remote_node_id, status, bytes_done, error_message, updated_at, remote_dir
 		FROM transfer_items WHERE transfer_id = ? ORDER BY id ASC
 	`, transferID)
 	if err != nil {
@@ -970,7 +1019,8 @@ func updateTransferItem(ctx context.Context, db sqlExecutor, item TransferItem) 
 			status = ?,
 			bytes_done = ?,
 			error_message = ?,
-			updated_at = ?
+			updated_at = ?,
+			remote_dir = ?
 		WHERE id = ?
 	`,
 		item.LocalPath,
@@ -983,6 +1033,7 @@ func updateTransferItem(ctx context.Context, db sqlExecutor, item TransferItem) 
 		item.BytesDone,
 		aphotos.Redact(item.ErrorMessage),
 		formatTime(item.UpdatedAt),
+		item.RemoteDir,
 		item.ID,
 	)
 	if err != nil {
@@ -1001,7 +1052,7 @@ func (s *Store) ListConfirmedItems(ctx context.Context, limit int) ([]TransferIt
 	}
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT i.id, i.transfer_id, i.local_path, i.name, i.media_type, i.size,
-		       i.md5, i.remote_node_id, i.status, i.bytes_done, i.error_message, i.updated_at
+		       i.md5, i.remote_node_id, i.status, i.bytes_done, i.error_message, i.updated_at, i.remote_dir
 		FROM transfer_items i
 		JOIN transfers t ON t.id = i.transfer_id
 		WHERE i.status = 'confirmed' AND i.remote_node_id != '' AND t.kind IN ('upload', 'backup')
@@ -1042,7 +1093,7 @@ type rowScanner interface {
 
 func scanBackupRule(r rowScanner) (BackupRule, error) {
 	var rule BackupRule
-	var incVideos, paused int
+	var incVideos, paused, keep int
 	var sched, conflict, statusStr, lastScanStr, createdStr, updatedStr string
 	err := r.Scan(
 		&rule.ID,
@@ -1053,6 +1104,7 @@ func scanBackupRule(r rowScanner) (BackupRule, error) {
 		&conflict,
 		&rule.DestinationNodeID,
 		&paused,
+		&keep,
 		&statusStr,
 		&lastScanStr,
 		&rule.LastError,
@@ -1066,6 +1118,7 @@ func scanBackupRule(r rowScanner) (BackupRule, error) {
 	rule.ScheduleMode = ScheduleMode(sched)
 	rule.ConflictPolicy = normalizeConflict(aphotos.ConflictPolicy(conflict))
 	rule.Paused = paused != 0
+	rule.KeepFolderStructure = keep != 0
 	rule.Status = BackupStatus(statusStr)
 	rule.LastScanAt = parseTimePtr(lastScanStr)
 	rule.CreatedAt = parseTime(createdStr)
@@ -1125,6 +1178,7 @@ func scanTransferItem(r rowScanner) (TransferItem, error) {
 		&it.BytesDone,
 		&it.ErrorMessage,
 		&updatedStr,
+		&it.RemoteDir,
 	)
 	if err != nil {
 		return TransferItem{}, err

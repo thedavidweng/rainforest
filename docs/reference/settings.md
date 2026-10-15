@@ -32,11 +32,10 @@ Reference for all persistent settings stored in the SQLite `settings` table (`in
 The native MyGo 0.5 i18n system chooses English (`en`) or Simplified Chinese
 (`zh-Hans`) from the user's system language preferences. This is independent of
 `SettingsDTO.region`, which controls Amazon routing. It is not stored in the
-SQLite settings table. React observes native locale changes; the native shell
-uses the same catalogs. Framework menus/dialog strings use MyGo's bundled
+SQLite settings table. Native views follow locale changes using the same catalogs. Framework menus/dialog strings use MyGo's bundled
 translations. Protocol error details and remote data are not translated.
 
 For contributors: edit both `locales/*.json` catalogs, run
-`frontend/node_modules/.bin/mygo generate`, and run `mise run check`. Generated
-`locales/catalog_gen.go` and `frontend/src/locales.ts` are committed and checked
-for drift alongside service bindings.
+`go tool mygo generate`, and run `mise run check`. Generated
+`locales/catalog_gen.go` is committed and checked for drift by
+`mise run i18n-check`.

@@ -2,7 +2,6 @@
 go = "1.27.2"
 gofumpt = "0.12.0"
 golangci-lint = "2.14.0"
-bun = "1.4.2"
 jactionlint = "2.1.0"
 
 [tasks.build]
@@ -51,7 +50,7 @@ run = '''
 for f in CLAUDE.md .cursorrules .windsurfrules .clinerules GEMINI.md; do
   if [ -e "$f" ]; then echo "forbidden per-tool agent file: $f (use AGENTS.md)"; exit 1; fi
 done
-files=$(find . -path './frontend' -prune -o -path './.git' -prune -o -name '*.go' ! -name '*_test.go' ! -name '*_gen.go' -print)
+files=$(find . -path './.git' -prune -o -name '*.go' ! -name '*_test.go' ! -name '*_gen.go' -print)
 if [ -n "$files" ]; then
   total=$(cat $files | grep -cv '^[[:space:]]*$')
   comments=$(cat $files | grep -E '^[[:space:]]*//' | grep -cvE '^[[:space:]]*//(go:|nolint)' || true)
@@ -61,27 +60,37 @@ if [ -n "$files" ]; then
 fi
 '''
 
-[tasks.bindings-check]
+[tasks.i18n-check]
 run = '''
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
-cp frontend/src/mygo.ts "$tmp_dir/mygo.ts"
-cp frontend/src/locales.ts "$tmp_dir/locales.ts"
 cp locales/catalog_gen.go "$tmp_dir/catalog_gen.go"
-bun frontend/node_modules/mygo-cli/bin/mygo.js i18n check
-bun frontend/node_modules/mygo-cli/bin/mygo.js generate
-diff -u "$tmp_dir/mygo.ts" frontend/src/mygo.ts
-diff -u "$tmp_dir/locales.ts" frontend/src/locales.ts
+go tool mygo i18n check
+go tool mygo generate
 diff -u "$tmp_dir/catalog_gen.go" locales/catalog_gen.go
 '''
 
-[tasks.frontend-check]
+[tasks.icons]
+description = "Sync internal/view/icons from the Phosphor version and weight/name lines in icons.txt"
 run = '''
-bun run --cwd frontend fmt-check
-bun run --cwd frontend lint
-bun run --cwd frontend typecheck
-bun --cwd frontend test
-bun run --cwd frontend build
+set -eu
+dir=internal/view/icons
+version=$(head -n 1 "$dir/icons.txt")
+base="https://unpkg.com/@phosphor-icons/core@$version"
+lines=$(tail -n +2 "$dir/icons.txt" | grep -v '^[[:space:]]*$')
+files=""
+while read -r weight name; do
+  if [ "$weight" = regular ]; then file="$name"; else file="$name-$weight"; fi
+  curl -fsSL "$base/assets/$weight/$file.svg" -o "$dir/$file.svg"
+  files="$files $file"
+done <<EOF2
+$lines
+EOF2
+curl -fsSL "$base/LICENSE" -o "$dir/LICENSE-phosphor"
+for f in "$dir"/*.svg; do
+  name=$(basename "$f" .svg)
+  echo "$files" | tr ' ' '\n' | grep -qx "$name" || rm "$f"
+done
 '''
 
 [tasks.check]
@@ -94,6 +103,5 @@ run = [
   "mise run test-race",
   "mise run lint",
   "mise run conventions",
-  "mise run bindings-check",
-  "mise run frontend-check",
+  "mise run i18n-check",
 ]

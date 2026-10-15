@@ -1,17 +1,23 @@
 # Choose an Upload Destination
 
-1. In **Transfers / Upload**, select or drop local files. In the confirmation dialog, enter an existing folder or album's exact **Destination Node ID**. Leave it blank to use the current account root.
-2. Check the displayed target name, protocol type, and `pending` / `readable` / `failed` status. Rainforest accepts `AVAILABLE` folders and albums (`VISUAL_COLLECTION`), without creating or browsing a full cloud library.
-3. Use **Check Destination** to recheck after reconnecting. Start when the target is `readable`. Rainforest checks again before execution. Readability does not prove upload permission or successful album association.
+1. On the **Upload** page, choose or drop local files. In the review dialog, the **Upload to** row shows where files will go, for example `Amazon Photos › Trips`. Click **Change…** to browse Amazon Photos, open folders, and click **Choose this folder**. To use an exact ID, expand **Use a folder or album ID** in the picker. The default is the account root.
+2. Check the displayed target name, protocol type, and `pending` / `readable` / `failed` status. Rainforest accepts `AVAILABLE` folders and albums (`VISUAL_COLLECTION`), and the destination picker browses folders read-only. Rainforest never renames, moves, or deletes remote folders.
+3. Changing the destination rechecks it. Start when the target is `readable`. Rainforest checks again before execution. Readability does not prove upload permission or successful album association.
 
-For automatic backups, open **Backups → Add Backup Folder** or **Edit**, set **Destination Node ID**, and use **Check Destination**. You can save a `pending` configuration while offline or without credentials. A failed or pending probe blocks execution; Rainforest keeps your ID and never silently redirects uploads to root.
+For automatic backups, open **Backup → Add folder** or **Edit…**, use **Upload to → Change…**, and watch the destination status. You can save a `pending` configuration while offline or without credentials. A failed or pending probe blocks execution; Rainforest keeps your ID and never silently redirects uploads to root.
 
-- **401:** import fresh cookies in Settings, then check again.
+- **401:** sign in again, then check again.
 - **403:** select a target accessible to this account or correct its permissions.
 - **404 / wrong ID / unsupported type / trash:** correct the target ID or restore the target using Amazon's interface.
-- **429 / timeout / disconnected network:** reconnect or wait, then check again or run **Scan Now**. Scheduled scans also recheck.
+- **429 / timeout / disconnected network:** reconnect or wait, then check again or click **Back up now**. Scheduled scans also recheck.
 
 Experimental marketplace badges are informational. They do not disable destination selection, and a successful check does not promote the region to verified.
+
+## Keep Folder Structure
+
+When the destination is a folder and you choose a local folder such as `Trips`, Rainforest finds or creates `Trips` and its subfolders under the destination by exact name and uploads each file into the matching folder. Loose files go directly into the destination. Backup rules do the same for the rule's subdirectories. The **Keep folder structure** switch appears in the review dialog when your selection includes a folder; turn it off to upload everything flat into the destination. It is also in the backup dialog, on by default.
+
+Album destinations are always flat because albums have no folders, so the switch is disabled with the hint "Albums don't have folders." If the mirrored folder cannot be resolved while checking an unconfirmed transfer, the item stays unconfirmed and nothing is uploaded again.
 
 ## Recover an Album Association
 

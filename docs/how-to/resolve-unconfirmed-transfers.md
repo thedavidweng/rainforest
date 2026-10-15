@@ -23,7 +23,7 @@ Rainforest never blindly re-POSTs an `unconfirmed` item during periodic backgrou
 
 ## Manually Reconcile and Retry
 
-To resolve an `unconfirmed` transfer in **Transfers / Upload**:
+To resolve an `unconfirmed` transfer in **Activity**:
 
 1. Expand the transfer details to see which item is `unconfirmed` and read its status message.
 2. Click **Retry** on the transfer card.

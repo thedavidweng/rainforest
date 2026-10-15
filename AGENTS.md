@@ -19,8 +19,8 @@ Single-context: root `GLOSSARY.md` / `CONTEXT.md` + `docs/adr/`. See `docs/agent
 ## Code principles
 
 1. Self-explanatory code, minimal comments. Write a comment only for a constraint the code cannot express. Decision rationale goes in `docs/adr/`, conventions go here. CI enforces a comment budget of 5% of non-test Go lines.
-2. Product scope is strictly one-time upload, one-way folder backup, transfer queue, and lightweight recovery download. Never add cloud photo wall, gallery timeline, AI search, album/folder manager, or trash UI pages.
-3. `internal/gui` and `internal/core` never import `github.com/egoist/mygo`. MyGo lives only in the thin desktop entrypoint (`cmd/rainforest` or root main).
+2. Product scope is strictly one-time upload, one-way folder backup, transfer queue, and lightweight recovery download. A read-only destination folder picker and mirroring local folder structure on upload and backup are in scope. Never add cloud photo wall, gallery timeline, AI search, album/folder manager (create, rename, move, delete), or trash UI pages.
+3. `internal/gui`, `internal/core`, `internal/engine`, `internal/store` and `internal/credstore` never import MyGo. The native views in `internal/view` import only `github.com/egoist/mygo/ui` (and its sub-packages); the root `github.com/egoist/mygo` package lives only in the root `main` package.
 
 ## Verification
 

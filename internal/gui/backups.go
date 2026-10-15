@@ -14,29 +14,31 @@ type Backups struct {
 }
 
 type BackupRuleInput struct {
-	LocalPath         string `json:"localPath"`
-	IncludeVideos     bool   `json:"includeVideos"`
-	ScheduleMode      string `json:"scheduleMode,omitempty"`
-	IntervalMinutes   int    `json:"intervalMinutes,omitempty"`
-	ConflictPolicy    string `json:"conflictPolicy,omitempty"`
-	DestinationNodeID string `json:"destinationNodeId,omitempty"`
-	Paused            bool   `json:"paused,omitempty"`
+	LocalPath           string `json:"localPath"`
+	IncludeVideos       bool   `json:"includeVideos"`
+	ScheduleMode        string `json:"scheduleMode,omitempty"`
+	IntervalMinutes     int    `json:"intervalMinutes,omitempty"`
+	ConflictPolicy      string `json:"conflictPolicy,omitempty"`
+	DestinationNodeID   string `json:"destinationNodeId,omitempty"`
+	Paused              bool   `json:"paused,omitempty"`
+	KeepFolderStructure *bool  `json:"keepFolderStructure,omitempty"`
 }
 
 type BackupRuleDTO struct {
-	ID                string `json:"id"`
-	LocalPath         string `json:"localPath"`
-	IncludeVideos     bool   `json:"includeVideos"`
-	ScheduleMode      string `json:"scheduleMode"`
-	IntervalMinutes   int    `json:"intervalMinutes"`
-	ConflictPolicy    string `json:"conflictPolicy"`
-	DestinationNodeID string `json:"destinationNodeId,omitempty"`
-	Paused            bool   `json:"paused"`
-	Status            string `json:"status"`
-	LastScanAt        string `json:"lastScanAt,omitempty"`
-	LastError         string `json:"lastError,omitempty"`
-	CreatedAt         string `json:"createdAt"`
-	UpdatedAt         string `json:"updatedAt"`
+	ID                  string `json:"id"`
+	LocalPath           string `json:"localPath"`
+	IncludeVideos       bool   `json:"includeVideos"`
+	ScheduleMode        string `json:"scheduleMode"`
+	IntervalMinutes     int    `json:"intervalMinutes"`
+	ConflictPolicy      string `json:"conflictPolicy"`
+	DestinationNodeID   string `json:"destinationNodeId,omitempty"`
+	Paused              bool   `json:"paused"`
+	KeepFolderStructure bool   `json:"keepFolderStructure"`
+	Status              string `json:"status"`
+	LastScanAt          string `json:"lastScanAt,omitempty"`
+	LastError           string `json:"lastError,omitempty"`
+	CreatedAt           string `json:"createdAt"`
+	UpdatedAt           string `json:"updatedAt"`
 }
 
 func (b *Backups) List(ctx context.Context) ([]BackupRuleDTO, error) {
@@ -159,30 +161,62 @@ func (b *Backups) PickFolder(ctx context.Context) (string, error) {
 
 func toEngineBackupInput(in BackupRuleInput) engine.BackupRuleInput {
 	return engine.BackupRuleInput{
-		LocalPath:         in.LocalPath,
-		IncludeVideos:     in.IncludeVideos,
-		ScheduleMode:      store.ScheduleMode(strings.TrimSpace(in.ScheduleMode)),
-		IntervalMinutes:   in.IntervalMinutes,
-		ConflictPolicy:    aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
-		DestinationNodeID: strings.TrimSpace(in.DestinationNodeID),
-		Paused:            in.Paused,
+		LocalPath:           in.LocalPath,
+		IncludeVideos:       in.IncludeVideos,
+		ScheduleMode:        store.ScheduleMode(strings.TrimSpace(in.ScheduleMode)),
+		IntervalMinutes:     in.IntervalMinutes,
+		ConflictPolicy:      aphotos.ConflictPolicy(strings.TrimSpace(in.ConflictPolicy)),
+		DestinationNodeID:   strings.TrimSpace(in.DestinationNodeID),
+		Paused:              in.Paused,
+		KeepFolderStructure: in.KeepFolderStructure,
 	}
 }
 
 func toBackupRuleDTO(r store.BackupRule) BackupRuleDTO {
 	return BackupRuleDTO{
-		ID:                r.ID,
-		LocalPath:         r.LocalPath,
-		IncludeVideos:     r.IncludeVideos,
-		ScheduleMode:      string(r.ScheduleMode),
-		IntervalMinutes:   r.IntervalMinutes,
-		ConflictPolicy:    string(r.ConflictPolicy),
-		DestinationNodeID: r.DestinationNodeID,
-		Paused:            r.Paused,
-		Status:            string(r.Status),
-		LastScanAt:        formatOptionalTimeISO(r.LastScanAt),
-		LastError:         aphotos.Redact(r.LastError),
-		CreatedAt:         formatTimeISO(r.CreatedAt),
-		UpdatedAt:         formatTimeISO(r.UpdatedAt),
+		ID:                  r.ID,
+		LocalPath:           r.LocalPath,
+		IncludeVideos:       r.IncludeVideos,
+		ScheduleMode:        string(r.ScheduleMode),
+		IntervalMinutes:     r.IntervalMinutes,
+		ConflictPolicy:      string(r.ConflictPolicy),
+		DestinationNodeID:   r.DestinationNodeID,
+		Paused:              r.Paused,
+		KeepFolderStructure: r.KeepFolderStructure,
+		Status:              string(r.Status),
+		LastScanAt:          formatOptionalTimeISO(r.LastScanAt),
+		LastError:           aphotos.Redact(r.LastError),
+		CreatedAt:           formatTimeISO(r.CreatedAt),
+		UpdatedAt:           formatTimeISO(r.UpdatedAt),
 	}
+}
+
+type TrackedFileDTO struct {
+	RelPath      string `json:"relPath"`
+	Size         int64  `json:"size"`
+	Status       string `json:"status"`
+	RemoteNodeID string `json:"remoteNodeId,omitempty"`
+	LastSyncedAt string `json:"lastSyncedAt,omitempty"`
+}
+
+func (b *Backups) Files(ctx context.Context, ruleID string) ([]TrackedFileDTO, error) {
+	_, eng, err := b.state.deps()
+	if err != nil {
+		return nil, err
+	}
+	files, err := eng.TrackedFiles(ctx, strings.TrimSpace(ruleID))
+	if err != nil {
+		return nil, toError(err)
+	}
+	out := make([]TrackedFileDTO, 0, len(files))
+	for i := range files {
+		out = append(out, TrackedFileDTO{
+			RelPath:      files[i].RelPath,
+			Size:         files[i].Size,
+			Status:       string(files[i].Status),
+			RemoteNodeID: files[i].RemoteNodeID,
+			LastSyncedAt: formatTimeISO(files[i].LastSyncedAt),
+		})
+	}
+	return out, nil
 }

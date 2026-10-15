@@ -4,6 +4,19 @@ All notable changes to **Rainforest** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Rebuilt the interface as a native desktop UI with a sidebar and a Welcome sign-in screen. Pages are now Upload, Activity, Backup, Restore, and Settings, with light and dark appearance that follows your system.
+- Upload now has a drop zone, a review dialog with a thumbnail grid and clear destination status, and a lighter recent-activity list. Dropping files on any page opens the review.
+- Activity groups transfers into In progress and Earlier, and explains unconfirmed uploads and downloads separately.
+- Settings apply immediately; storage details, diagnostics, and account sign-out live in one page.
+
+### Removed
+
+- The WebView-based React frontend and its Node/bun tooling. Building from source now needs only Go (and `go tool mygo`).
+
 ## [0.1.0] - 2026-10-14
 
 Initial release of **Rainforest**, the cross-platform desktop upload, one-way folder backup, transfer queue, and recovery download client for Amazon Photos.

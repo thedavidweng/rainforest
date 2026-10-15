@@ -1,43 +1,44 @@
-# MyGo, React, and Go SDK Architecture
+# MyGo Native UI and Go SDK Architecture
 
-This page explains Rainforest's layered architecture and how the desktop shell, GUI facade, transfer engine, SQLite store, and `amazon-photos` Go SDK interact.
+This page explains Rainforest's layered architecture and how the desktop shell, native views, GUI facade, transfer engine, SQLite store, and `amazon-photos` Go SDK interact.
 
-## Five-Layer Separation
+## Layers
 
 ```text
-React 19 + TypeScript UI (frontend/src/)
-  └── Backend seam (frontend/src/backend.ts)
-        ├── MyGo IPC adapter (frontend/src/mygo-backend.ts)
-        └── In-memory test double (frontend/src/testing/memory-backend.ts)
-              │
-Thin MyGo v0.4.8 Desktop Adapter (main.go, tray_icon.go)
-  └── Binds internal/gui services & desktop events
-        │  (zero github.com/egoist/mygo imports below this line)
+Thin MyGo Desktop Adapter (main.go, tray_icon.go)
+  └── Window, tray, quit confirmation, notifications, native file pickers
+        │  (the only package importing github.com/egoist/mygo)
+Native Views (internal/view, mygo/ui)
+  └── Welcome, Upload, Activity, Backup, Restore, Settings
+        │  (imports only github.com/egoist/mygo/ui)
 Framework-Neutral GUI Facade (internal/gui/)
   └── Auth, Transfers, Backups, Downloads, Settings, TrayTracker, DecideQuit
-        │
+        │  (zero MyGo imports from here down)
 Core Engine & Credential Vault (internal/engine/, internal/credstore/)
   └── Planner, Queue, One-Way Backup Scanner, ReconcileOnStartup
         │
 SQLite State Store (internal/store/) + Amazon Photos Go SDK (pkg/aphotos)
 ```
 
-## Why MyGo Lives Only in `main.go`
+## Why the Root MyGo Package Lives Only in `main.go`
 
-By restricting `github.com/egoist/mygo` imports to `main.go`:
+By restricting the root `github.com/egoist/mygo` package to `main.go`:
 
 - `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` compile and run in standard `go test -race ./...` suites on headless Linux, macOS, and Windows runners without initializing a native window or system tray.
-- `TestGUIPackageZeroMyGoOrWebviewImports` statically parses `internal/gui/*.go` to enforce that no WebView or desktop framework dependency leaks into the service layer.
+- `TestGUIPackageZeroMyGoOrWebviewImports` statically parses `internal/gui/*.go` to enforce that no desktop framework dependency leaks into the service layer.
+- `internal/view` depends only on `mygo/ui`, so its pages run headless under `ui.NewTester`.
 
-## Deterministic TypeScript Binding Generation (`MYGO_GENERATE`)
+## How Views Talk to Services
 
-MyGo generates `frontend/src/mygo.ts` by running the Go binary with `MYGO_GENERATE=<output-file>`. In `main.go`:
+Views call `internal/gui` services directly; there is no IPC layer or generated client. `gui` calls block on the network or SQLite, so a view never calls them while building a frame: work runs on a goroutine and its result is applied on the UI thread through the `Update` function that `main.go` passes in. `main.go` forwards `gui` events (transfer progress, backup status, auth changes, notifications) to the view, which applies them the same way. `gui.Error` values are shown by their sanitized `Message`.
 
-1. Package-level `mygo.NewEvent` descriptors and `svc := gui.NewEmptyServices()` are registered via `mygo.BindAs` before `mygo.App.Run()`.
-2. When `MYGO_GENERATE` is set, `mygo.App.Run()` writes the TypeScript client definitions and exits immediately—before `mygo.App.WhenReady` opens SQLite or touches user directories.
-3. `mise run bindings-check` verifies on every CI run that `frontend/src/mygo.ts` has zero drift from the Go service definitions.
+File drops are handled by the native view: dropping files on any signed-in page switches to Upload and opens the review dialog.
+
+## Tooling
+
+The MyGo CLI is a pinned Go tool (`go tool mygo`). `go tool mygo generate` regenerates the typed i18n accessors in `locales/catalog_gen.go`, and `mise run i18n-check` fails CI when they drift. Tests exercise views with `ui.NewTester` and real `gui.Services`.
 
 ## Avoiding WebView Cookie and Custom-Scheme Pitfalls
 
-- **WebView Cookie Isolation ([MyGo #343](https://github.com/egoist/mygo/issues/343))**: Windows WebView2 initializes its cookie manager asynchronously, which can lose or race cookies read at startup. Rainforest never stores or reads Amazon cookies in the WebView; all HTTP traffic runs in Go via `pkg/aphotos`.
-- **No Custom-Scheme Video Streaming ([MyGo #161](https://github.com/egoist/mygo/issues/161))**: Linux WebKitGTK does not reliably seek or stream `<video>` elements over custom WebView URI schemes. Rainforest only generates small local `data:image/png;base64` thumbnails during preflight planning.
+- **WebView Cookie Isolation ([MyGo #343](https://github.com/egoist/mygo/issues/343))**: Windows WebView2 initializes its cookie manager asynchronously, which can lose or race cookies read at startup. The native sign-in window is the only WebView use; Rainforest never reads Amazon cookies from it after saving them to the vault, and all HTTP traffic runs in Go via `pkg/aphotos`.
+- **No Custom-Scheme Video Streaming ([MyGo #161](https://github.com/egoist/mygo/issues/161))**: Rainforest does not stream remote media. It only generates small local thumbnails during preflight planning, decoded natively in the review dialog.

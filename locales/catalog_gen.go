@@ -34,896 +34,2242 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
-// AmazonPhotosTransferAndBackup says "Amazon Photos Transfer & Backup"
+// NavUpload says "Upload"
 // in the language the app shows.
-func AmazonPhotosTransferAndBackup() string { return In(i18n.Locale()).AmazonPhotosTransferAndBackup() }
+func NavUpload() string { return In(i18n.Locale()).NavUpload() }
 
-// AmazonPhotosTransferAndBackup says "Amazon Photos Transfer & Backup"
+// NavUpload says "Upload"
 // in the language of msgs.
-func (msgs Messages) AmazonPhotosTransferAndBackup() string {
-	return Catalog.Format(msgs.locale, "amazonPhotosTransferAndBackup", nil)
+func (msgs Messages) NavUpload() string {
+	return Catalog.Format(msgs.locale, "navUpload", nil)
 }
 
-// UnofficialClientAgpl30Only says "Unofficial client · AGPL-3.0-only"
+// NavActivity says "Activity"
 // in the language the app shows.
-func UnofficialClientAgpl30Only() string { return In(i18n.Locale()).UnofficialClientAgpl30Only() }
+func NavActivity() string { return In(i18n.Locale()).NavActivity() }
 
-// UnofficialClientAgpl30Only says "Unofficial client · AGPL-3.0-only"
+// NavActivity says "Activity"
 // in the language of msgs.
-func (msgs Messages) UnofficialClientAgpl30Only() string {
-	return Catalog.Format(msgs.locale, "unofficialClientAgpl30Only", nil)
+func (msgs Messages) NavActivity() string {
+	return Catalog.Format(msgs.locale, "navActivity", nil)
 }
 
-// Dismiss says "Dismiss"
+// NavBackup says "Backup"
 // in the language the app shows.
-func Dismiss() string { return In(i18n.Locale()).Dismiss() }
+func NavBackup() string { return In(i18n.Locale()).NavBackup() }
 
-// Dismiss says "Dismiss"
+// NavBackup says "Backup"
 // in the language of msgs.
-func (msgs Messages) Dismiss() string {
-	return Catalog.Format(msgs.locale, "dismiss", nil)
+func (msgs Messages) NavBackup() string {
+	return Catalog.Format(msgs.locale, "navBackup", nil)
 }
 
-// OneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies says "One-way incremental backup: deleting, moving, or renaming local files never deletes your Amazon Photos cloud copies."
+// NavRestore says "Restore"
 // in the language the app shows.
-func OneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies() string {
-	return In(i18n.Locale()).OneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies()
+func NavRestore() string { return In(i18n.Locale()).NavRestore() }
+
+// NavRestore says "Restore"
+// in the language of msgs.
+func (msgs Messages) NavRestore() string {
+	return Catalog.Format(msgs.locale, "navRestore", nil)
+}
+
+// NavSettings says "Settings"
+// in the language the app shows.
+func NavSettings() string { return In(i18n.Locale()).NavSettings() }
+
+// NavSettings says "Settings"
+// in the language of msgs.
+func (msgs Messages) NavSettings() string {
+	return Catalog.Format(msgs.locale, "navSettings", nil)
+}
+
+// AppTagline says "for Amazon Photos"
+// in the language the app shows.
+func AppTagline() string { return In(i18n.Locale()).AppTagline() }
+
+// AppTagline says "for Amazon Photos"
+// in the language of msgs.
+func (msgs Messages) AppTagline() string {
+	return Catalog.Format(msgs.locale, "appTagline", nil)
+}
+
+// AccountSignedIn says "Signed in"
+// in the language the app shows.
+func AccountSignedIn() string { return In(i18n.Locale()).AccountSignedIn() }
+
+// AccountSignedIn says "Signed in"
+// in the language of msgs.
+func (msgs Messages) AccountSignedIn() string {
+	return Catalog.Format(msgs.locale, "accountSignedIn", nil)
+}
+
+// AccountUsage says "{count, plural, one {# photo} other {# photos}} · {size}"
+// in the language the app shows.
+func AccountUsage(count int, size string) string { return In(i18n.Locale()).AccountUsage(count, size) }
+
+// AccountUsage says "{count, plural, one {# photo} other {# photos}} · {size}"
+// in the language of msgs.
+func (msgs Messages) AccountUsage(count int, size string) string {
+	return Catalog.Format(msgs.locale, "accountUsage", map[string]any{"count": count, "size": size})
+}
+
+// BackupsPausedNotice says "Backups paused"
+// in the language the app shows.
+func BackupsPausedNotice() string { return In(i18n.Locale()).BackupsPausedNotice() }
+
+// BackupsPausedNotice says "Backups paused"
+// in the language of msgs.
+func (msgs Messages) BackupsPausedNotice() string {
+	return Catalog.Format(msgs.locale, "backupsPausedNotice", nil)
+}
+
+// DropOverlay says "Drop to review your upload"
+// in the language the app shows.
+func DropOverlay() string { return In(i18n.Locale()).DropOverlay() }
+
+// DropOverlay says "Drop to review your upload"
+// in the language of msgs.
+func (msgs Messages) DropOverlay() string {
+	return Catalog.Format(msgs.locale, "dropOverlay", nil)
+}
+
+// CommonLoading says "Loading"
+// in the language the app shows.
+func CommonLoading() string { return In(i18n.Locale()).CommonLoading() }
+
+// CommonLoading says "Loading"
+// in the language of msgs.
+func (msgs Messages) CommonLoading() string {
+	return Catalog.Format(msgs.locale, "commonLoading", nil)
+}
+
+// CommonCancel says "Cancel"
+// in the language the app shows.
+func CommonCancel() string { return In(i18n.Locale()).CommonCancel() }
+
+// CommonCancel says "Cancel"
+// in the language of msgs.
+func (msgs Messages) CommonCancel() string {
+	return Catalog.Format(msgs.locale, "commonCancel", nil)
+}
+
+// CommonClose says "Close"
+// in the language the app shows.
+func CommonClose() string { return In(i18n.Locale()).CommonClose() }
+
+// CommonClose says "Close"
+// in the language of msgs.
+func (msgs Messages) CommonClose() string {
+	return Catalog.Format(msgs.locale, "commonClose", nil)
+}
+
+// CommonDismiss says "Dismiss"
+// in the language the app shows.
+func CommonDismiss() string { return In(i18n.Locale()).CommonDismiss() }
+
+// CommonDismiss says "Dismiss"
+// in the language of msgs.
+func (msgs Messages) CommonDismiss() string {
+	return Catalog.Format(msgs.locale, "commonDismiss", nil)
+}
+
+// CommonRetry says "Retry"
+// in the language the app shows.
+func CommonRetry() string { return In(i18n.Locale()).CommonRetry() }
+
+// CommonRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) CommonRetry() string {
+	return Catalog.Format(msgs.locale, "commonRetry", nil)
+}
+
+// CommonRemove says "Remove"
+// in the language the app shows.
+func CommonRemove() string { return In(i18n.Locale()).CommonRemove() }
+
+// CommonRemove says "Remove"
+// in the language of msgs.
+func (msgs Messages) CommonRemove() string {
+	return Catalog.Format(msgs.locale, "commonRemove", nil)
+}
+
+// CommonEdit says "Edit…"
+// in the language the app shows.
+func CommonEdit() string { return In(i18n.Locale()).CommonEdit() }
+
+// CommonEdit says "Edit…"
+// in the language of msgs.
+func (msgs Messages) CommonEdit() string {
+	return Catalog.Format(msgs.locale, "commonEdit", nil)
+}
+
+// CommonChoose says "Choose…"
+// in the language the app shows.
+func CommonChoose() string { return In(i18n.Locale()).CommonChoose() }
+
+// CommonChoose says "Choose…"
+// in the language of msgs.
+func (msgs Messages) CommonChoose() string {
+	return Catalog.Format(msgs.locale, "commonChoose", nil)
+}
+
+// CommonView says "View"
+// in the language the app shows.
+func CommonView() string { return In(i18n.Locale()).CommonView() }
+
+// CommonView says "View"
+// in the language of msgs.
+func (msgs Messages) CommonView() string {
+	return Catalog.Format(msgs.locale, "commonView", nil)
+}
+
+// CommonViewAll says "View all"
+// in the language the app shows.
+func CommonViewAll() string { return In(i18n.Locale()).CommonViewAll() }
+
+// CommonViewAll says "View all"
+// in the language of msgs.
+func (msgs Messages) CommonViewAll() string {
+	return Catalog.Format(msgs.locale, "commonViewAll", nil)
+}
+
+// CommonPause says "Pause"
+// in the language the app shows.
+func CommonPause() string { return In(i18n.Locale()).CommonPause() }
+
+// CommonPause says "Pause"
+// in the language of msgs.
+func (msgs Messages) CommonPause() string {
+	return Catalog.Format(msgs.locale, "commonPause", nil)
+}
+
+// CommonResume says "Resume"
+// in the language the app shows.
+func CommonResume() string { return In(i18n.Locale()).CommonResume() }
+
+// CommonResume says "Resume"
+// in the language of msgs.
+func (msgs Messages) CommonResume() string {
+	return Catalog.Format(msgs.locale, "commonResume", nil)
+}
+
+// CommonMoreActions says "More actions"
+// in the language the app shows.
+func CommonMoreActions() string { return In(i18n.Locale()).CommonMoreActions() }
+
+// CommonMoreActions says "More actions"
+// in the language of msgs.
+func (msgs Messages) CommonMoreActions() string {
+	return Catalog.Format(msgs.locale, "commonMoreActions", nil)
+}
+
+// CommonExpand says "Show items"
+// in the language the app shows.
+func CommonExpand() string { return In(i18n.Locale()).CommonExpand() }
+
+// CommonExpand says "Show items"
+// in the language of msgs.
+func (msgs Messages) CommonExpand() string {
+	return Catalog.Format(msgs.locale, "commonExpand", nil)
+}
+
+// CommonCollapse says "Hide items"
+// in the language the app shows.
+func CommonCollapse() string { return In(i18n.Locale()).CommonCollapse() }
+
+// CommonCollapse says "Hide items"
+// in the language of msgs.
+func (msgs Messages) CommonCollapse() string {
+	return Catalog.Format(msgs.locale, "commonCollapse", nil)
+}
+
+// OptionIncludeVideos says "Include videos"
+// in the language the app shows.
+func OptionIncludeVideos() string { return In(i18n.Locale()).OptionIncludeVideos() }
+
+// OptionIncludeVideos says "Include videos"
+// in the language of msgs.
+func (msgs Messages) OptionIncludeVideos() string {
+	return Catalog.Format(msgs.locale, "optionIncludeVideos", nil)
+}
+
+// OptionIfExists says "If a file already exists"
+// in the language the app shows.
+func OptionIfExists() string { return In(i18n.Locale()).OptionIfExists() }
+
+// OptionIfExists says "If a file already exists"
+// in the language of msgs.
+func (msgs Messages) OptionIfExists() string {
+	return Catalog.Format(msgs.locale, "optionIfExists", nil)
+}
+
+// ConflictSkip says "Skip it"
+// in the language the app shows.
+func ConflictSkip() string { return In(i18n.Locale()).ConflictSkip() }
+
+// ConflictSkip says "Skip it"
+// in the language of msgs.
+func (msgs Messages) ConflictSkip() string {
+	return Catalog.Format(msgs.locale, "conflictSkip", nil)
+}
+
+// ConflictRename says "Keep both"
+// in the language the app shows.
+func ConflictRename() string { return In(i18n.Locale()).ConflictRename() }
+
+// ConflictRename says "Keep both"
+// in the language of msgs.
+func (msgs Messages) ConflictRename() string {
+	return Catalog.Format(msgs.locale, "conflictRename", nil)
+}
+
+// ConflictFailUpload says "Stop the upload"
+// in the language the app shows.
+func ConflictFailUpload() string { return In(i18n.Locale()).ConflictFailUpload() }
+
+// ConflictFailUpload says "Stop the upload"
+// in the language of msgs.
+func (msgs Messages) ConflictFailUpload() string {
+	return Catalog.Format(msgs.locale, "conflictFailUpload", nil)
+}
+
+// ConflictFailDownload says "Stop the download"
+// in the language the app shows.
+func ConflictFailDownload() string { return In(i18n.Locale()).ConflictFailDownload() }
+
+// ConflictFailDownload says "Stop the download"
+// in the language of msgs.
+func (msgs Messages) ConflictFailDownload() string {
+	return Catalog.Format(msgs.locale, "conflictFailDownload", nil)
+}
+
+// DestChecking says "Checking…"
+// in the language the app shows.
+func DestChecking() string { return In(i18n.Locale()).DestChecking() }
+
+// DestChecking says "Checking…"
+// in the language of msgs.
+func (msgs Messages) DestChecking() string {
+	return Catalog.Format(msgs.locale, "destChecking", nil)
+}
+
+// DestReady says "Ready"
+// in the language the app shows.
+func DestReady() string { return In(i18n.Locale()).DestReady() }
+
+// DestReady says "Ready"
+// in the language of msgs.
+func (msgs Messages) DestReady() string {
+	return Catalog.Format(msgs.locale, "destReady", nil)
+}
+
+// DestUnavailable says "Unavailable"
+// in the language the app shows.
+func DestUnavailable() string { return In(i18n.Locale()).DestUnavailable() }
+
+// DestUnavailable says "Unavailable"
+// in the language of msgs.
+func (msgs Messages) DestUnavailable() string {
+	return Catalog.Format(msgs.locale, "destUnavailable", nil)
+}
+
+// DestLibrary says "Amazon Photos"
+// in the language the app shows.
+func DestLibrary() string { return In(i18n.Locale()).DestLibrary() }
+
+// DestLibrary says "Amazon Photos"
+// in the language of msgs.
+func (msgs Messages) DestLibrary() string {
+	return Catalog.Format(msgs.locale, "destLibrary", nil)
+}
+
+// DestUploadsTo says "Uploads to {name}"
+// in the language the app shows.
+func DestUploadsTo(name string) string { return In(i18n.Locale()).DestUploadsTo(name) }
+
+// DestUploadsTo says "Uploads to {name}"
+// in the language of msgs.
+func (msgs Messages) DestUploadsTo(name string) string {
+	return Catalog.Format(msgs.locale, "destUploadsTo", map[string]any{"name": name})
+}
+
+// ErrorGeneric says "Something went wrong. Try again."
+// in the language the app shows.
+func ErrorGeneric() string { return In(i18n.Locale()).ErrorGeneric() }
+
+// ErrorGeneric says "Something went wrong. Try again."
+// in the language of msgs.
+func (msgs Messages) ErrorGeneric() string {
+	return Catalog.Format(msgs.locale, "errorGeneric", nil)
+}
+
+// ErrorSessionExpired says "Your session has expired. Sign in again."
+// in the language the app shows.
+func ErrorSessionExpired() string { return In(i18n.Locale()).ErrorSessionExpired() }
+
+// ErrorSessionExpired says "Your session has expired. Sign in again."
+// in the language of msgs.
+func (msgs Messages) ErrorSessionExpired() string {
+	return Catalog.Format(msgs.locale, "errorSessionExpired", nil)
+}
+
+// ToastUploadStarted says "Upload started"
+// in the language the app shows.
+func ToastUploadStarted() string { return In(i18n.Locale()).ToastUploadStarted() }
+
+// ToastUploadStarted says "Upload started"
+// in the language of msgs.
+func (msgs Messages) ToastUploadStarted() string {
+	return Catalog.Format(msgs.locale, "toastUploadStarted", nil)
+}
+
+// ToastDownloadStarted says "Download started"
+// in the language the app shows.
+func ToastDownloadStarted() string { return In(i18n.Locale()).ToastDownloadStarted() }
+
+// ToastDownloadStarted says "Download started"
+// in the language of msgs.
+func (msgs Messages) ToastDownloadStarted() string {
+	return Catalog.Format(msgs.locale, "toastDownloadStarted", nil)
+}
+
+// ToastBackupStarted says "Backup started"
+// in the language the app shows.
+func ToastBackupStarted() string { return In(i18n.Locale()).ToastBackupStarted() }
+
+// ToastBackupStarted says "Backup started"
+// in the language of msgs.
+func (msgs Messages) ToastBackupStarted() string {
+	return Catalog.Format(msgs.locale, "toastBackupStarted", nil)
+}
+
+// TimeJustNow says "just now"
+// in the language the app shows.
+func TimeJustNow() string { return In(i18n.Locale()).TimeJustNow() }
+
+// TimeJustNow says "just now"
+// in the language of msgs.
+func (msgs Messages) TimeJustNow() string {
+	return Catalog.Format(msgs.locale, "timeJustNow", nil)
+}
+
+// TimeMinutesAgo says "{count, number} min ago"
+// in the language the app shows.
+func TimeMinutesAgo(count int) string { return In(i18n.Locale()).TimeMinutesAgo(count) }
+
+// TimeMinutesAgo says "{count, number} min ago"
+// in the language of msgs.
+func (msgs Messages) TimeMinutesAgo(count int) string {
+	return Catalog.Format(msgs.locale, "timeMinutesAgo", map[string]any{"count": count})
+}
+
+// TimeHoursAgo says "{count, number} h ago"
+// in the language the app shows.
+func TimeHoursAgo(count int) string { return In(i18n.Locale()).TimeHoursAgo(count) }
+
+// TimeHoursAgo says "{count, number} h ago"
+// in the language of msgs.
+func (msgs Messages) TimeHoursAgo(count int) string {
+	return Catalog.Format(msgs.locale, "timeHoursAgo", map[string]any{"count": count})
+}
+
+// TimeYesterday says "Yesterday"
+// in the language the app shows.
+func TimeYesterday() string { return In(i18n.Locale()).TimeYesterday() }
+
+// TimeYesterday says "Yesterday"
+// in the language of msgs.
+func (msgs Messages) TimeYesterday() string {
+	return Catalog.Format(msgs.locale, "timeYesterday", nil)
+}
+
+// RegionNameUs says "United States"
+// in the language the app shows.
+func RegionNameUs() string { return In(i18n.Locale()).RegionNameUs() }
+
+// RegionNameUs says "United States"
+// in the language of msgs.
+func (msgs Messages) RegionNameUs() string {
+	return Catalog.Format(msgs.locale, "regionNameUs", nil)
+}
+
+// RegionNameCa says "Canada"
+// in the language the app shows.
+func RegionNameCa() string { return In(i18n.Locale()).RegionNameCa() }
+
+// RegionNameCa says "Canada"
+// in the language of msgs.
+func (msgs Messages) RegionNameCa() string {
+	return Catalog.Format(msgs.locale, "regionNameCa", nil)
+}
+
+// RegionNameUk says "United Kingdom"
+// in the language the app shows.
+func RegionNameUk() string { return In(i18n.Locale()).RegionNameUk() }
+
+// RegionNameUk says "United Kingdom"
+// in the language of msgs.
+func (msgs Messages) RegionNameUk() string {
+	return Catalog.Format(msgs.locale, "regionNameUk", nil)
+}
+
+// RegionNameJp says "Japan"
+// in the language the app shows.
+func RegionNameJp() string { return In(i18n.Locale()).RegionNameJp() }
+
+// RegionNameJp says "Japan"
+// in the language of msgs.
+func (msgs Messages) RegionNameJp() string {
+	return Catalog.Format(msgs.locale, "regionNameJp", nil)
+}
+
+// RegionNameDe says "Germany"
+// in the language the app shows.
+func RegionNameDe() string { return In(i18n.Locale()).RegionNameDe() }
+
+// RegionNameDe says "Germany"
+// in the language of msgs.
+func (msgs Messages) RegionNameDe() string {
+	return Catalog.Format(msgs.locale, "regionNameDe", nil)
+}
+
+// RegionNameFr says "France"
+// in the language the app shows.
+func RegionNameFr() string { return In(i18n.Locale()).RegionNameFr() }
+
+// RegionNameFr says "France"
+// in the language of msgs.
+func (msgs Messages) RegionNameFr() string {
+	return Catalog.Format(msgs.locale, "regionNameFr", nil)
+}
+
+// RegionNameIt says "Italy"
+// in the language the app shows.
+func RegionNameIt() string { return In(i18n.Locale()).RegionNameIt() }
+
+// RegionNameIt says "Italy"
+// in the language of msgs.
+func (msgs Messages) RegionNameIt() string {
+	return Catalog.Format(msgs.locale, "regionNameIt", nil)
+}
+
+// RegionNameEs says "Spain"
+// in the language the app shows.
+func RegionNameEs() string { return In(i18n.Locale()).RegionNameEs() }
+
+// RegionNameEs says "Spain"
+// in the language of msgs.
+func (msgs Messages) RegionNameEs() string {
+	return Catalog.Format(msgs.locale, "regionNameEs", nil)
+}
+
+// WelcomeTitle says "Back up your photos to Amazon Photos"
+// in the language the app shows.
+func WelcomeTitle() string { return In(i18n.Locale()).WelcomeTitle() }
+
+// WelcomeTitle says "Back up your photos to Amazon Photos"
+// in the language of msgs.
+func (msgs Messages) WelcomeTitle() string {
+	return Catalog.Format(msgs.locale, "welcomeTitle", nil)
+}
+
+// WelcomeBody says "Rainforest uploads photos and videos from your computer and keeps chosen folders backed up. Sign in with your Amazon …"
+// in the language the app shows.
+func WelcomeBody() string { return In(i18n.Locale()).WelcomeBody() }
+
+// WelcomeBody says "Rainforest uploads photos and videos from your computer and keeps chosen folders backed up. Sign in with your Amazon …"
+// in the language of msgs.
+func (msgs Messages) WelcomeBody() string {
+	return Catalog.Format(msgs.locale, "welcomeBody", nil)
+}
+
+// WelcomeMarketplace says "Amazon marketplace"
+// in the language the app shows.
+func WelcomeMarketplace() string { return In(i18n.Locale()).WelcomeMarketplace() }
+
+// WelcomeMarketplace says "Amazon marketplace"
+// in the language of msgs.
+func (msgs Messages) WelcomeMarketplace() string {
+	return Catalog.Format(msgs.locale, "welcomeMarketplace", nil)
+}
+
+// WelcomeExperimental says "Support for this marketplace is experimental."
+// in the language the app shows.
+func WelcomeExperimental() string { return In(i18n.Locale()).WelcomeExperimental() }
+
+// WelcomeExperimental says "Support for this marketplace is experimental."
+// in the language of msgs.
+func (msgs Messages) WelcomeExperimental() string {
+	return Catalog.Format(msgs.locale, "welcomeExperimental", nil)
+}
+
+// WelcomeSignIn says "Sign in with Amazon"
+// in the language the app shows.
+func WelcomeSignIn() string { return In(i18n.Locale()).WelcomeSignIn() }
+
+// WelcomeSignIn says "Sign in with Amazon"
+// in the language of msgs.
+func (msgs Messages) WelcomeSignIn() string {
+	return Catalog.Format(msgs.locale, "welcomeSignIn", nil)
+}
+
+// WelcomeSigningIn says "Finish signing in in the Amazon window"
+// in the language the app shows.
+func WelcomeSigningIn() string { return In(i18n.Locale()).WelcomeSigningIn() }
+
+// WelcomeSigningIn says "Finish signing in in the Amazon window"
+// in the language of msgs.
+func (msgs Messages) WelcomeSigningIn() string {
+	return Catalog.Format(msgs.locale, "welcomeSigningIn", nil)
+}
+
+// WelcomeCancelled says "Sign-in cancelled."
+// in the language the app shows.
+func WelcomeCancelled() string { return In(i18n.Locale()).WelcomeCancelled() }
+
+// WelcomeCancelled says "Sign-in cancelled."
+// in the language of msgs.
+func (msgs Messages) WelcomeCancelled() string {
+	return Catalog.Format(msgs.locale, "welcomeCancelled", nil)
+}
+
+// WelcomeOtherWays says "Other ways to sign in"
+// in the language the app shows.
+func WelcomeOtherWays() string { return In(i18n.Locale()).WelcomeOtherWays() }
+
+// WelcomeOtherWays says "Other ways to sign in"
+// in the language of msgs.
+func (msgs Messages) WelcomeOtherWays() string {
+	return Catalog.Format(msgs.locale, "welcomeOtherWays", nil)
+}
+
+// WelcomeImportHelp says "Import session cookies exported from your browser (cookies.txt, JSON, or a Cookie header)."
+// in the language the app shows.
+func WelcomeImportHelp() string { return In(i18n.Locale()).WelcomeImportHelp() }
+
+// WelcomeImportHelp says "Import session cookies exported from your browser (cookies.txt, JSON, or a Cookie header)."
+// in the language of msgs.
+func (msgs Messages) WelcomeImportHelp() string {
+	return Catalog.Format(msgs.locale, "welcomeImportHelp", nil)
+}
+
+// WelcomeCookiesPlaceholder says "Paste cookies here"
+// in the language the app shows.
+func WelcomeCookiesPlaceholder() string { return In(i18n.Locale()).WelcomeCookiesPlaceholder() }
+
+// WelcomeCookiesPlaceholder says "Paste cookies here"
+// in the language of msgs.
+func (msgs Messages) WelcomeCookiesPlaceholder() string {
+	return Catalog.Format(msgs.locale, "welcomeCookiesPlaceholder", nil)
+}
+
+// WelcomeImportFile says "Import from file…"
+// in the language the app shows.
+func WelcomeImportFile() string { return In(i18n.Locale()).WelcomeImportFile() }
+
+// WelcomeImportFile says "Import from file…"
+// in the language of msgs.
+func (msgs Messages) WelcomeImportFile() string {
+	return Catalog.Format(msgs.locale, "welcomeImportFile", nil)
+}
+
+// WelcomeImportPasted says "Import pasted cookies"
+// in the language the app shows.
+func WelcomeImportPasted() string { return In(i18n.Locale()).WelcomeImportPasted() }
+
+// WelcomeImportPasted says "Import pasted cookies"
+// in the language of msgs.
+func (msgs Messages) WelcomeImportPasted() string {
+	return Catalog.Format(msgs.locale, "welcomeImportPasted", nil)
+}
+
+// WelcomeFooter says "Rainforest is an unofficial app and isn't affiliated with Amazon. Your password stays with Amazon."
+// in the language the app shows.
+func WelcomeFooter() string { return In(i18n.Locale()).WelcomeFooter() }
+
+// WelcomeFooter says "Rainforest is an unofficial app and isn't affiliated with Amazon. Your password stays with Amazon."
+// in the language of msgs.
+func (msgs Messages) WelcomeFooter() string {
+	return Catalog.Format(msgs.locale, "welcomeFooter", nil)
+}
+
+// UploadTitle says "Upload"
+// in the language the app shows.
+func UploadTitle() string { return In(i18n.Locale()).UploadTitle() }
+
+// UploadTitle says "Upload"
+// in the language of msgs.
+func (msgs Messages) UploadTitle() string {
+	return Catalog.Format(msgs.locale, "uploadTitle", nil)
+}
+
+// UploadSubtitle says "Send photos and videos to Amazon Photos."
+// in the language the app shows.
+func UploadSubtitle() string { return In(i18n.Locale()).UploadSubtitle() }
+
+// UploadSubtitle says "Send photos and videos to Amazon Photos."
+// in the language of msgs.
+func (msgs Messages) UploadSubtitle() string {
+	return Catalog.Format(msgs.locale, "uploadSubtitle", nil)
+}
+
+// UploadDropTitle says "Drop photos and videos here"
+// in the language the app shows.
+func UploadDropTitle() string { return In(i18n.Locale()).UploadDropTitle() }
+
+// UploadDropTitle says "Drop photos and videos here"
+// in the language of msgs.
+func (msgs Messages) UploadDropTitle() string {
+	return Catalog.Format(msgs.locale, "uploadDropTitle", nil)
+}
+
+// UploadDropBody says "Folders work too. You'll review everything before it uploads."
+// in the language the app shows.
+func UploadDropBody() string { return In(i18n.Locale()).UploadDropBody() }
+
+// UploadDropBody says "Folders work too. You'll review everything before it uploads."
+// in the language of msgs.
+func (msgs Messages) UploadDropBody() string {
+	return Catalog.Format(msgs.locale, "uploadDropBody", nil)
+}
+
+// UploadChooseFiles says "Choose files…"
+// in the language the app shows.
+func UploadChooseFiles() string { return In(i18n.Locale()).UploadChooseFiles() }
+
+// UploadChooseFiles says "Choose files…"
+// in the language of msgs.
+func (msgs Messages) UploadChooseFiles() string {
+	return Catalog.Format(msgs.locale, "uploadChooseFiles", nil)
+}
+
+// UploadChooseFolder says "Choose folder…"
+// in the language the app shows.
+func UploadChooseFolder() string { return In(i18n.Locale()).UploadChooseFolder() }
+
+// UploadChooseFolder says "Choose folder…"
+// in the language of msgs.
+func (msgs Messages) UploadChooseFolder() string {
+	return Catalog.Format(msgs.locale, "uploadChooseFolder", nil)
+}
+
+// UploadRecent says "Recent activity"
+// in the language the app shows.
+func UploadRecent() string { return In(i18n.Locale()).UploadRecent() }
+
+// UploadRecent says "Recent activity"
+// in the language of msgs.
+func (msgs Messages) UploadRecent() string {
+	return Catalog.Format(msgs.locale, "uploadRecent", nil)
+}
+
+// UploadNothingYet says "Nothing uploaded yet."
+// in the language the app shows.
+func UploadNothingYet() string { return In(i18n.Locale()).UploadNothingYet() }
+
+// UploadNothingYet says "Nothing uploaded yet."
+// in the language of msgs.
+func (msgs Messages) UploadNothingYet() string {
+	return Catalog.Format(msgs.locale, "uploadNothingYet", nil)
+}
+
+// UploadSupported says "Supported: JPEG, HEIC, PNG, RAW, MP4, MOV and more."
+// in the language the app shows.
+func UploadSupported() string { return In(i18n.Locale()).UploadSupported() }
+
+// UploadSupported says "Supported: JPEG, HEIC, PNG, RAW, MP4, MOV and more."
+// in the language of msgs.
+func (msgs Messages) UploadSupported() string {
+	return Catalog.Format(msgs.locale, "uploadSupported", nil)
+}
+
+// ReviewTitle says "Review upload"
+// in the language the app shows.
+func ReviewTitle() string { return In(i18n.Locale()).ReviewTitle() }
+
+// ReviewTitle says "Review upload"
+// in the language of msgs.
+func (msgs Messages) ReviewTitle() string {
+	return Catalog.Format(msgs.locale, "reviewTitle", nil)
+}
+
+// ReviewChecking says "Checking files…"
+// in the language the app shows.
+func ReviewChecking() string { return In(i18n.Locale()).ReviewChecking() }
+
+// ReviewChecking says "Checking files…"
+// in the language of msgs.
+func (msgs Messages) ReviewChecking() string {
+	return Catalog.Format(msgs.locale, "reviewChecking", nil)
+}
+
+// ReviewPhotos says "Photos"
+// in the language the app shows.
+func ReviewPhotos() string { return In(i18n.Locale()).ReviewPhotos() }
+
+// ReviewPhotos says "Photos"
+// in the language of msgs.
+func (msgs Messages) ReviewPhotos() string {
+	return Catalog.Format(msgs.locale, "reviewPhotos", nil)
+}
+
+// ReviewVideos says "Videos"
+// in the language the app shows.
+func ReviewVideos() string { return In(i18n.Locale()).ReviewVideos() }
+
+// ReviewVideos says "Videos"
+// in the language of msgs.
+func (msgs Messages) ReviewVideos() string {
+	return Catalog.Format(msgs.locale, "reviewVideos", nil)
+}
+
+// ReviewTotalSize says "Total size"
+// in the language the app shows.
+func ReviewTotalSize() string { return In(i18n.Locale()).ReviewTotalSize() }
+
+// ReviewTotalSize says "Total size"
+// in the language of msgs.
+func (msgs Messages) ReviewTotalSize() string {
+	return Catalog.Format(msgs.locale, "reviewTotalSize", nil)
+}
+
+// ReviewSkipped says "Skipped"
+// in the language the app shows.
+func ReviewSkipped() string { return In(i18n.Locale()).ReviewSkipped() }
+
+// ReviewSkipped says "Skipped"
+// in the language of msgs.
+func (msgs Messages) ReviewSkipped() string {
+	return Catalog.Format(msgs.locale, "reviewSkipped", nil)
+}
+
+// ReviewSkippedTip says "Files that aren't photos or videos are left out."
+// in the language the app shows.
+func ReviewSkippedTip() string { return In(i18n.Locale()).ReviewSkippedTip() }
+
+// ReviewSkippedTip says "Files that aren't photos or videos are left out."
+// in the language of msgs.
+func (msgs Messages) ReviewSkippedTip() string {
+	return Catalog.Format(msgs.locale, "reviewSkippedTip", nil)
+}
+
+// ReviewMore says "+{count, number}"
+// in the language the app shows.
+func ReviewMore(count int) string { return In(i18n.Locale()).ReviewMore(count) }
+
+// ReviewMore says "+{count, number}"
+// in the language of msgs.
+func (msgs Messages) ReviewMore(count int) string {
+	return Catalog.Format(msgs.locale, "reviewMore", map[string]any{"count": count})
+}
+
+// ReviewUploadTo says "Upload to"
+// in the language the app shows.
+func ReviewUploadTo() string { return In(i18n.Locale()).ReviewUploadTo() }
+
+// ReviewUploadTo says "Upload to"
+// in the language of msgs.
+func (msgs Messages) ReviewUploadTo() string {
+	return Catalog.Format(msgs.locale, "reviewUploadTo", nil)
+}
+
+// ReviewNoFiles says "No photos or videos found in your selection."
+// in the language the app shows.
+func ReviewNoFiles() string { return In(i18n.Locale()).ReviewNoFiles() }
+
+// ReviewNoFiles says "No photos or videos found in your selection."
+// in the language of msgs.
+func (msgs Messages) ReviewNoFiles() string {
+	return Catalog.Format(msgs.locale, "reviewNoFiles", nil)
+}
+
+// ReviewFooterNote says "Nothing uploads until you confirm."
+// in the language the app shows.
+func ReviewFooterNote() string { return In(i18n.Locale()).ReviewFooterNote() }
+
+// ReviewFooterNote says "Nothing uploads until you confirm."
+// in the language of msgs.
+func (msgs Messages) ReviewFooterNote() string {
+	return Catalog.Format(msgs.locale, "reviewFooterNote", nil)
+}
+
+// ReviewConfirm says "Upload {count, plural, one {# item} other {# items}}"
+// in the language the app shows.
+func ReviewConfirm(count int) string { return In(i18n.Locale()).ReviewConfirm(count) }
+
+// ReviewConfirm says "Upload {count, plural, one {# item} other {# items}}"
+// in the language of msgs.
+func (msgs Messages) ReviewConfirm(count int) string {
+	return Catalog.Format(msgs.locale, "reviewConfirm", map[string]any{"count": count})
+}
+
+// ActivityTitle says "Activity"
+// in the language the app shows.
+func ActivityTitle() string { return In(i18n.Locale()).ActivityTitle() }
+
+// ActivityTitle says "Activity"
+// in the language of msgs.
+func (msgs Messages) ActivityTitle() string {
+	return Catalog.Format(msgs.locale, "activityTitle", nil)
+}
+
+// ActivitySubtitle says "Uploads, backups and downloads."
+// in the language the app shows.
+func ActivitySubtitle() string { return In(i18n.Locale()).ActivitySubtitle() }
+
+// ActivitySubtitle says "Uploads, backups and downloads."
+// in the language of msgs.
+func (msgs Messages) ActivitySubtitle() string {
+	return Catalog.Format(msgs.locale, "activitySubtitle", nil)
+}
+
+// ActivityClearHistory says "Clear history"
+// in the language the app shows.
+func ActivityClearHistory() string { return In(i18n.Locale()).ActivityClearHistory() }
+
+// ActivityClearHistory says "Clear history"
+// in the language of msgs.
+func (msgs Messages) ActivityClearHistory() string {
+	return Catalog.Format(msgs.locale, "activityClearHistory", nil)
+}
+
+// ActivityClearTitle says "Clear activity history?"
+// in the language the app shows.
+func ActivityClearTitle() string { return In(i18n.Locale()).ActivityClearTitle() }
+
+// ActivityClearTitle says "Clear activity history?"
+// in the language of msgs.
+func (msgs Messages) ActivityClearTitle() string {
+	return Catalog.Format(msgs.locale, "activityClearTitle", nil)
+}
+
+// ActivityClearBody says "Finished transfers are removed from this list. Your files aren't affected."
+// in the language the app shows.
+func ActivityClearBody() string { return In(i18n.Locale()).ActivityClearBody() }
+
+// ActivityClearBody says "Finished transfers are removed from this list. Your files aren't affected."
+// in the language of msgs.
+func (msgs Messages) ActivityClearBody() string {
+	return Catalog.Format(msgs.locale, "activityClearBody", nil)
+}
+
+// ActivityClearConfirm says "Clear"
+// in the language the app shows.
+func ActivityClearConfirm() string { return In(i18n.Locale()).ActivityClearConfirm() }
+
+// ActivityClearConfirm says "Clear"
+// in the language of msgs.
+func (msgs Messages) ActivityClearConfirm() string {
+	return Catalog.Format(msgs.locale, "activityClearConfirm", nil)
+}
+
+// ActivityInProgress says "In progress"
+// in the language the app shows.
+func ActivityInProgress() string { return In(i18n.Locale()).ActivityInProgress() }
+
+// ActivityInProgress says "In progress"
+// in the language of msgs.
+func (msgs Messages) ActivityInProgress() string {
+	return Catalog.Format(msgs.locale, "activityInProgress", nil)
+}
+
+// ActivityEarlier says "Earlier"
+// in the language the app shows.
+func ActivityEarlier() string { return In(i18n.Locale()).ActivityEarlier() }
+
+// ActivityEarlier says "Earlier"
+// in the language of msgs.
+func (msgs Messages) ActivityEarlier() string {
+	return Catalog.Format(msgs.locale, "activityEarlier", nil)
+}
+
+// ActivityEmptyTitle says "No activity yet"
+// in the language the app shows.
+func ActivityEmptyTitle() string { return In(i18n.Locale()).ActivityEmptyTitle() }
+
+// ActivityEmptyTitle says "No activity yet"
+// in the language of msgs.
+func (msgs Messages) ActivityEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "activityEmptyTitle", nil)
+}
+
+// ActivityEmptyBody says "Uploads, backups and downloads will show up here."
+// in the language the app shows.
+func ActivityEmptyBody() string { return In(i18n.Locale()).ActivityEmptyBody() }
+
+// ActivityEmptyBody says "Uploads, backups and downloads will show up here."
+// in the language of msgs.
+func (msgs Messages) ActivityEmptyBody() string {
+	return Catalog.Format(msgs.locale, "activityEmptyBody", nil)
+}
+
+// ActivityEmptyAction says "Upload photos"
+// in the language the app shows.
+func ActivityEmptyAction() string { return In(i18n.Locale()).ActivityEmptyAction() }
+
+// ActivityEmptyAction says "Upload photos"
+// in the language of msgs.
+func (msgs Messages) ActivityEmptyAction() string {
+	return Catalog.Format(msgs.locale, "activityEmptyAction", nil)
+}
+
+// ActivityDetails says "Show details"
+// in the language the app shows.
+func ActivityDetails() string { return In(i18n.Locale()).ActivityDetails() }
+
+// ActivityDetails says "Show details"
+// in the language of msgs.
+func (msgs Messages) ActivityDetails() string {
+	return Catalog.Format(msgs.locale, "activityDetails", nil)
+}
+
+// ActivityLoadingItems says "Loading items…"
+// in the language the app shows.
+func ActivityLoadingItems() string { return In(i18n.Locale()).ActivityLoadingItems() }
+
+// ActivityLoadingItems says "Loading items…"
+// in the language of msgs.
+func (msgs Messages) ActivityLoadingItems() string {
+	return Catalog.Format(msgs.locale, "activityLoadingItems", nil)
+}
+
+// ActivityNoItems says "No items to show."
+// in the language the app shows.
+func ActivityNoItems() string { return In(i18n.Locale()).ActivityNoItems() }
+
+// ActivityNoItems says "No items to show."
+// in the language of msgs.
+func (msgs Messages) ActivityNoItems() string {
+	return Catalog.Format(msgs.locale, "activityNoItems", nil)
+}
+
+// ActivityCancel says "Cancel transfer"
+// in the language the app shows.
+func ActivityCancel() string { return In(i18n.Locale()).ActivityCancel() }
+
+// ActivityCancel says "Cancel transfer"
+// in the language of msgs.
+func (msgs Messages) ActivityCancel() string {
+	return Catalog.Format(msgs.locale, "activityCancel", nil)
+}
+
+// ActivityMetaActive says "{kind} · {done, number} of {total, plural, one {# item} other {# items}} · {sizeDone} of {sizeTotal}"
+// in the language the app shows.
+func ActivityMetaActive(kind string, done int, total int, sizeDone string, sizeTotal string) string {
+	return In(i18n.Locale()).ActivityMetaActive(kind, done, total, sizeDone, sizeTotal)
+}
+
+// ActivityMetaActive says "{kind} · {done, number} of {total, plural, one {# item} other {# items}} · {sizeDone} of {sizeTotal}"
+// in the language of msgs.
+func (msgs Messages) ActivityMetaActive(kind string, done int, total int, sizeDone string, sizeTotal string) string {
+	return Catalog.Format(msgs.locale, "activityMetaActive", map[string]any{"kind": kind, "done": done, "total": total, "sizeDone": sizeDone, "sizeTotal": sizeTotal})
+}
+
+// ActivityMetaDone says "{kind} · {count, plural, one {# item} other {# items}} · {size} · {time}"
+// in the language the app shows.
+func ActivityMetaDone(kind string, count int, size string, time_ string) string {
+	return In(i18n.Locale()).ActivityMetaDone(kind, count, size, time_)
+}
+
+// ActivityMetaDone says "{kind} · {count, plural, one {# item} other {# items}} · {size} · {time}"
+// in the language of msgs.
+func (msgs Messages) ActivityMetaDone(kind string, count int, size string, time_ string) string {
+	return Catalog.Format(msgs.locale, "activityMetaDone", map[string]any{"kind": kind, "count": count, "size": size, "time": time_})
+}
+
+// ActivityFailedCount says "{count, number} failed"
+// in the language the app shows.
+func ActivityFailedCount(count int) string { return In(i18n.Locale()).ActivityFailedCount(count) }
+
+// ActivityFailedCount says "{count, number} failed"
+// in the language of msgs.
+func (msgs Messages) ActivityFailedCount(count int) string {
+	return Catalog.Format(msgs.locale, "activityFailedCount", map[string]any{"count": count})
+}
+
+// ActivityNeedsCheckingCount says "{count, plural, one {# needs checking} other {# need checking}}"
+// in the language the app shows.
+func ActivityNeedsCheckingCount(count int) string {
+	return In(i18n.Locale()).ActivityNeedsCheckingCount(count)
+}
+
+// ActivityNeedsCheckingCount says "{count, plural, one {# needs checking} other {# need checking}}"
+// in the language of msgs.
+func (msgs Messages) ActivityNeedsCheckingCount(count int) string {
+	return Catalog.Format(msgs.locale, "activityNeedsCheckingCount", map[string]any{"count": count})
+}
+
+// ActivityUnconfirmed says "Some uploads couldn't be confirmed. Rainforest will check them against your library at next launch before retrying."
+// in the language the app shows.
+func ActivityUnconfirmed() string { return In(i18n.Locale()).ActivityUnconfirmed() }
+
+// ActivityUnconfirmed says "Some uploads couldn't be confirmed. Rainforest will check them against your library at next launch before retrying."
+// in the language of msgs.
+func (msgs Messages) ActivityUnconfirmed() string {
+	return Catalog.Format(msgs.locale, "activityUnconfirmed", nil)
+}
+
+// ActivityUnconfirmedDownload says "Some downloads couldn't be confirmed. Rainforest will check the files against your library at next launch before retr…"
+// in the language the app shows.
+func ActivityUnconfirmedDownload() string { return In(i18n.Locale()).ActivityUnconfirmedDownload() }
+
+// ActivityUnconfirmedDownload says "Some downloads couldn't be confirmed. Rainforest will check the files against your library at next launch before retr…"
+// in the language of msgs.
+func (msgs Messages) ActivityUnconfirmedDownload() string {
+	return Catalog.Format(msgs.locale, "activityUnconfirmedDownload", nil)
+}
+
+// StageQueued says "Waiting"
+// in the language the app shows.
+func StageQueued() string { return In(i18n.Locale()).StageQueued() }
+
+// StageQueued says "Waiting"
+// in the language of msgs.
+func (msgs Messages) StageQueued() string {
+	return Catalog.Format(msgs.locale, "stageQueued", nil)
+}
+
+// StageUploading says "Uploading"
+// in the language the app shows.
+func StageUploading() string { return In(i18n.Locale()).StageUploading() }
+
+// StageUploading says "Uploading"
+// in the language of msgs.
+func (msgs Messages) StageUploading() string {
+	return Catalog.Format(msgs.locale, "stageUploading", nil)
+}
+
+// StageDownloading says "Downloading"
+// in the language the app shows.
+func StageDownloading() string { return In(i18n.Locale()).StageDownloading() }
+
+// StageDownloading says "Downloading"
+// in the language of msgs.
+func (msgs Messages) StageDownloading() string {
+	return Catalog.Format(msgs.locale, "stageDownloading", nil)
+}
+
+// StagePaused says "Paused"
+// in the language the app shows.
+func StagePaused() string { return In(i18n.Locale()).StagePaused() }
+
+// StagePaused says "Paused"
+// in the language of msgs.
+func (msgs Messages) StagePaused() string {
+	return Catalog.Format(msgs.locale, "stagePaused", nil)
+}
+
+// StageCompleted says "Done"
+// in the language the app shows.
+func StageCompleted() string { return In(i18n.Locale()).StageCompleted() }
+
+// StageCompleted says "Done"
+// in the language of msgs.
+func (msgs Messages) StageCompleted() string {
+	return Catalog.Format(msgs.locale, "stageCompleted", nil)
+}
+
+// StagePartial says "Partly done"
+// in the language the app shows.
+func StagePartial() string { return In(i18n.Locale()).StagePartial() }
+
+// StagePartial says "Partly done"
+// in the language of msgs.
+func (msgs Messages) StagePartial() string {
+	return Catalog.Format(msgs.locale, "stagePartial", nil)
+}
+
+// StageFailed says "Failed"
+// in the language the app shows.
+func StageFailed() string { return In(i18n.Locale()).StageFailed() }
+
+// StageFailed says "Failed"
+// in the language of msgs.
+func (msgs Messages) StageFailed() string {
+	return Catalog.Format(msgs.locale, "stageFailed", nil)
+}
+
+// StageCancelled says "Cancelled"
+// in the language the app shows.
+func StageCancelled() string { return In(i18n.Locale()).StageCancelled() }
+
+// StageCancelled says "Cancelled"
+// in the language of msgs.
+func (msgs Messages) StageCancelled() string {
+	return Catalog.Format(msgs.locale, "stageCancelled", nil)
+}
+
+// StageUnconfirmed says "Needs checking"
+// in the language the app shows.
+func StageUnconfirmed() string { return In(i18n.Locale()).StageUnconfirmed() }
+
+// StageUnconfirmed says "Needs checking"
+// in the language of msgs.
+func (msgs Messages) StageUnconfirmed() string {
+	return Catalog.Format(msgs.locale, "stageUnconfirmed", nil)
+}
+
+// ItemQueued says "Waiting"
+// in the language the app shows.
+func ItemQueued() string { return In(i18n.Locale()).ItemQueued() }
+
+// ItemQueued says "Waiting"
+// in the language of msgs.
+func (msgs Messages) ItemQueued() string {
+	return Catalog.Format(msgs.locale, "itemQueued", nil)
+}
+
+// ItemRunning says "In progress"
+// in the language the app shows.
+func ItemRunning() string { return In(i18n.Locale()).ItemRunning() }
+
+// ItemRunning says "In progress"
+// in the language of msgs.
+func (msgs Messages) ItemRunning() string {
+	return Catalog.Format(msgs.locale, "itemRunning", nil)
+}
+
+// ItemConfirmed says "Done"
+// in the language the app shows.
+func ItemConfirmed() string { return In(i18n.Locale()).ItemConfirmed() }
+
+// ItemConfirmed says "Done"
+// in the language of msgs.
+func (msgs Messages) ItemConfirmed() string {
+	return Catalog.Format(msgs.locale, "itemConfirmed", nil)
+}
+
+// ItemSkipped says "Already there"
+// in the language the app shows.
+func ItemSkipped() string { return In(i18n.Locale()).ItemSkipped() }
+
+// ItemSkipped says "Already there"
+// in the language of msgs.
+func (msgs Messages) ItemSkipped() string {
+	return Catalog.Format(msgs.locale, "itemSkipped", nil)
+}
+
+// ItemAlbumPending says "Adding to album"
+// in the language the app shows.
+func ItemAlbumPending() string { return In(i18n.Locale()).ItemAlbumPending() }
+
+// ItemAlbumPending says "Adding to album"
+// in the language of msgs.
+func (msgs Messages) ItemAlbumPending() string {
+	return Catalog.Format(msgs.locale, "itemAlbumPending", nil)
+}
+
+// ItemUnconfirmed says "Needs checking"
+// in the language the app shows.
+func ItemUnconfirmed() string { return In(i18n.Locale()).ItemUnconfirmed() }
+
+// ItemUnconfirmed says "Needs checking"
+// in the language of msgs.
+func (msgs Messages) ItemUnconfirmed() string {
+	return Catalog.Format(msgs.locale, "itemUnconfirmed", nil)
+}
+
+// ItemFailed says "Failed"
+// in the language the app shows.
+func ItemFailed() string { return In(i18n.Locale()).ItemFailed() }
+
+// ItemFailed says "Failed"
+// in the language of msgs.
+func (msgs Messages) ItemFailed() string {
+	return Catalog.Format(msgs.locale, "itemFailed", nil)
+}
+
+// ItemCancelled says "Cancelled"
+// in the language the app shows.
+func ItemCancelled() string { return In(i18n.Locale()).ItemCancelled() }
+
+// ItemCancelled says "Cancelled"
+// in the language of msgs.
+func (msgs Messages) ItemCancelled() string {
+	return Catalog.Format(msgs.locale, "itemCancelled", nil)
 }
+
+// RuleActive says "Up to date"
+// in the language the app shows.
+func RuleActive() string { return In(i18n.Locale()).RuleActive() }
 
-// OneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies says "One-way incremental backup: deleting, moving, or renaming local files never deletes your Amazon Photos cloud copies."
+// RuleActive says "Up to date"
 // in the language of msgs.
-func (msgs Messages) OneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies() string {
-	return Catalog.Format(msgs.locale, "oneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies", nil)
+func (msgs Messages) RuleActive() string {
+	return Catalog.Format(msgs.locale, "ruleActive", nil)
 }
 
-// AutomaticFolderBackups says "Automatic Folder Backups"
+// RuleScanning says "Backing up…"
 // in the language the app shows.
-func AutomaticFolderBackups() string { return In(i18n.Locale()).AutomaticFolderBackups() }
+func RuleScanning() string { return In(i18n.Locale()).RuleScanning() }
 
-// AutomaticFolderBackups says "Automatic Folder Backups"
+// RuleScanning says "Backing up…"
 // in the language of msgs.
-func (msgs Messages) AutomaticFolderBackups() string {
-	return Catalog.Format(msgs.locale, "automaticFolderBackups", nil)
+func (msgs Messages) RuleScanning() string {
+	return Catalog.Format(msgs.locale, "ruleScanning", nil)
 }
 
-// ConfiguredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning says "Configured local folders are scanned incrementally while Rainforest is running."
+// RulePaused says "Paused"
 // in the language the app shows.
-func ConfiguredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning() string {
-	return In(i18n.Locale()).ConfiguredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning()
+func RulePaused() string { return In(i18n.Locale()).RulePaused() }
+
+// RulePaused says "Paused"
+// in the language of msgs.
+func (msgs Messages) RulePaused() string {
+	return Catalog.Format(msgs.locale, "rulePaused", nil)
 }
+
+// RuleUnavailable says "Folder unavailable"
+// in the language the app shows.
+func RuleUnavailable() string { return In(i18n.Locale()).RuleUnavailable() }
 
-// ConfiguredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning says "Configured local folders are scanned incrementally while Rainforest is running."
+// RuleUnavailable says "Folder unavailable"
 // in the language of msgs.
-func (msgs Messages) ConfiguredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning() string {
-	return Catalog.Format(msgs.locale, "configuredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning", nil)
+func (msgs Messages) RuleUnavailable() string {
+	return Catalog.Format(msgs.locale, "ruleUnavailable", nil)
 }
 
-// AddBackupFolder says "Add Backup Folder"
+// RuleError says "Needs attention"
 // in the language the app shows.
-func AddBackupFolder() string { return In(i18n.Locale()).AddBackupFolder() }
+func RuleError() string { return In(i18n.Locale()).RuleError() }
 
-// AddBackupFolder says "Add Backup Folder"
+// RuleError says "Needs attention"
 // in the language of msgs.
-func (msgs Messages) AddBackupFolder() string {
-	return Catalog.Format(msgs.locale, "addBackupFolder", nil)
+func (msgs Messages) RuleError() string {
+	return Catalog.Format(msgs.locale, "ruleError", nil)
 }
 
-// DestinationNodeId says "Destination Node ID"
+// DoctorPass says "Passed"
 // in the language the app shows.
-func DestinationNodeId() string { return In(i18n.Locale()).DestinationNodeId() }
+func DoctorPass() string { return In(i18n.Locale()).DoctorPass() }
 
-// DestinationNodeId says "Destination Node ID"
+// DoctorPass says "Passed"
 // in the language of msgs.
-func (msgs Messages) DestinationNodeId() string {
-	return Catalog.Format(msgs.locale, "destinationNodeId", nil)
+func (msgs Messages) DoctorPass() string {
+	return Catalog.Format(msgs.locale, "doctorPass", nil)
 }
 
-// LocalFolderPath says "Local Folder Path"
+// DoctorWarn says "Warning"
 // in the language the app shows.
-func LocalFolderPath() string { return In(i18n.Locale()).LocalFolderPath() }
+func DoctorWarn() string { return In(i18n.Locale()).DoctorWarn() }
 
-// LocalFolderPath says "Local Folder Path"
+// DoctorWarn says "Warning"
 // in the language of msgs.
-func (msgs Messages) LocalFolderPath() string {
-	return Catalog.Format(msgs.locale, "localFolderPath", nil)
+func (msgs Messages) DoctorWarn() string {
+	return Catalog.Format(msgs.locale, "doctorWarn", nil)
 }
 
-// PickFolder says "Pick Folder"
+// DoctorFail says "Failed"
 // in the language the app shows.
-func PickFolder() string { return In(i18n.Locale()).PickFolder() }
+func DoctorFail() string { return In(i18n.Locale()).DoctorFail() }
 
-// PickFolder says "Pick Folder"
+// DoctorFail says "Failed"
 // in the language of msgs.
-func (msgs Messages) PickFolder() string {
-	return Catalog.Format(msgs.locale, "pickFolder", nil)
+func (msgs Messages) DoctorFail() string {
+	return Catalog.Format(msgs.locale, "doctorFail", nil)
 }
 
-// MediaTypes says "Media Types:"
+// DoctorSkipped says "Skipped"
 // in the language the app shows.
-func MediaTypes() string { return In(i18n.Locale()).MediaTypes() }
+func DoctorSkipped() string { return In(i18n.Locale()).DoctorSkipped() }
 
-// MediaTypes says "Media Types:"
+// DoctorSkipped says "Skipped"
 // in the language of msgs.
-func (msgs Messages) MediaTypes() string {
-	return Catalog.Format(msgs.locale, "mediaTypes", nil)
+func (msgs Messages) DoctorSkipped() string {
+	return Catalog.Format(msgs.locale, "doctorSkipped", nil)
 }
 
-// PhotosVideos says "Photos + Videos"
+// KindUpload says "Upload"
 // in the language the app shows.
-func PhotosVideos() string { return In(i18n.Locale()).PhotosVideos() }
+func KindUpload() string { return In(i18n.Locale()).KindUpload() }
 
-// PhotosVideos says "Photos + Videos"
+// KindUpload says "Upload"
 // in the language of msgs.
-func (msgs Messages) PhotosVideos() string {
-	return Catalog.Format(msgs.locale, "photosVideos", nil)
+func (msgs Messages) KindUpload() string {
+	return Catalog.Format(msgs.locale, "kindUpload", nil)
 }
 
-// PhotosOnly says "Photos Only"
+// KindBackup says "Backup"
 // in the language the app shows.
-func PhotosOnly() string { return In(i18n.Locale()).PhotosOnly() }
+func KindBackup() string { return In(i18n.Locale()).KindBackup() }
 
-// PhotosOnly says "Photos Only"
+// KindBackup says "Backup"
 // in the language of msgs.
-func (msgs Messages) PhotosOnly() string {
-	return Catalog.Format(msgs.locale, "photosOnly", nil)
+func (msgs Messages) KindBackup() string {
+	return Catalog.Format(msgs.locale, "kindBackup", nil)
 }
 
-// Schedule says "Schedule:"
+// KindDownload says "Download"
 // in the language the app shows.
-func Schedule() string { return In(i18n.Locale()).Schedule() }
+func KindDownload() string { return In(i18n.Locale()).KindDownload() }
 
-// Schedule says "Schedule:"
+// KindDownload says "Download"
 // in the language of msgs.
-func (msgs Messages) Schedule() string {
-	return Catalog.Format(msgs.locale, "schedule", nil)
+func (msgs Messages) KindDownload() string {
+	return Catalog.Format(msgs.locale, "kindDownload", nil)
 }
 
-// ImmediatePeriodic says "Immediate + Periodic"
+// BackupTitle says "Backup"
 // in the language the app shows.
-func ImmediatePeriodic() string { return In(i18n.Locale()).ImmediatePeriodic() }
+func BackupTitle() string { return In(i18n.Locale()).BackupTitle() }
 
-// ImmediatePeriodic says "Immediate + Periodic"
+// BackupTitle says "Backup"
 // in the language of msgs.
-func (msgs Messages) ImmediatePeriodic() string {
-	return Catalog.Format(msgs.locale, "immediatePeriodic", nil)
+func (msgs Messages) BackupTitle() string {
+	return Catalog.Format(msgs.locale, "backupTitle", nil)
 }
 
-// ScheduledInterval says "Scheduled Interval"
+// BackupSubtitle says "Keep folders on this computer backed up automatically."
 // in the language the app shows.
-func ScheduledInterval() string { return In(i18n.Locale()).ScheduledInterval() }
+func BackupSubtitle() string { return In(i18n.Locale()).BackupSubtitle() }
 
-// ScheduledInterval says "Scheduled Interval"
+// BackupSubtitle says "Keep folders on this computer backed up automatically."
 // in the language of msgs.
-func (msgs Messages) ScheduledInterval() string {
-	return Catalog.Format(msgs.locale, "scheduledInterval", nil)
+func (msgs Messages) BackupSubtitle() string {
+	return Catalog.Format(msgs.locale, "backupSubtitle", nil)
 }
 
-// IntervalMinutes says "Interval (minutes):"
+// BackupPauseAll says "Pause all"
 // in the language the app shows.
-func IntervalMinutes() string { return In(i18n.Locale()).IntervalMinutes() }
+func BackupPauseAll() string { return In(i18n.Locale()).BackupPauseAll() }
 
-// IntervalMinutes says "Interval (minutes):"
+// BackupPauseAll says "Pause all"
 // in the language of msgs.
-func (msgs Messages) IntervalMinutes() string {
-	return Catalog.Format(msgs.locale, "intervalMinutes", nil)
+func (msgs Messages) BackupPauseAll() string {
+	return Catalog.Format(msgs.locale, "backupPauseAll", nil)
 }
 
-// ConflictPolicy says "Conflict Policy:"
+// BackupResumeAll says "Resume all"
 // in the language the app shows.
-func ConflictPolicy() string { return In(i18n.Locale()).ConflictPolicy() }
+func BackupResumeAll() string { return In(i18n.Locale()).BackupResumeAll() }
 
-// ConflictPolicy says "Conflict Policy:"
+// BackupResumeAll says "Resume all"
 // in the language of msgs.
-func (msgs Messages) ConflictPolicy() string {
-	return Catalog.Format(msgs.locale, "conflictPolicy", nil)
+func (msgs Messages) BackupResumeAll() string {
+	return Catalog.Format(msgs.locale, "backupResumeAll", nil)
 }
 
-// Skip says "skip"
+// BackupAddFolder says "Add folder"
 // in the language the app shows.
-func Skip() string { return In(i18n.Locale()).Skip() }
+func BackupAddFolder() string { return In(i18n.Locale()).BackupAddFolder() }
 
-// Skip says "skip"
+// BackupAddFolder says "Add folder"
 // in the language of msgs.
-func (msgs Messages) Skip() string {
-	return Catalog.Format(msgs.locale, "skip", nil)
+func (msgs Messages) BackupAddFolder() string {
+	return Catalog.Format(msgs.locale, "backupAddFolder", nil)
 }
 
-// Rename says "rename"
+// BackupEditFolder says "Edit folder"
 // in the language the app shows.
-func Rename() string { return In(i18n.Locale()).Rename() }
+func BackupEditFolder() string { return In(i18n.Locale()).BackupEditFolder() }
 
-// Rename says "rename"
+// BackupEditFolder says "Edit folder"
 // in the language of msgs.
-func (msgs Messages) Rename() string {
-	return Catalog.Format(msgs.locale, "rename", nil)
+func (msgs Messages) BackupEditFolder() string {
+	return Catalog.Format(msgs.locale, "backupEditFolder", nil)
 }
 
-// Cancel says "Cancel"
+// BackupSaveChanges says "Save changes"
 // in the language the app shows.
-func Cancel() string { return In(i18n.Locale()).Cancel() }
+func BackupSaveChanges() string { return In(i18n.Locale()).BackupSaveChanges() }
 
-// Cancel says "Cancel"
+// BackupSaveChanges says "Save changes"
 // in the language of msgs.
-func (msgs Messages) Cancel() string {
-	return Catalog.Format(msgs.locale, "cancel", nil)
+func (msgs Messages) BackupSaveChanges() string {
+	return Catalog.Format(msgs.locale, "backupSaveChanges", nil)
 }
 
-// SaveBackupRule says "Save Backup Rule"
+// BackupAllPaused says "All backups are paused."
 // in the language the app shows.
-func SaveBackupRule() string { return In(i18n.Locale()).SaveBackupRule() }
+func BackupAllPaused() string { return In(i18n.Locale()).BackupAllPaused() }
 
-// SaveBackupRule says "Save Backup Rule"
+// BackupAllPaused says "All backups are paused."
 // in the language of msgs.
-func (msgs Messages) SaveBackupRule() string {
-	return Catalog.Format(msgs.locale, "saveBackupRule", nil)
+func (msgs Messages) BackupAllPaused() string {
+	return Catalog.Format(msgs.locale, "backupAllPaused", nil)
 }
 
-// NoBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup says "No backup folders configured. Click \"Add Backup Folder\" to start one-way automatic backup."
+// BackupOneWayNote says "Backup is one-way: deleting or moving files on this computer never removes them from Amazon Photos."
 // in the language the app shows.
-func NoBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup() string {
-	return In(i18n.Locale()).NoBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup()
+func BackupOneWayNote() string { return In(i18n.Locale()).BackupOneWayNote() }
+
+// BackupOneWayNote says "Backup is one-way: deleting or moving files on this computer never removes them from Amazon Photos."
+// in the language of msgs.
+func (msgs Messages) BackupOneWayNote() string {
+	return Catalog.Format(msgs.locale, "backupOneWayNote", nil)
 }
+
+// BackupMediaAll says "Photos and videos"
+// in the language the app shows.
+func BackupMediaAll() string { return In(i18n.Locale()).BackupMediaAll() }
 
-// NoBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup says "No backup folders configured. Click \"Add Backup Folder\" to start one-way automatic backup."
+// BackupMediaAll says "Photos and videos"
 // in the language of msgs.
-func (msgs Messages) NoBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup() string {
-	return Catalog.Format(msgs.locale, "noBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup", nil)
+func (msgs Messages) BackupMediaAll() string {
+	return Catalog.Format(msgs.locale, "backupMediaAll", nil)
 }
 
-// ScanNow says "Scan Now"
+// BackupMediaPhotos says "Photos only"
 // in the language the app shows.
-func ScanNow() string { return In(i18n.Locale()).ScanNow() }
+func BackupMediaPhotos() string { return In(i18n.Locale()).BackupMediaPhotos() }
 
-// ScanNow says "Scan Now"
+// BackupMediaPhotos says "Photos only"
 // in the language of msgs.
-func (msgs Messages) ScanNow() string {
-	return Catalog.Format(msgs.locale, "scanNow", nil)
+func (msgs Messages) BackupMediaPhotos() string {
+	return Catalog.Format(msgs.locale, "backupMediaPhotos", nil)
 }
 
-// Resume says "Resume"
+// BackupScheduleImmediate says "When files change"
 // in the language the app shows.
-func Resume() string { return In(i18n.Locale()).Resume() }
+func BackupScheduleImmediate() string { return In(i18n.Locale()).BackupScheduleImmediate() }
 
-// Resume says "Resume"
+// BackupScheduleImmediate says "When files change"
 // in the language of msgs.
-func (msgs Messages) Resume() string {
-	return Catalog.Format(msgs.locale, "resume", nil)
+func (msgs Messages) BackupScheduleImmediate() string {
+	return Catalog.Format(msgs.locale, "backupScheduleImmediate", nil)
 }
 
-// Pause says "Pause"
+// BackupScheduleInterval says "On a schedule"
 // in the language the app shows.
-func Pause() string { return In(i18n.Locale()).Pause() }
+func BackupScheduleInterval() string { return In(i18n.Locale()).BackupScheduleInterval() }
 
-// Pause says "Pause"
+// BackupScheduleInterval says "On a schedule"
 // in the language of msgs.
-func (msgs Messages) Pause() string {
-	return Catalog.Format(msgs.locale, "pause", nil)
+func (msgs Messages) BackupScheduleInterval() string {
+	return Catalog.Format(msgs.locale, "backupScheduleInterval", nil)
 }
 
-// Edit says "Edit"
+// BackupEveryMinutes says "Every {count, plural, one {# minute} other {# minutes}}"
 // in the language the app shows.
-func Edit() string { return In(i18n.Locale()).Edit() }
+func BackupEveryMinutes(count int) string { return In(i18n.Locale()).BackupEveryMinutes(count) }
 
-// Edit says "Edit"
+// BackupEveryMinutes says "Every {count, plural, one {# minute} other {# minutes}}"
 // in the language of msgs.
-func (msgs Messages) Edit() string {
-	return Catalog.Format(msgs.locale, "edit", nil)
+func (msgs Messages) BackupEveryMinutes(count int) string {
+	return Catalog.Format(msgs.locale, "backupEveryMinutes", map[string]any{"count": count})
 }
 
-// Remove says "Remove"
+// BackupChecked says "Checked {time}"
 // in the language the app shows.
-func Remove() string { return In(i18n.Locale()).Remove() }
+func BackupChecked(time_ string) string { return In(i18n.Locale()).BackupChecked(time_) }
 
-// Remove says "Remove"
+// BackupChecked says "Checked {time}"
 // in the language of msgs.
-func (msgs Messages) Remove() string {
-	return Catalog.Format(msgs.locale, "remove", nil)
+func (msgs Messages) BackupChecked(time_ string) string {
+	return Catalog.Format(msgs.locale, "backupChecked", map[string]any{"time": time_})
 }
 
-// Conflict says "Conflict:"
+// BackupNotChecked says "Not checked yet"
 // in the language the app shows.
-func Conflict() string { return In(i18n.Locale()).Conflict() }
+func BackupNotChecked() string { return In(i18n.Locale()).BackupNotChecked() }
 
-// Conflict says "Conflict:"
+// BackupNotChecked says "Not checked yet"
 // in the language of msgs.
-func (msgs Messages) Conflict() string {
-	return Catalog.Format(msgs.locale, "conflict", nil)
+func (msgs Messages) BackupNotChecked() string {
+	return Catalog.Format(msgs.locale, "backupNotChecked", nil)
 }
 
-// LastScan says "Last scan:"
+// BackupNow says "Back up now"
 // in the language the app shows.
-func LastScan() string { return In(i18n.Locale()).LastScan() }
+func BackupNow() string { return In(i18n.Locale()).BackupNow() }
 
-// LastScan says "Last scan:"
+// BackupNow says "Back up now"
 // in the language of msgs.
-func (msgs Messages) LastScan() string {
-	return Catalog.Format(msgs.locale, "lastScan", nil)
+func (msgs Messages) BackupNow() string {
+	return Catalog.Format(msgs.locale, "backupNow", nil)
 }
 
-// ExternalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched says "External drive or folder is currently offline — cloud files are untouched."
+// BackupRemoveTitle says "Stop backing up “{name}”?"
 // in the language the app shows.
-func ExternalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched() string {
-	return In(i18n.Locale()).ExternalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched()
+func BackupRemoveTitle(name string) string { return In(i18n.Locale()).BackupRemoveTitle(name) }
+
+// BackupRemoveTitle says "Stop backing up “{name}”?"
+// in the language of msgs.
+func (msgs Messages) BackupRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "backupRemoveTitle", map[string]any{"name": name})
 }
+
+// BackupRemoveBody says "Files already in Amazon Photos stay there."
+// in the language the app shows.
+func BackupRemoveBody() string { return In(i18n.Locale()).BackupRemoveBody() }
 
-// ExternalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched says "External drive or folder is currently offline — cloud files are untouched."
+// BackupRemoveBody says "Files already in Amazon Photos stay there."
 // in the language of msgs.
-func (msgs Messages) ExternalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched() string {
-	return Catalog.Format(msgs.locale, "externalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched", nil)
+func (msgs Messages) BackupRemoveBody() string {
+	return Catalog.Format(msgs.locale, "backupRemoveBody", nil)
 }
 
-// Destination says "Destination:"
+// BackupUnavailable says "This folder isn't available. Connect the drive or restore the folder — files in Amazon Photos are untouched."
 // in the language the app shows.
-func Destination() string { return In(i18n.Locale()).Destination() }
+func BackupUnavailable() string { return In(i18n.Locale()).BackupUnavailable() }
 
-// Destination says "Destination:"
+// BackupUnavailable says "This folder isn't available. Connect the drive or restore the folder — files in Amazon Photos are untouched."
 // in the language of msgs.
-func (msgs Messages) Destination() string {
-	return Catalog.Format(msgs.locale, "destination", nil)
+func (msgs Messages) BackupUnavailable() string {
+	return Catalog.Format(msgs.locale, "backupUnavailable", nil)
 }
 
-// CheckDestination says "Check Destination"
+// BackupEmptyTitle says "No folders backed up yet"
 // in the language the app shows.
-func CheckDestination() string { return In(i18n.Locale()).CheckDestination() }
+func BackupEmptyTitle() string { return In(i18n.Locale()).BackupEmptyTitle() }
 
-// CheckDestination says "Check Destination"
+// BackupEmptyTitle says "No folders backed up yet"
 // in the language of msgs.
-func (msgs Messages) CheckDestination() string {
-	return Catalog.Format(msgs.locale, "checkDestination", nil)
+func (msgs Messages) BackupEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "backupEmptyTitle", nil)
 }
 
-// RecoveryDownloadSecondary says "Recovery Download (Secondary)"
+// BackupEmptyBody says "Choose a folder and Rainforest will upload new photos and videos from it automatically."
 // in the language the app shows.
-func RecoveryDownloadSecondary() string { return In(i18n.Locale()).RecoveryDownloadSecondary() }
+func BackupEmptyBody() string { return In(i18n.Locale()).BackupEmptyBody() }
 
-// RecoveryDownloadSecondary says "Recovery Download (Secondary)"
+// BackupEmptyBody says "Choose a folder and Rainforest will upload new photos and videos from it automatically."
 // in the language of msgs.
-func (msgs Messages) RecoveryDownloadSecondary() string {
-	return Catalog.Format(msgs.locale, "recoveryDownloadSecondary", nil)
+func (msgs Messages) BackupEmptyBody() string {
+	return Catalog.Format(msgs.locale, "backupEmptyBody", nil)
 }
 
-// RestoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds says "Restore original files from confirmed transfer records, verified albums/folders, or explicit remote node IDs."
+// BackupFolder says "Folder"
 // in the language the app shows.
-func RestoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds() string {
-	return In(i18n.Locale()).RestoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds()
+func BackupFolder() string { return In(i18n.Locale()).BackupFolder() }
+
+// BackupFolder says "Folder"
+// in the language of msgs.
+func (msgs Messages) BackupFolder() string {
+	return Catalog.Format(msgs.locale, "backupFolder", nil)
 }
+
+// BackupBackUp says "Back up"
+// in the language the app shows.
+func BackupBackUp() string { return In(i18n.Locale()).BackupBackUp() }
 
-// RestoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds says "Restore original files from confirmed transfer records, verified albums/folders, or explicit remote node IDs."
+// BackupBackUp says "Back up"
 // in the language of msgs.
-func (msgs Messages) RestoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds() string {
-	return Catalog.Format(msgs.locale, "restoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds", nil)
+func (msgs Messages) BackupBackUp() string {
+	return Catalog.Format(msgs.locale, "backupBackUp", nil)
 }
 
-// RegionCapability says "Region Capability:"
+// BackupEvery says "Every"
 // in the language the app shows.
-func RegionCapability() string { return In(i18n.Locale()).RegionCapability() }
+func BackupEvery() string { return In(i18n.Locale()).BackupEvery() }
 
-// RegionCapability says "Region Capability:"
+// BackupEvery says "Every"
 // in the language of msgs.
-func (msgs Messages) RegionCapability() string {
-	return Catalog.Format(msgs.locale, "regionCapability", nil)
+func (msgs Messages) BackupEvery() string {
+	return Catalog.Format(msgs.locale, "backupEvery", nil)
 }
 
-// ConfirmedTransferHistory says "Confirmed Transfer History"
+// BackupMinutes says "minutes"
 // in the language the app shows.
-func ConfirmedTransferHistory() string { return In(i18n.Locale()).ConfirmedTransferHistory() }
+func BackupMinutes() string { return In(i18n.Locale()).BackupMinutes() }
 
-// ConfirmedTransferHistory says "Confirmed Transfer History"
+// BackupMinutes says "minutes"
 // in the language of msgs.
-func (msgs Messages) ConfirmedTransferHistory() string {
-	return Catalog.Format(msgs.locale, "confirmedTransferHistory", nil)
+func (msgs Messages) BackupMinutes() string {
+	return Catalog.Format(msgs.locale, "backupMinutes", nil)
 }
 
-// RemoteAlbumsFolders says "Remote Albums / Folders"
+// BackupRemoveMenu says "Remove…"
 // in the language the app shows.
-func RemoteAlbumsFolders() string { return In(i18n.Locale()).RemoteAlbumsFolders() }
+func BackupRemoveMenu() string { return In(i18n.Locale()).BackupRemoveMenu() }
 
-// RemoteAlbumsFolders says "Remote Albums / Folders"
+// BackupRemoveMenu says "Remove…"
 // in the language of msgs.
-func (msgs Messages) RemoteAlbumsFolders() string {
-	return Catalog.Format(msgs.locale, "remoteAlbumsFolders", nil)
+func (msgs Messages) BackupRemoveMenu() string {
+	return Catalog.Format(msgs.locale, "backupRemoveMenu", nil)
 }
 
-// ExplicitRemoteNodeIds says "Explicit Remote Node IDs"
+// BackupErrorFolder says "Choose a folder to back up."
 // in the language the app shows.
-func ExplicitRemoteNodeIds() string { return In(i18n.Locale()).ExplicitRemoteNodeIds() }
+func BackupErrorFolder() string { return In(i18n.Locale()).BackupErrorFolder() }
 
-// ExplicitRemoteNodeIds says "Explicit Remote Node IDs"
+// BackupErrorFolder says "Choose a folder to back up."
 // in the language of msgs.
-func (msgs Messages) ExplicitRemoteNodeIds() string {
-	return Catalog.Format(msgs.locale, "explicitRemoteNodeIds", nil)
+func (msgs Messages) BackupErrorFolder() string {
+	return Catalog.Format(msgs.locale, "backupErrorFolder", nil)
 }
 
-// SelectConfirmedUploadedFilesToDownloadAndVerify says "Select confirmed uploaded files to download and verify:"
+// BackupErrorInterval says "Enter a number of minutes from 5 to 1440."
 // in the language the app shows.
-func SelectConfirmedUploadedFilesToDownloadAndVerify() string {
-	return In(i18n.Locale()).SelectConfirmedUploadedFilesToDownloadAndVerify()
+func BackupErrorInterval() string { return In(i18n.Locale()).BackupErrorInterval() }
+
+// BackupErrorInterval says "Enter a number of minutes from 5 to 1440."
+// in the language of msgs.
+func (msgs Messages) BackupErrorInterval() string {
+	return Catalog.Format(msgs.locale, "backupErrorInterval", nil)
 }
+
+// RestoreTitle says "Restore"
+// in the language the app shows.
+func RestoreTitle() string { return In(i18n.Locale()).RestoreTitle() }
 
-// SelectConfirmedUploadedFilesToDownloadAndVerify says "Select confirmed uploaded files to download and verify:"
+// RestoreTitle says "Restore"
 // in the language of msgs.
-func (msgs Messages) SelectConfirmedUploadedFilesToDownloadAndVerify() string {
-	return Catalog.Format(msgs.locale, "selectConfirmedUploadedFilesToDownloadAndVerify", nil)
+func (msgs Messages) RestoreTitle() string {
+	return Catalog.Format(msgs.locale, "restoreTitle", nil)
 }
 
-// NoConfirmedTransferHistoryItemsAvailableYet says "No confirmed transfer history items available yet."
+// RestoreSubtitle says "Download your original files back to this computer."
 // in the language the app shows.
-func NoConfirmedTransferHistoryItemsAvailableYet() string {
-	return In(i18n.Locale()).NoConfirmedTransferHistoryItemsAvailableYet()
+func RestoreSubtitle() string { return In(i18n.Locale()).RestoreSubtitle() }
+
+// RestoreSubtitle says "Download your original files back to this computer."
+// in the language of msgs.
+func (msgs Messages) RestoreSubtitle() string {
+	return Catalog.Format(msgs.locale, "restoreSubtitle", nil)
 }
+
+// RestoreExperimental says "Restore for this marketplace is experimental."
+// in the language the app shows.
+func RestoreExperimental() string { return In(i18n.Locale()).RestoreExperimental() }
 
-// NoConfirmedTransferHistoryItemsAvailableYet says "No confirmed transfer history items available yet."
+// RestoreExperimental says "Restore for this marketplace is experimental."
 // in the language of msgs.
-func (msgs Messages) NoConfirmedTransferHistoryItemsAvailableYet() string {
-	return Catalog.Format(msgs.locale, "noConfirmedTransferHistoryItemsAvailableYet", nil)
+func (msgs Messages) RestoreExperimental() string {
+	return Catalog.Format(msgs.locale, "restoreExperimental", nil)
 }
 
-// SelectRemoteFolderOrAlbum says "Select Remote Folder or Album"
+// RestoreSourceUploaded says "Uploaded with Rainforest"
 // in the language the app shows.
-func SelectRemoteFolderOrAlbum() string { return In(i18n.Locale()).SelectRemoteFolderOrAlbum() }
+func RestoreSourceUploaded() string { return In(i18n.Locale()).RestoreSourceUploaded() }
 
-// SelectRemoteFolderOrAlbum says "Select Remote Folder or Album"
+// RestoreSourceUploaded says "Uploaded with Rainforest"
 // in the language of msgs.
-func (msgs Messages) SelectRemoteFolderOrAlbum() string {
-	return Catalog.Format(msgs.locale, "selectRemoteFolderOrAlbum", nil)
+func (msgs Messages) RestoreSourceUploaded() string {
+	return Catalog.Format(msgs.locale, "restoreSourceUploaded", nil)
 }
 
-// ChooseAnAlbumOrFolder says "-- Choose an album or folder --"
+// RestoreSourceContainer says "Album or folder"
 // in the language the app shows.
-func ChooseAnAlbumOrFolder() string { return In(i18n.Locale()).ChooseAnAlbumOrFolder() }
+func RestoreSourceContainer() string { return In(i18n.Locale()).RestoreSourceContainer() }
 
-// ChooseAnAlbumOrFolder says "-- Choose an album or folder --"
+// RestoreSourceContainer says "Album or folder"
 // in the language of msgs.
-func (msgs Messages) ChooseAnAlbumOrFolder() string {
-	return Catalog.Format(msgs.locale, "chooseAnAlbumOrFolder", nil)
+func (msgs Messages) RestoreSourceContainer() string {
+	return Catalog.Format(msgs.locale, "restoreSourceContainer", nil)
 }
 
-// Folder says "[Folder]"
+// RestoreSourceById says "By ID"
 // in the language the app shows.
-func Folder() string { return In(i18n.Locale()).Folder() }
+func RestoreSourceById() string { return In(i18n.Locale()).RestoreSourceById() }
 
-// Folder says "[Folder]"
+// RestoreSourceById says "By ID"
 // in the language of msgs.
-func (msgs Messages) Folder() string {
-	return Catalog.Format(msgs.locale, "folder", nil)
+func (msgs Messages) RestoreSourceById() string {
+	return Catalog.Format(msgs.locale, "restoreSourceById", nil)
 }
 
-// Album says "[Album]"
+// RestoreContainerPlaceholder says "Choose an album or folder"
 // in the language the app shows.
-func Album() string { return In(i18n.Locale()).Album() }
+func RestoreContainerPlaceholder() string { return In(i18n.Locale()).RestoreContainerPlaceholder() }
 
-// Album says "[Album]"
+// RestoreContainerPlaceholder says "Choose an album or folder"
 // in the language of msgs.
-func (msgs Messages) Album() string {
-	return Catalog.Format(msgs.locale, "album", nil)
+func (msgs Messages) RestoreContainerPlaceholder() string {
+	return Catalog.Format(msgs.locale, "restoreContainerPlaceholder", nil)
 }
 
-// RemoteNodeIdsCommaOrSpaceSeparated says "Remote Node IDs (comma or space separated)"
+// RestoreAlbumOption says "Album · {name}"
 // in the language the app shows.
-func RemoteNodeIdsCommaOrSpaceSeparated() string {
-	return In(i18n.Locale()).RemoteNodeIdsCommaOrSpaceSeparated()
+func RestoreAlbumOption(name string) string { return In(i18n.Locale()).RestoreAlbumOption(name) }
+
+// RestoreAlbumOption says "Album · {name}"
+// in the language of msgs.
+func (msgs Messages) RestoreAlbumOption(name string) string {
+	return Catalog.Format(msgs.locale, "restoreAlbumOption", map[string]any{"name": name})
 }
+
+// RestoreFolderOption says "Folder · {name}"
+// in the language the app shows.
+func RestoreFolderOption(name string) string { return In(i18n.Locale()).RestoreFolderOption(name) }
 
-// RemoteNodeIdsCommaOrSpaceSeparated says "Remote Node IDs (comma or space separated)"
+// RestoreFolderOption says "Folder · {name}"
 // in the language of msgs.
-func (msgs Messages) RemoteNodeIdsCommaOrSpaceSeparated() string {
-	return Catalog.Format(msgs.locale, "remoteNodeIdsCommaOrSpaceSeparated", nil)
+func (msgs Messages) RestoreFolderOption(name string) string {
+	return Catalog.Format(msgs.locale, "restoreFolderOption", map[string]any{"name": name})
 }
 
-// TargetLocalDirectory says "Target Local Directory"
+// RestoreSelectAll says "Select all"
 // in the language the app shows.
-func TargetLocalDirectory() string { return In(i18n.Locale()).TargetLocalDirectory() }
+func RestoreSelectAll() string { return In(i18n.Locale()).RestoreSelectAll() }
 
-// TargetLocalDirectory says "Target Local Directory"
+// RestoreSelectAll says "Select all"
 // in the language of msgs.
-func (msgs Messages) TargetLocalDirectory() string {
-	return Catalog.Format(msgs.locale, "targetLocalDirectory", nil)
+func (msgs Messages) RestoreSelectAll() string {
+	return Catalog.Format(msgs.locale, "restoreSelectAll", nil)
 }
 
-// PickDirectory says "Pick Directory"
+// RestoreSelected says "{count, number} selected · {size}"
 // in the language the app shows.
-func PickDirectory() string { return In(i18n.Locale()).PickDirectory() }
+func RestoreSelected(count int, size string) string {
+	return In(i18n.Locale()).RestoreSelected(count, size)
+}
 
-// PickDirectory says "Pick Directory"
+// RestoreSelected says "{count, number} selected · {size}"
 // in the language of msgs.
-func (msgs Messages) PickDirectory() string {
-	return Catalog.Format(msgs.locale, "pickDirectory", nil)
+func (msgs Messages) RestoreSelected(count int, size string) string {
+	return Catalog.Format(msgs.locale, "restoreSelected", map[string]any{"count": count, "size": size})
 }
 
-// ConflictPolicyLabel says "Conflict Policy"
+// RestoreEmptyTitle says "Nothing to restore yet"
 // in the language the app shows.
-func ConflictPolicyLabel() string { return In(i18n.Locale()).ConflictPolicyLabel() }
+func RestoreEmptyTitle() string { return In(i18n.Locale()).RestoreEmptyTitle() }
 
-// ConflictPolicyLabel says "Conflict Policy"
+// RestoreEmptyTitle says "Nothing to restore yet"
 // in the language of msgs.
-func (msgs Messages) ConflictPolicyLabel() string {
-	return Catalog.Format(msgs.locale, "conflictPolicyLabel", nil)
+func (msgs Messages) RestoreEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "restoreEmptyTitle", nil)
 }
 
-// Fail says "fail"
+// RestoreEmptyBody says "Files you upload with Rainforest can be restored from here."
 // in the language the app shows.
-func Fail() string { return In(i18n.Locale()).Fail() }
+func RestoreEmptyBody() string { return In(i18n.Locale()).RestoreEmptyBody() }
 
-// Fail says "fail"
+// RestoreEmptyBody says "Files you upload with Rainforest can be restored from here."
 // in the language of msgs.
-func (msgs Messages) Fail() string {
-	return Catalog.Format(msgs.locale, "fail", nil)
+func (msgs Messages) RestoreEmptyBody() string {
+	return Catalog.Format(msgs.locale, "restoreEmptyBody", nil)
 }
 
-// StartRecoveryDownload says "Start Recovery Download"
+// RestoreIdsPlaceholder says "Paste node IDs, separated by commas or spaces"
 // in the language the app shows.
-func StartRecoveryDownload() string { return In(i18n.Locale()).StartRecoveryDownload() }
+func RestoreIdsPlaceholder() string { return In(i18n.Locale()).RestoreIdsPlaceholder() }
 
-// StartRecoveryDownload says "Start Recovery Download"
+// RestoreIdsPlaceholder says "Paste node IDs, separated by commas or spaces"
 // in the language of msgs.
-func (msgs Messages) StartRecoveryDownload() string {
-	return Catalog.Format(msgs.locale, "startRecoveryDownload", nil)
+func (msgs Messages) RestoreIdsPlaceholder() string {
+	return Catalog.Format(msgs.locale, "restoreIdsPlaceholder", nil)
 }
 
-// RecoveryTransfer says "Recovery Transfer:"
+// RestoreIdCount says "{count, plural, one {# ID} other {# IDs}}"
 // in the language the app shows.
-func RecoveryTransfer() string { return In(i18n.Locale()).RecoveryTransfer() }
+func RestoreIdCount(count int) string { return In(i18n.Locale()).RestoreIdCount(count) }
 
-// RecoveryTransfer says "Recovery Transfer:"
+// RestoreIdCount says "{count, plural, one {# ID} other {# IDs}}"
 // in the language of msgs.
-func (msgs Messages) RecoveryTransfer() string {
-	return Catalog.Format(msgs.locale, "recoveryTransfer", nil)
+func (msgs Messages) RestoreIdCount(count int) string {
+	return Catalog.Format(msgs.locale, "restoreIdCount", map[string]any{"count": count})
 }
 
-// AccountAndSession says "Account & Session"
+// RestoreSaveTo says "Save to"
 // in the language the app shows.
-func AccountAndSession() string { return In(i18n.Locale()).AccountAndSession() }
+func RestoreSaveTo() string { return In(i18n.Locale()).RestoreSaveTo() }
 
-// AccountAndSession says "Account & Session"
+// RestoreSaveTo says "Save to"
 // in the language of msgs.
-func (msgs Messages) AccountAndSession() string {
-	return Catalog.Format(msgs.locale, "accountAndSession", nil)
+func (msgs Messages) RestoreSaveTo() string {
+	return Catalog.Format(msgs.locale, "restoreSaveTo", nil)
 }
 
-// ChooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon says "Choose your Amazon marketplace, then sign in on Amazon’s website. Your password and verification codes stay with Am…"
+// RestoreFolderPlaceholder says "Choose a folder"
 // in the language the app shows.
-func ChooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon() string {
-	return In(i18n.Locale()).ChooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon()
+func RestoreFolderPlaceholder() string { return In(i18n.Locale()).RestoreFolderPlaceholder() }
+
+// RestoreFolderPlaceholder says "Choose a folder"
+// in the language of msgs.
+func (msgs Messages) RestoreFolderPlaceholder() string {
+	return Catalog.Format(msgs.locale, "restoreFolderPlaceholder", nil)
 }
+
+// RestoreDownloadItems says "Download {count, plural, one {# item} other {# items}}"
+// in the language the app shows.
+func RestoreDownloadItems(count int) string { return In(i18n.Locale()).RestoreDownloadItems(count) }
 
-// ChooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon says "Choose your Amazon marketplace, then sign in on Amazon’s website. Your password and verification codes stay with Am…"
+// RestoreDownloadItems says "Download {count, plural, one {# item} other {# items}}"
 // in the language of msgs.
-func (msgs Messages) ChooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon() string {
-	return Catalog.Format(msgs.locale, "chooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon", nil)
+func (msgs Messages) RestoreDownloadItems(count int) string {
+	return Catalog.Format(msgs.locale, "restoreDownloadItems", map[string]any{"count": count})
 }
 
-// SignedIn says "Signed in ("
+// RestoreDownloadAlbum says "Download album"
 // in the language the app shows.
-func SignedIn() string { return In(i18n.Locale()).SignedIn() }
+func RestoreDownloadAlbum() string { return In(i18n.Locale()).RestoreDownloadAlbum() }
 
-// SignedIn says "Signed in ("
+// RestoreDownloadAlbum says "Download album"
 // in the language of msgs.
-func (msgs Messages) SignedIn() string {
-	return Catalog.Format(msgs.locale, "signedIn", nil)
+func (msgs Messages) RestoreDownloadAlbum() string {
+	return Catalog.Format(msgs.locale, "restoreDownloadAlbum", nil)
 }
 
-// SignOut says "Sign Out"
+// RestoreDownloadFolder says "Download folder"
 // in the language the app shows.
-func SignOut() string { return In(i18n.Locale()).SignOut() }
+func RestoreDownloadFolder() string { return In(i18n.Locale()).RestoreDownloadFolder() }
 
-// SignOut says "Sign Out"
+// RestoreDownloadFolder says "Download folder"
 // in the language of msgs.
-func (msgs Messages) SignOut() string {
-	return Catalog.Format(msgs.locale, "signOut", nil)
+func (msgs Messages) RestoreDownloadFolder() string {
+	return Catalog.Format(msgs.locale, "restoreDownloadFolder", nil)
 }
 
-// NotSignedIn says "Not signed in"
+// RestoreDownload says "Download"
 // in the language the app shows.
-func NotSignedIn() string { return In(i18n.Locale()).NotSignedIn() }
+func RestoreDownload() string { return In(i18n.Locale()).RestoreDownload() }
 
-// NotSignedIn says "Not signed in"
+// RestoreDownload says "Download"
 // in the language of msgs.
-func (msgs Messages) NotSignedIn() string {
-	return Catalog.Format(msgs.locale, "notSignedIn", nil)
+func (msgs Messages) RestoreDownload() string {
+	return Catalog.Format(msgs.locale, "restoreDownload", nil)
 }
 
-// MarketplaceRegion says "Marketplace Region"
+// RestoreVerifyNote says "Each file is checked after it downloads."
 // in the language the app shows.
-func MarketplaceRegion() string { return In(i18n.Locale()).MarketplaceRegion() }
+func RestoreVerifyNote() string { return In(i18n.Locale()).RestoreVerifyNote() }
 
-// MarketplaceRegion says "Marketplace Region"
+// RestoreVerifyNote says "Each file is checked after it downloads."
 // in the language of msgs.
-func (msgs Messages) MarketplaceRegion() string {
-	return Catalog.Format(msgs.locale, "marketplaceRegion", nil)
+func (msgs Messages) RestoreVerifyNote() string {
+	return Catalog.Format(msgs.locale, "restoreVerifyNote", nil)
 }
 
-// SelectRegion says "-- Select Region --"
+// SettingsTitle says "Settings"
 // in the language the app shows.
-func SelectRegion() string { return In(i18n.Locale()).SelectRegion() }
+func SettingsTitle() string { return In(i18n.Locale()).SettingsTitle() }
 
-// SelectRegion says "-- Select Region --"
+// SettingsTitle says "Settings"
 // in the language of msgs.
-func (msgs Messages) SelectRegion() string {
-	return Catalog.Format(msgs.locale, "selectRegion", nil)
+func (msgs Messages) SettingsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTitle", nil)
 }
 
-// CompleteSignInInTheAmazonWindow says "Complete sign-in in the Amazon window…"
+// SettingsSubtitle says "Your account, transfers and this computer."
 // in the language the app shows.
-func CompleteSignInInTheAmazonWindow() string {
-	return In(i18n.Locale()).CompleteSignInInTheAmazonWindow()
+func SettingsSubtitle() string { return In(i18n.Locale()).SettingsSubtitle() }
+
+// SettingsSubtitle says "Your account, transfers and this computer."
+// in the language of msgs.
+func (msgs Messages) SettingsSubtitle() string {
+	return Catalog.Format(msgs.locale, "settingsSubtitle", nil)
 }
+
+// SettingsAccount says "Account"
+// in the language the app shows.
+func SettingsAccount() string { return In(i18n.Locale()).SettingsAccount() }
 
-// CompleteSignInInTheAmazonWindow says "Complete sign-in in the Amazon window…"
+// SettingsAccount says "Account"
 // in the language of msgs.
-func (msgs Messages) CompleteSignInInTheAmazonWindow() string {
-	return Catalog.Format(msgs.locale, "completeSignInInTheAmazonWindow", nil)
+func (msgs Messages) SettingsAccount() string {
+	return Catalog.Format(msgs.locale, "settingsAccount", nil)
 }
 
-// CancelSignIn says "Cancel sign-in"
+// SettingsTransfers says "Transfers"
 // in the language the app shows.
-func CancelSignIn() string { return In(i18n.Locale()).CancelSignIn() }
+func SettingsTransfers() string { return In(i18n.Locale()).SettingsTransfers() }
 
-// CancelSignIn says "Cancel sign-in"
+// SettingsTransfers says "Transfers"
 // in the language of msgs.
-func (msgs Messages) CancelSignIn() string {
-	return Catalog.Format(msgs.locale, "cancelSignIn", nil)
+func (msgs Messages) SettingsTransfers() string {
+	return Catalog.Format(msgs.locale, "settingsTransfers", nil)
 }
 
-// SignInToAmazon says "Sign in to Amazon"
+// SettingsComputer says "This computer"
 // in the language the app shows.
-func SignInToAmazon() string { return In(i18n.Locale()).SignInToAmazon() }
+func SettingsComputer() string { return In(i18n.Locale()).SettingsComputer() }
 
-// SignInToAmazon says "Sign in to Amazon"
+// SettingsComputer says "This computer"
 // in the language of msgs.
-func (msgs Messages) SignInToAmazon() string {
-	return Catalog.Format(msgs.locale, "signInToAmazon", nil)
+func (msgs Messages) SettingsComputer() string {
+	return Catalog.Format(msgs.locale, "settingsComputer", nil)
 }
 
-// ImportSessionCookiesAdvanced says "Import session cookies (advanced)"
+// SettingsDiagnostics says "Diagnostics"
 // in the language the app shows.
-func ImportSessionCookiesAdvanced() string { return In(i18n.Locale()).ImportSessionCookiesAdvanced() }
+func SettingsDiagnostics() string { return In(i18n.Locale()).SettingsDiagnostics() }
 
-// ImportSessionCookiesAdvanced says "Import session cookies (advanced)"
+// SettingsDiagnostics says "Diagnostics"
 // in the language of msgs.
-func (msgs Messages) ImportSessionCookiesAdvanced() string {
-	return Catalog.Format(msgs.locale, "importSessionCookiesAdvanced", nil)
+func (msgs Messages) SettingsDiagnostics() string {
+	return Catalog.Format(msgs.locale, "settingsDiagnostics", nil)
 }
 
-// SessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson says "Session Cookies (Raw Cookie Header, Netscape cookies.txt, or JSON)"
+// SettingsAbout says "About"
 // in the language the app shows.
-func SessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson() string {
-	return In(i18n.Locale()).SessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson()
+func SettingsAbout() string { return In(i18n.Locale()).SettingsAbout() }
+
+// SettingsAbout says "About"
+// in the language of msgs.
+func (msgs Messages) SettingsAbout() string {
+	return Catalog.Format(msgs.locale, "settingsAbout", nil)
 }
+
+// SettingsSignOut says "Sign out"
+// in the language the app shows.
+func SettingsSignOut() string { return In(i18n.Locale()).SettingsSignOut() }
 
-// SessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson says "Session Cookies (Raw Cookie Header, Netscape cookies.txt, or JSON)"
+// SettingsSignOut says "Sign out"
 // in the language of msgs.
-func (msgs Messages) SessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson() string {
-	return Catalog.Format(msgs.locale, "sessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson", nil)
+func (msgs Messages) SettingsSignOut() string {
+	return Catalog.Format(msgs.locale, "settingsSignOut", nil)
 }
 
-// ImportCookieFile says "Import Cookie File"
+// SettingsSignOutTitle says "Sign out of Amazon?"
 // in the language the app shows.
-func ImportCookieFile() string { return In(i18n.Locale()).ImportCookieFile() }
+func SettingsSignOutTitle() string { return In(i18n.Locale()).SettingsSignOutTitle() }
 
-// ImportCookieFile says "Import Cookie File"
+// SettingsSignOutTitle says "Sign out of Amazon?"
 // in the language of msgs.
-func (msgs Messages) ImportCookieFile() string {
-	return Catalog.Format(msgs.locale, "importCookieFile", nil)
+func (msgs Messages) SettingsSignOutTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSignOutTitle", nil)
 }
 
-// ImportPastedCookies says "Import Pasted Cookies"
+// SettingsSignOutBody says "Backups and uploads stop until you sign in again."
 // in the language the app shows.
-func ImportPastedCookies() string { return In(i18n.Locale()).ImportPastedCookies() }
+func SettingsSignOutBody() string { return In(i18n.Locale()).SettingsSignOutBody() }
 
-// ImportPastedCookies says "Import Pasted Cookies"
+// SettingsSignOutBody says "Backups and uploads stop until you sign in again."
 // in the language of msgs.
-func (msgs Messages) ImportPastedCookies() string {
-	return Catalog.Format(msgs.locale, "importPastedCookies", nil)
+func (msgs Messages) SettingsSignOutBody() string {
+	return Catalog.Format(msgs.locale, "settingsSignOutBody", nil)
 }
 
-// StorageUsageBreakdown says "Storage Usage Breakdown"
+// SettingsVerified says "Verified"
 // in the language the app shows.
-func StorageUsageBreakdown() string { return In(i18n.Locale()).StorageUsageBreakdown() }
+func SettingsVerified() string { return In(i18n.Locale()).SettingsVerified() }
 
-// StorageUsageBreakdown says "Storage Usage Breakdown"
+// SettingsVerified says "Verified"
 // in the language of msgs.
-func (msgs Messages) StorageUsageBreakdown() string {
-	return Catalog.Format(msgs.locale, "storageUsageBreakdown", nil)
+func (msgs Messages) SettingsVerified() string {
+	return Catalog.Format(msgs.locale, "settingsVerified", nil)
 }
 
-// Photos says "Photos"
+// SettingsExperimental says "Experimental"
 // in the language the app shows.
-func Photos() string { return In(i18n.Locale()).Photos() }
+func SettingsExperimental() string { return In(i18n.Locale()).SettingsExperimental() }
 
-// Photos says "Photos"
+// SettingsExperimental says "Experimental"
 // in the language of msgs.
-func (msgs Messages) Photos() string {
-	return Catalog.Format(msgs.locale, "photos", nil)
+func (msgs Messages) SettingsExperimental() string {
+	return Catalog.Format(msgs.locale, "settingsExperimental", nil)
 }
 
-// Videos says "Videos"
+// SettingsUsagePhotos says "Photos"
 // in the language the app shows.
-func Videos() string { return In(i18n.Locale()).Videos() }
+func SettingsUsagePhotos() string { return In(i18n.Locale()).SettingsUsagePhotos() }
 
-// Videos says "Videos"
+// SettingsUsagePhotos says "Photos"
 // in the language of msgs.
-func (msgs Messages) Videos() string {
-	return Catalog.Format(msgs.locale, "videos", nil)
+func (msgs Messages) SettingsUsagePhotos() string {
+	return Catalog.Format(msgs.locale, "settingsUsagePhotos", nil)
 }
 
-// TotalUsed says "Total Used"
+// SettingsUsageVideos says "Videos"
 // in the language the app shows.
-func TotalUsed() string { return In(i18n.Locale()).TotalUsed() }
+func SettingsUsageVideos() string { return In(i18n.Locale()).SettingsUsageVideos() }
 
-// TotalUsed says "Total Used"
+// SettingsUsageVideos says "Videos"
 // in the language of msgs.
-func (msgs Messages) TotalUsed() string {
-	return Catalog.Format(msgs.locale, "totalUsed", nil)
+func (msgs Messages) SettingsUsageVideos() string {
+	return Catalog.Format(msgs.locale, "settingsUsageVideos", nil)
 }
 
-// BillableUsed says "Billable Used"
+// SettingsUsageTotal says "Total"
 // in the language the app shows.
-func BillableUsed() string { return In(i18n.Locale()).BillableUsed() }
+func SettingsUsageTotal() string { return In(i18n.Locale()).SettingsUsageTotal() }
 
-// BillableUsed says "Billable Used"
+// SettingsUsageTotal says "Total"
 // in the language of msgs.
-func (msgs Messages) BillableUsed() string {
-	return Catalog.Format(msgs.locale, "billableUsed", nil)
+func (msgs Messages) SettingsUsageTotal() string {
+	return Catalog.Format(msgs.locale, "settingsUsageTotal", nil)
 }
 
-// SignInToAmazonToViewStorageUsageBreakdown says "Sign in to Amazon to view storage usage breakdown."
+// SettingsUsageBillable says "Billable"
 // in the language the app shows.
-func SignInToAmazonToViewStorageUsageBreakdown() string {
-	return In(i18n.Locale()).SignInToAmazonToViewStorageUsageBreakdown()
+func SettingsUsageBillable() string { return In(i18n.Locale()).SettingsUsageBillable() }
+
+// SettingsUsageBillable says "Billable"
+// in the language of msgs.
+func (msgs Messages) SettingsUsageBillable() string {
+	return Catalog.Format(msgs.locale, "settingsUsageBillable", nil)
 }
+
+// SettingsUsageCount says "{count, plural, one {# item} other {# items}}"
+// in the language the app shows.
+func SettingsUsageCount(count int) string { return In(i18n.Locale()).SettingsUsageCount(count) }
 
-// SignInToAmazonToViewStorageUsageBreakdown says "Sign in to Amazon to view storage usage breakdown."
+// SettingsUsageCount says "{count, plural, one {# item} other {# items}}"
 // in the language of msgs.
-func (msgs Messages) SignInToAmazonToViewStorageUsageBreakdown() string {
-	return Catalog.Format(msgs.locale, "signInToAmazonToViewStorageUsageBreakdown", nil)
+func (msgs Messages) SettingsUsageCount(count int) string {
+	return Catalog.Format(msgs.locale, "settingsUsageCount", map[string]any{"count": count})
 }
 
-// TransferAndDesktopBehavior says "Transfer & Desktop Behavior"
+// SettingsUsageUnavailable says "Storage details aren't available right now."
 // in the language the app shows.
-func TransferAndDesktopBehavior() string { return In(i18n.Locale()).TransferAndDesktopBehavior() }
+func SettingsUsageUnavailable() string { return In(i18n.Locale()).SettingsUsageUnavailable() }
 
-// TransferAndDesktopBehavior says "Transfer & Desktop Behavior"
+// SettingsUsageUnavailable says "Storage details aren't available right now."
 // in the language of msgs.
-func (msgs Messages) TransferAndDesktopBehavior() string {
-	return Catalog.Format(msgs.locale, "transferAndDesktopBehavior", nil)
+func (msgs Messages) SettingsUsageUnavailable() string {
+	return Catalog.Format(msgs.locale, "settingsUsageUnavailable", nil)
 }
 
-// MetadataConcurrency116 says "Metadata Concurrency (1–16)"
+// SettingsUploadConcurrency says "Simultaneous uploads"
 // in the language the app shows.
-func MetadataConcurrency116() string { return In(i18n.Locale()).MetadataConcurrency116() }
+func SettingsUploadConcurrency() string { return In(i18n.Locale()).SettingsUploadConcurrency() }
 
-// MetadataConcurrency116 says "Metadata Concurrency (1–16)"
+// SettingsUploadConcurrency says "Simultaneous uploads"
 // in the language of msgs.
-func (msgs Messages) MetadataConcurrency116() string {
-	return Catalog.Format(msgs.locale, "metadataConcurrency116", nil)
+func (msgs Messages) SettingsUploadConcurrency() string {
+	return Catalog.Format(msgs.locale, "settingsUploadConcurrency", nil)
 }
 
-// UploadConcurrency18 says "Upload Concurrency (1–8)"
+// SettingsUploadConcurrencyHelp says "More is faster on a good connection."
 // in the language the app shows.
-func UploadConcurrency18() string { return In(i18n.Locale()).UploadConcurrency18() }
+func SettingsUploadConcurrencyHelp() string { return In(i18n.Locale()).SettingsUploadConcurrencyHelp() }
 
-// UploadConcurrency18 says "Upload Concurrency (1–8)"
+// SettingsUploadConcurrencyHelp says "More is faster on a good connection."
 // in the language of msgs.
-func (msgs Messages) UploadConcurrency18() string {
-	return Catalog.Format(msgs.locale, "uploadConcurrency18", nil)
+func (msgs Messages) SettingsUploadConcurrencyHelp() string {
+	return Catalog.Format(msgs.locale, "settingsUploadConcurrencyHelp", nil)
 }
 
-// DefaultConflictPolicy says "Default Conflict Policy"
+// SettingsMetadataConcurrency says "Simultaneous file checks"
 // in the language the app shows.
-func DefaultConflictPolicy() string { return In(i18n.Locale()).DefaultConflictPolicy() }
+func SettingsMetadataConcurrency() string { return In(i18n.Locale()).SettingsMetadataConcurrency() }
 
-// DefaultConflictPolicy says "Default Conflict Policy"
+// SettingsMetadataConcurrency says "Simultaneous file checks"
 // in the language of msgs.
-func (msgs Messages) DefaultConflictPolicy() string {
-	return Catalog.Format(msgs.locale, "defaultConflictPolicy", nil)
+func (msgs Messages) SettingsMetadataConcurrency() string {
+	return Catalog.Format(msgs.locale, "settingsMetadataConcurrency", nil)
 }
 
-// CloseWindowToSystemTray says "Close window to system tray"
+// SettingsOpenAtLogin says "Open at login"
 // in the language the app shows.
-func CloseWindowToSystemTray() string { return In(i18n.Locale()).CloseWindowToSystemTray() }
+func SettingsOpenAtLogin() string { return In(i18n.Locale()).SettingsOpenAtLogin() }
 
-// CloseWindowToSystemTray says "Close window to system tray"
+// SettingsOpenAtLogin says "Open at login"
 // in the language of msgs.
-func (msgs Messages) CloseWindowToSystemTray() string {
-	return Catalog.Format(msgs.locale, "closeWindowToSystemTray", nil)
+func (msgs Messages) SettingsOpenAtLogin() string {
+	return Catalog.Format(msgs.locale, "settingsOpenAtLogin", nil)
 }
 
-// LaunchAtLogin says "Launch at login"
+// SettingsKeepRunningMenuBar says "Keep running in the menu bar when the window is closed"
 // in the language the app shows.
-func LaunchAtLogin() string { return In(i18n.Locale()).LaunchAtLogin() }
+func SettingsKeepRunningMenuBar() string { return In(i18n.Locale()).SettingsKeepRunningMenuBar() }
 
-// LaunchAtLogin says "Launch at login"
+// SettingsKeepRunningMenuBar says "Keep running in the menu bar when the window is closed"
 // in the language of msgs.
-func (msgs Messages) LaunchAtLogin() string {
-	return Catalog.Format(msgs.locale, "launchAtLogin", nil)
+func (msgs Messages) SettingsKeepRunningMenuBar() string {
+	return Catalog.Format(msgs.locale, "settingsKeepRunningMenuBar", nil)
 }
 
-// DesktopNotifications says "Desktop notifications"
+// SettingsKeepRunningTray says "Keep running in the system tray when the window is closed"
 // in the language the app shows.
-func DesktopNotifications() string { return In(i18n.Locale()).DesktopNotifications() }
+func SettingsKeepRunningTray() string { return In(i18n.Locale()).SettingsKeepRunningTray() }
 
-// DesktopNotifications says "Desktop notifications"
+// SettingsKeepRunningTray says "Keep running in the system tray when the window is closed"
 // in the language of msgs.
-func (msgs Messages) DesktopNotifications() string {
-	return Catalog.Format(msgs.locale, "desktopNotifications", nil)
+func (msgs Messages) SettingsKeepRunningTray() string {
+	return Catalog.Format(msgs.locale, "settingsKeepRunningTray", nil)
 }
 
-// DesktopLifecycleAndActionReference says "Desktop Lifecycle & Action Reference:"
+// SettingsNotifications says "Notifications"
 // in the language the app shows.
-func DesktopLifecycleAndActionReference() string {
-	return In(i18n.Locale()).DesktopLifecycleAndActionReference()
+func SettingsNotifications() string { return In(i18n.Locale()).SettingsNotifications() }
+
+// SettingsNotifications says "Notifications"
+// in the language of msgs.
+func (msgs Messages) SettingsNotifications() string {
+	return Catalog.Format(msgs.locale, "settingsNotifications", nil)
 }
+
+// SettingsNotificationsHelp says "Get notified when uploads and backups finish."
+// in the language the app shows.
+func SettingsNotificationsHelp() string { return In(i18n.Locale()).SettingsNotificationsHelp() }
 
-// DesktopLifecycleAndActionReference says "Desktop Lifecycle & Action Reference:"
+// SettingsNotificationsHelp says "Get notified when uploads and backups finish."
 // in the language of msgs.
-func (msgs Messages) DesktopLifecycleAndActionReference() string {
-	return Catalog.Format(msgs.locale, "desktopLifecycleAndActionReference", nil)
+func (msgs Messages) SettingsNotificationsHelp() string {
+	return Catalog.Format(msgs.locale, "settingsNotificationsHelp", nil)
 }
 
-// PauseTask says "Pause Task"
+// SettingsDiagnosticsBody says "Check your connection, sign-in and access to Amazon Photos."
 // in the language the app shows.
-func PauseTask() string { return In(i18n.Locale()).PauseTask() }
+func SettingsDiagnosticsBody() string { return In(i18n.Locale()).SettingsDiagnosticsBody() }
 
-// PauseTask says "Pause Task"
+// SettingsDiagnosticsBody says "Check your connection, sign-in and access to Amazon Photos."
 // in the language of msgs.
-func (msgs Messages) PauseTask() string {
-	return Catalog.Format(msgs.locale, "pauseTask", nil)
+func (msgs Messages) SettingsDiagnosticsBody() string {
+	return Catalog.Format(msgs.locale, "settingsDiagnosticsBody", nil)
 }
 
-// PausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue says ": Pauses one active upload or download transfer in the queue; other transfers and backups continue."
+// SettingsDiagnosticsWrite says "Also test uploading (creates and deletes a temporary folder)"
 // in the language the app shows.
-func PausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue() string {
-	return In(i18n.Locale()).PausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue()
+func SettingsDiagnosticsWrite() string { return In(i18n.Locale()).SettingsDiagnosticsWrite() }
+
+// SettingsDiagnosticsWrite says "Also test uploading (creates and deletes a temporary folder)"
+// in the language of msgs.
+func (msgs Messages) SettingsDiagnosticsWrite() string {
+	return Catalog.Format(msgs.locale, "settingsDiagnosticsWrite", nil)
 }
+
+// SettingsRunDiagnostics says "Run diagnostics"
+// in the language the app shows.
+func SettingsRunDiagnostics() string { return In(i18n.Locale()).SettingsRunDiagnostics() }
 
-// PausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue says ": Pauses one active upload or download transfer in the queue; other transfers and backups continue."
+// SettingsRunDiagnostics says "Run diagnostics"
 // in the language of msgs.
-func (msgs Messages) PausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue() string {
-	return Catalog.Format(msgs.locale, "pausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue", nil)
+func (msgs Messages) SettingsRunDiagnostics() string {
+	return Catalog.Format(msgs.locale, "settingsRunDiagnostics", nil)
 }
 
-// StopBackups says "Stop Backups"
+// SettingsDiagnosticsRunning says "Running…"
 // in the language the app shows.
-func StopBackups() string { return In(i18n.Locale()).StopBackups() }
+func SettingsDiagnosticsRunning() string { return In(i18n.Locale()).SettingsDiagnosticsRunning() }
 
-// StopBackups says "Stop Backups"
+// SettingsDiagnosticsRunning says "Running…"
 // in the language of msgs.
-func (msgs Messages) StopBackups() string {
-	return Catalog.Format(msgs.locale, "stopBackups", nil)
+func (msgs Messages) SettingsDiagnosticsRunning() string {
+	return Catalog.Format(msgs.locale, "settingsDiagnosticsRunning", nil)
 }
 
-// HaltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed says ": Halts background folder scans across all configured backup rules until resumed."
+// SettingsLevel says "Level {grade, number}"
 // in the language the app shows.
-func HaltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed() string {
-	return In(i18n.Locale()).HaltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed()
+func SettingsLevel(grade int) string { return In(i18n.Locale()).SettingsLevel(grade) }
+
+// SettingsLevel says "Level {grade, number}"
+// in the language of msgs.
+func (msgs Messages) SettingsLevel(grade int) string {
+	return Catalog.Format(msgs.locale, "settingsLevel", map[string]any{"grade": grade})
 }
+
+// SettingsAboutDisclaimer says "Rainforest is an independent, unofficial app and isn't affiliated with or endorsed by Amazon.com, Inc."
+// in the language the app shows.
+func SettingsAboutDisclaimer() string { return In(i18n.Locale()).SettingsAboutDisclaimer() }
 
-// HaltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed says ": Halts background folder scans across all configured backup rules until resumed."
+// SettingsAboutDisclaimer says "Rainforest is an independent, unofficial app and isn't affiliated with or endorsed by Amazon.com, Inc."
 // in the language of msgs.
-func (msgs Messages) HaltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed() string {
-	return Catalog.Format(msgs.locale, "haltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed", nil)
+func (msgs Messages) SettingsAboutDisclaimer() string {
+	return Catalog.Format(msgs.locale, "settingsAboutDisclaimer", nil)
 }
 
-// CloseWindow says "Close Window"
+// SettingsLicense says "Licensed under AGPL-3.0-only"
 // in the language the app shows.
-func CloseWindow() string { return In(i18n.Locale()).CloseWindow() }
+func SettingsLicense() string { return In(i18n.Locale()).SettingsLicense() }
 
-// CloseWindow says "Close Window"
+// SettingsLicense says "Licensed under AGPL-3.0-only"
 // in the language of msgs.
-func (msgs Messages) CloseWindow() string {
-	return Catalog.Format(msgs.locale, "closeWindow", nil)
+func (msgs Messages) SettingsLicense() string {
+	return Catalog.Format(msgs.locale, "settingsLicense", nil)
 }
 
-// HidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground says ": Hides the window to the system tray (when enabled) while active transfers and backups continue running in the backg…"
+// SettingsSourceCode says "Source code"
 // in the language the app shows.
-func HidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground() string {
-	return In(i18n.Locale()).HidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground()
+func SettingsSourceCode() string { return In(i18n.Locale()).SettingsSourceCode() }
+
+// SettingsSourceCode says "Source code"
+// in the language of msgs.
+func (msgs Messages) SettingsSourceCode() string {
+	return Catalog.Format(msgs.locale, "settingsSourceCode", nil)
 }
+
+// SettingsVersion says "Version {version}"
+// in the language the app shows.
+func SettingsVersion(version string) string { return In(i18n.Locale()).SettingsVersion(version) }
 
-// HidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground says ": Hides the window to the system tray (when enabled) while active transfers and backups continue running in the backg…"
+// SettingsVersion says "Version {version}"
 // in the language of msgs.
-func (msgs Messages) HidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground() string {
-	return Catalog.Format(msgs.locale, "hidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground", nil)
+func (msgs Messages) SettingsVersion(version string) string {
+	return Catalog.Format(msgs.locale, "settingsVersion", map[string]any{"version": version})
 }
 
 // QuitRainforest says "Quit Rainforest"
@@ -936,258 +2282,6 @@ func (msgs Messages) QuitRainforest() string {
 	return Catalog.Format(msgs.locale, "quitRainforest", nil)
 }
 
-// SafelyStopsBackgroundWorkersAndExitsTheApplicationCompletely says ": Safely stops background workers and exits the application completely."
-// in the language the app shows.
-func SafelyStopsBackgroundWorkersAndExitsTheApplicationCompletely() string {
-	return In(i18n.Locale()).SafelyStopsBackgroundWorkersAndExitsTheApplicationCompletely()
-}
-
-// SafelyStopsBackgroundWorkersAndExitsTheApplicationCompletely says ": Safely stops background workers and exits the application completely."
-// in the language of msgs.
-func (msgs Messages) SafelyStopsBackgroundWorkersAndExitsTheApplicationCompletely() string {
-	return Catalog.Format(msgs.locale, "safelyStopsBackgroundWorkersAndExitsTheApplicationCompletely", nil)
-}
-
-// SaveSettings says "Save Settings"
-// in the language the app shows.
-func SaveSettings() string { return In(i18n.Locale()).SaveSettings() }
-
-// SaveSettings says "Save Settings"
-// in the language of msgs.
-func (msgs Messages) SaveSettings() string {
-	return Catalog.Format(msgs.locale, "saveSettings", nil)
-}
-
-// DoctorDiagnostics says "Doctor Diagnostics"
-// in the language the app shows.
-func DoctorDiagnostics() string { return In(i18n.Locale()).DoctorDiagnostics() }
-
-// DoctorDiagnostics says "Doctor Diagnostics"
-// in the language of msgs.
-func (msgs Messages) DoctorDiagnostics() string {
-	return Catalog.Format(msgs.locale, "doctorDiagnostics", nil)
-}
-
-// GradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics says "Graded connectivity, credential vault, region routing, read-probe, and opt-in write-probe diagnostics."
-// in the language the app shows.
-func GradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics() string {
-	return In(i18n.Locale()).GradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics()
-}
-
-// GradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics says "Graded connectivity, credential vault, region routing, read-probe, and opt-in write-probe diagnostics."
-// in the language of msgs.
-func (msgs Messages) GradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics() string {
-	return Catalog.Format(msgs.locale, "gradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics", nil)
-}
-
-// ConfirmTemporaryFolderWriteProbeGrade5 says "Confirm temporary folder write probe (Grade 5)"
-// in the language the app shows.
-func ConfirmTemporaryFolderWriteProbeGrade5() string {
-	return In(i18n.Locale()).ConfirmTemporaryFolderWriteProbeGrade5()
-}
-
-// ConfirmTemporaryFolderWriteProbeGrade5 says "Confirm temporary folder write probe (Grade 5)"
-// in the language of msgs.
-func (msgs Messages) ConfirmTemporaryFolderWriteProbeGrade5() string {
-	return Catalog.Format(msgs.locale, "confirmTemporaryFolderWriteProbeGrade5", nil)
-}
-
-// RunDoctor says "Run Doctor"
-// in the language the app shows.
-func RunDoctor() string { return In(i18n.Locale()).RunDoctor() }
-
-// RunDoctor says "Run Doctor"
-// in the language of msgs.
-func (msgs Messages) RunDoctor() string {
-	return Catalog.Format(msgs.locale, "runDoctor", nil)
-}
-
-// Grade says "[Grade"
-// in the language the app shows.
-func Grade() string { return In(i18n.Locale()).Grade() }
-
-// Grade says "[Grade"
-// in the language of msgs.
-func (msgs Messages) Grade() string {
-	return Catalog.Format(msgs.locale, "grade", nil)
-}
-
-// Hint says "Hint:"
-// in the language the app shows.
-func Hint() string { return In(i18n.Locale()).Hint() }
-
-// Hint says "Hint:"
-// in the language of msgs.
-func (msgs Messages) Hint() string {
-	return Catalog.Format(msgs.locale, "hint", nil)
-}
-
-// AboutRainforest says "About Rainforest"
-// in the language the app shows.
-func AboutRainforest() string { return In(i18n.Locale()).AboutRainforest() }
-
-// AboutRainforest says "About Rainforest"
-// in the language of msgs.
-func (msgs Messages) AboutRainforest() string {
-	return Catalog.Format(msgs.locale, "aboutRainforest", nil)
-}
-
-// RainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc says "Rainforest is an independent, unofficial client and is not affiliated with or endorsed by Amazon.com, Inc."
-// in the language the app shows.
-func RainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc() string {
-	return In(i18n.Locale()).RainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc()
-}
-
-// RainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc says "Rainforest is an independent, unofficial client and is not affiliated with or endorsed by Amazon.com, Inc."
-// in the language of msgs.
-func (msgs Messages) RainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc() string {
-	return Catalog.Format(msgs.locale, "rainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc", nil)
-}
-
-// LicenseAgpl30Only says "License: AGPL-3.0-only"
-// in the language the app shows.
-func LicenseAgpl30Only() string { return In(i18n.Locale()).LicenseAgpl30Only() }
-
-// LicenseAgpl30Only says "License: AGPL-3.0-only"
-// in the language of msgs.
-func (msgs Messages) LicenseAgpl30Only() string {
-	return Catalog.Format(msgs.locale, "licenseAgpl30Only", nil)
-}
-
-// Retry says "Retry"
-// in the language the app shows.
-func Retry() string { return In(i18n.Locale()).Retry() }
-
-// Retry says "Retry"
-// in the language of msgs.
-func (msgs Messages) Retry() string {
-	return Catalog.Format(msgs.locale, "retry", nil)
-}
-
-// Details says "Details"
-// in the language the app shows.
-func Details() string { return In(i18n.Locale()).Details() }
-
-// Details says "Details"
-// in the language of msgs.
-func (msgs Messages) Details() string {
-	return Catalog.Format(msgs.locale, "details", nil)
-}
-
-// Confirmed says "confirmed"
-// in the language the app shows.
-func Confirmed() string { return In(i18n.Locale()).Confirmed() }
-
-// Confirmed says "confirmed"
-// in the language of msgs.
-func (msgs Messages) Confirmed() string {
-	return Catalog.Format(msgs.locale, "confirmed", nil)
-}
-
-// Skipped says "skipped"
-// in the language the app shows.
-func Skipped() string { return In(i18n.Locale()).Skipped() }
-
-// Skipped says "skipped"
-// in the language of msgs.
-func (msgs Messages) Skipped() string {
-	return Catalog.Format(msgs.locale, "skipped", nil)
-}
-
-// Failed says "failed"
-// in the language the app shows.
-func Failed() string { return In(i18n.Locale()).Failed() }
-
-// Failed says "failed"
-// in the language of msgs.
-func (msgs Messages) Failed() string {
-	return Catalog.Format(msgs.locale, "failed", nil)
-}
-
-// Unconfirmed says "unconfirmed"
-// in the language the app shows.
-func Unconfirmed() string { return In(i18n.Locale()).Unconfirmed() }
-
-// Unconfirmed says "unconfirmed"
-// in the language of msgs.
-func (msgs Messages) Unconfirmed() string {
-	return Catalog.Format(msgs.locale, "unconfirmed", nil)
-}
-
-// Total says "Total:"
-// in the language the app shows.
-func Total() string { return In(i18n.Locale()).Total() }
-
-// Total says "Total:"
-// in the language of msgs.
-func (msgs Messages) Total() string {
-	return Catalog.Format(msgs.locale, "total", nil)
-}
-
-// NoItemRecords says "No item records."
-// in the language the app shows.
-func NoItemRecords() string { return In(i18n.Locale()).NoItemRecords() }
-
-// NoItemRecords says "No item records."
-// in the language of msgs.
-func (msgs Messages) NoItemRecords() string {
-	return Catalog.Format(msgs.locale, "noItemRecords", nil)
-}
-
-// Connected says "Connected"
-// in the language the app shows.
-func Connected() string { return In(i18n.Locale()).Connected() }
-
-// Connected says "Connected"
-// in the language of msgs.
-func (msgs Messages) Connected() string {
-	return Catalog.Format(msgs.locale, "connected", nil)
-}
-
-// SignInInSettings says "Sign in in Settings"
-// in the language the app shows.
-func SignInInSettings() string { return In(i18n.Locale()).SignInInSettings() }
-
-// SignInInSettings says "Sign in in Settings"
-// in the language of msgs.
-func (msgs Messages) SignInInSettings() string {
-	return Catalog.Format(msgs.locale, "signInInSettings", nil)
-}
-
-// DropPhotosVideosOrFoldersHereForOneShotUpload says "Drop photos, videos, or folders here for one-shot upload"
-// in the language the app shows.
-func DropPhotosVideosOrFoldersHereForOneShotUpload() string {
-	return In(i18n.Locale()).DropPhotosVideosOrFoldersHereForOneShotUpload()
-}
-
-// DropPhotosVideosOrFoldersHereForOneShotUpload says "Drop photos, videos, or folders here for one-shot upload"
-// in the language of msgs.
-func (msgs Messages) DropPhotosVideosOrFoldersHereForOneShotUpload() string {
-	return Catalog.Format(msgs.locale, "dropPhotosVideosOrFoldersHereForOneShotUpload", nil)
-}
-
-// PreflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading says "Preflight summary lets you review file count, size, destination, and conflict handling before uploading."
-// in the language the app shows.
-func PreflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading() string {
-	return In(i18n.Locale()).PreflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading()
-}
-
-// PreflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading says "Preflight summary lets you review file count, size, destination, and conflict handling before uploading."
-// in the language of msgs.
-func (msgs Messages) PreflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading() string {
-	return Catalog.Format(msgs.locale, "preflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading", nil)
-}
-
-// SelectFiles says "Select Files"
-// in the language the app shows.
-func SelectFiles() string { return In(i18n.Locale()).SelectFiles() }
-
-// SelectFiles says "Select Files"
-// in the language of msgs.
-func (msgs Messages) SelectFiles() string {
-	return Catalog.Format(msgs.locale, "selectFiles", nil)
-}
-
 // SelectFolder says "Select Folder"
 // in the language the app shows.
 func SelectFolder() string { return In(i18n.Locale()).SelectFolder() }
@@ -1198,206 +2292,6 @@ func (msgs Messages) SelectFolder() string {
 	return Catalog.Format(msgs.locale, "selectFolder", nil)
 }
 
-// ConfirmUploadPlan says "Confirm Upload Plan:"
-// in the language the app shows.
-func ConfirmUploadPlan() string { return In(i18n.Locale()).ConfirmUploadPlan() }
-
-// ConfirmUploadPlan says "Confirm Upload Plan:"
-// in the language of msgs.
-func (msgs Messages) ConfirmUploadPlan() string {
-	return Catalog.Format(msgs.locale, "confirmUploadPlan", nil)
-}
-
-// PendingCheckingDestination says "pending — checking destination"
-// in the language the app shows.
-func PendingCheckingDestination() string { return In(i18n.Locale()).PendingCheckingDestination() }
-
-// PendingCheckingDestination says "pending — checking destination"
-// in the language of msgs.
-func (msgs Messages) PendingCheckingDestination() string {
-	return Catalog.Format(msgs.locale, "pendingCheckingDestination", nil)
-}
-
-// MediaFilter says "Media Filter:"
-// in the language the app shows.
-func MediaFilter() string { return In(i18n.Locale()).MediaFilter() }
-
-// MediaFilter says "Media Filter:"
-// in the language of msgs.
-func (msgs Messages) MediaFilter() string {
-	return Catalog.Format(msgs.locale, "mediaFilter", nil)
-}
-
-// TotalSelected says "Total Selected"
-// in the language the app shows.
-func TotalSelected() string { return In(i18n.Locale()).TotalSelected() }
-
-// TotalSelected says "Total Selected"
-// in the language of msgs.
-func (msgs Messages) TotalSelected() string {
-	return Catalog.Format(msgs.locale, "totalSelected", nil)
-}
-
-// Files says "files ("
-// in the language the app shows.
-func Files() string { return In(i18n.Locale()).Files() }
-
-// Files says "files ("
-// in the language of msgs.
-func (msgs Messages) Files() string {
-	return Catalog.Format(msgs.locale, "files", nil)
-}
-
-// SkippedLabel says "Skipped"
-// in the language the app shows.
-func SkippedLabel() string { return In(i18n.Locale()).SkippedLabel() }
-
-// SkippedLabel says "Skipped"
-// in the language of msgs.
-func (msgs Messages) SkippedLabel() string {
-	return Catalog.Format(msgs.locale, "skippedLabel", nil)
-}
-
-// ConfirmAndStartUpload says "Confirm & Start Upload"
-// in the language the app shows.
-func ConfirmAndStartUpload() string { return In(i18n.Locale()).ConfirmAndStartUpload() }
-
-// ConfirmAndStartUpload says "Confirm & Start Upload"
-// in the language of msgs.
-func (msgs Messages) ConfirmAndStartUpload() string {
-	return Catalog.Format(msgs.locale, "confirmAndStartUpload", nil)
-}
-
-// ActiveTransfers says "Active Transfers ("
-// in the language the app shows.
-func ActiveTransfers() string { return In(i18n.Locale()).ActiveTransfers() }
-
-// ActiveTransfers says "Active Transfers ("
-// in the language of msgs.
-func (msgs Messages) ActiveTransfers() string {
-	return Catalog.Format(msgs.locale, "activeTransfers", nil)
-}
-
-// NoActiveTransfers says "No active transfers."
-// in the language the app shows.
-func NoActiveTransfers() string { return In(i18n.Locale()).NoActiveTransfers() }
-
-// NoActiveTransfers says "No active transfers."
-// in the language of msgs.
-func (msgs Messages) NoActiveTransfers() string {
-	return Catalog.Format(msgs.locale, "noActiveTransfers", nil)
-}
-
-// TransferHistory says "Transfer History ("
-// in the language the app shows.
-func TransferHistory() string { return In(i18n.Locale()).TransferHistory() }
-
-// TransferHistory says "Transfer History ("
-// in the language of msgs.
-func (msgs Messages) TransferHistory() string {
-	return Catalog.Format(msgs.locale, "transferHistory", nil)
-}
-
-// ClearHistory says "Clear History"
-// in the language the app shows.
-func ClearHistory() string { return In(i18n.Locale()).ClearHistory() }
-
-// ClearHistory says "Clear History"
-// in the language of msgs.
-func (msgs Messages) ClearHistory() string {
-	return Catalog.Format(msgs.locale, "clearHistory", nil)
-}
-
-// NoCompletedOrPastTransfers says "No completed or past transfers."
-// in the language the app shows.
-func NoCompletedOrPastTransfers() string { return In(i18n.Locale()).NoCompletedOrPastTransfers() }
-
-// NoCompletedOrPastTransfers says "No completed or past transfers."
-// in the language of msgs.
-func (msgs Messages) NoCompletedOrPastTransfers() string {
-	return Catalog.Format(msgs.locale, "noCompletedOrPastTransfers", nil)
-}
-
-// Experimental says "Experimental protocol evidence; successful sign-in does not verify regional write operations."
-// in the language the app shows.
-func Experimental() string { return In(i18n.Locale()).Experimental() }
-
-// Experimental says "Experimental protocol evidence; successful sign-in does not verify regional write operations."
-// in the language of msgs.
-func (msgs Messages) Experimental() string {
-	return Catalog.Format(msgs.locale, "experimental", nil)
-}
-
-// SignInCancelled says "Sign-in cancelled. Your account has not changed."
-// in the language the app shows.
-func SignInCancelled() string { return In(i18n.Locale()).SignInCancelled() }
-
-// SignInCancelled says "Sign-in cancelled. Your account has not changed."
-// in the language of msgs.
-func (msgs Messages) SignInCancelled() string {
-	return Catalog.Format(msgs.locale, "signInCancelled", nil)
-}
-
-// SettingsSaved says "Settings saved."
-// in the language the app shows.
-func SettingsSaved() string { return In(i18n.Locale()).SettingsSaved() }
-
-// SettingsSaved says "Settings saved."
-// in the language of msgs.
-func (msgs Messages) SettingsSaved() string {
-	return Catalog.Format(msgs.locale, "settingsSaved", nil)
-}
-
-// Transfers says "Transfers / Upload"
-// in the language the app shows.
-func Transfers() string { return In(i18n.Locale()).Transfers() }
-
-// Transfers says "Transfers / Upload"
-// in the language of msgs.
-func (msgs Messages) Transfers() string {
-	return Catalog.Format(msgs.locale, "transfers", nil)
-}
-
-// Backups says "Backups"
-// in the language the app shows.
-func Backups() string { return In(i18n.Locale()).Backups() }
-
-// Backups says "Backups"
-// in the language of msgs.
-func (msgs Messages) Backups() string {
-	return Catalog.Format(msgs.locale, "backups", nil)
-}
-
-// Downloads says "Downloads"
-// in the language the app shows.
-func Downloads() string { return In(i18n.Locale()).Downloads() }
-
-// Downloads says "Downloads"
-// in the language of msgs.
-func (msgs Messages) Downloads() string {
-	return Catalog.Format(msgs.locale, "downloads", nil)
-}
-
-// Settings says "Settings"
-// in the language the app shows.
-func Settings() string { return In(i18n.Locale()).Settings() }
-
-// Settings says "Settings"
-// in the language of msgs.
-func (msgs Messages) Settings() string {
-	return Catalog.Format(msgs.locale, "settings", nil)
-}
-
-// NotSignedInHint says "Not signed in. Sign in to Amazon in Settings to start transfers."
-// in the language the app shows.
-func NotSignedInHint() string { return In(i18n.Locale()).NotSignedInHint() }
-
-// NotSignedInHint says "Not signed in. Sign in to Amazon in Settings to start transfers."
-// in the language of msgs.
-func (msgs Messages) NotSignedInHint() string {
-	return Catalog.Format(msgs.locale, "notSignedInHint", nil)
-}
-
 // BrowserLoginTitle says "Sign in to Amazon — Rainforest"
 // in the language the app shows.
 func BrowserLoginTitle() string { return In(i18n.Locale()).BrowserLoginTitle() }
@@ -1406,6 +2300,316 @@ func BrowserLoginTitle() string { return In(i18n.Locale()).BrowserLoginTitle() }
 // in the language of msgs.
 func (msgs Messages) BrowserLoginTitle() string {
 	return Catalog.Format(msgs.locale, "browserLoginTitle", nil)
+}
+
+// UploadRecentUploads says "Recent uploads"
+// in the language the app shows.
+func UploadRecentUploads() string { return In(i18n.Locale()).UploadRecentUploads() }
+
+// UploadRecentUploads says "Recent uploads"
+// in the language of msgs.
+func (msgs Messages) UploadRecentUploads() string {
+	return Catalog.Format(msgs.locale, "uploadRecentUploads", nil)
+}
+
+// UploadLastUploaded says "Last uploaded {when}"
+// in the language the app shows.
+func UploadLastUploaded(when string) string { return In(i18n.Locale()).UploadLastUploaded(when) }
+
+// UploadLastUploaded says "Last uploaded {when}"
+// in the language of msgs.
+func (msgs Messages) UploadLastUploaded(when string) string {
+	return Catalog.Format(msgs.locale, "uploadLastUploaded", map[string]any{"when": when})
+}
+
+// UploadViewInPhotos says "View in Amazon Photos"
+// in the language the app shows.
+func UploadViewInPhotos() string { return In(i18n.Locale()).UploadViewInPhotos() }
+
+// UploadViewInPhotos says "View in Amazon Photos"
+// in the language of msgs.
+func (msgs Messages) UploadViewInPhotos() string {
+	return Catalog.Format(msgs.locale, "uploadViewInPhotos", nil)
+}
+
+// OptionKeepStructure says "Keep folder structure"
+// in the language the app shows.
+func OptionKeepStructure() string { return In(i18n.Locale()).OptionKeepStructure() }
+
+// OptionKeepStructure says "Keep folder structure"
+// in the language of msgs.
+func (msgs Messages) OptionKeepStructure() string {
+	return Catalog.Format(msgs.locale, "optionKeepStructure", nil)
+}
+
+// OptionKeepStructureHint says "Subfolders are recreated in Amazon Photos."
+// in the language the app shows.
+func OptionKeepStructureHint() string { return In(i18n.Locale()).OptionKeepStructureHint() }
+
+// OptionKeepStructureHint says "Subfolders are recreated in Amazon Photos."
+// in the language of msgs.
+func (msgs Messages) OptionKeepStructureHint() string {
+	return Catalog.Format(msgs.locale, "optionKeepStructureHint", nil)
+}
+
+// OptionKeepStructureAlbumHint says "Albums don't have folders."
+// in the language the app shows.
+func OptionKeepStructureAlbumHint() string { return In(i18n.Locale()).OptionKeepStructureAlbumHint() }
+
+// OptionKeepStructureAlbumHint says "Albums don't have folders."
+// in the language of msgs.
+func (msgs Messages) OptionKeepStructureAlbumHint() string {
+	return Catalog.Format(msgs.locale, "optionKeepStructureAlbumHint", nil)
+}
+
+// DestChange says "Change…"
+// in the language the app shows.
+func DestChange() string { return In(i18n.Locale()).DestChange() }
+
+// DestChange says "Change…"
+// in the language of msgs.
+func (msgs Messages) DestChange() string {
+	return Catalog.Format(msgs.locale, "destChange", nil)
+}
+
+// PickerTitle says "Choose a folder"
+// in the language the app shows.
+func PickerTitle() string { return In(i18n.Locale()).PickerTitle() }
+
+// PickerTitle says "Choose a folder"
+// in the language of msgs.
+func (msgs Messages) PickerTitle() string {
+	return Catalog.Format(msgs.locale, "pickerTitle", nil)
+}
+
+// PickerPath says "Folder path"
+// in the language the app shows.
+func PickerPath() string { return In(i18n.Locale()).PickerPath() }
+
+// PickerPath says "Folder path"
+// in the language of msgs.
+func (msgs Messages) PickerPath() string {
+	return Catalog.Format(msgs.locale, "pickerPath", nil)
+}
+
+// PickerChoose says "Choose this folder"
+// in the language the app shows.
+func PickerChoose() string { return In(i18n.Locale()).PickerChoose() }
+
+// PickerChoose says "Choose this folder"
+// in the language of msgs.
+func (msgs Messages) PickerChoose() string {
+	return Catalog.Format(msgs.locale, "pickerChoose", nil)
+}
+
+// PickerEmpty says "No folders here."
+// in the language the app shows.
+func PickerEmpty() string { return In(i18n.Locale()).PickerEmpty() }
+
+// PickerEmpty says "No folders here."
+// in the language of msgs.
+func (msgs Messages) PickerEmpty() string {
+	return Catalog.Format(msgs.locale, "pickerEmpty", nil)
+}
+
+// PickerTruncated says "Only some folders are shown. Use a folder ID for the others."
+// in the language the app shows.
+func PickerTruncated() string { return In(i18n.Locale()).PickerTruncated() }
+
+// PickerTruncated says "Only some folders are shown. Use a folder ID for the others."
+// in the language of msgs.
+func (msgs Messages) PickerTruncated() string {
+	return Catalog.Format(msgs.locale, "pickerTruncated", nil)
+}
+
+// PickerManual says "Use a folder or album ID"
+// in the language the app shows.
+func PickerManual() string { return In(i18n.Locale()).PickerManual() }
+
+// PickerManual says "Use a folder or album ID"
+// in the language of msgs.
+func (msgs Messages) PickerManual() string {
+	return Catalog.Format(msgs.locale, "pickerManual", nil)
+}
+
+// PickerManualPlaceholder says "Paste a folder or album ID"
+// in the language the app shows.
+func PickerManualPlaceholder() string { return In(i18n.Locale()).PickerManualPlaceholder() }
+
+// PickerManualPlaceholder says "Paste a folder or album ID"
+// in the language of msgs.
+func (msgs Messages) PickerManualPlaceholder() string {
+	return Catalog.Format(msgs.locale, "pickerManualPlaceholder", nil)
+}
+
+// PickerManualUse says "Use this ID"
+// in the language the app shows.
+func PickerManualUse() string { return In(i18n.Locale()).PickerManualUse() }
+
+// PickerManualUse says "Use this ID"
+// in the language of msgs.
+func (msgs Messages) PickerManualUse() string {
+	return Catalog.Format(msgs.locale, "pickerManualUse", nil)
+}
+
+// BackupRulePaused says "This folder is paused."
+// in the language the app shows.
+func BackupRulePaused() string { return In(i18n.Locale()).BackupRulePaused() }
+
+// BackupRulePaused says "This folder is paused."
+// in the language of msgs.
+func (msgs Messages) BackupRulePaused() string {
+	return Catalog.Format(msgs.locale, "backupRulePaused", nil)
+}
+
+// BackupFolders says "Backup folders"
+// in the language the app shows.
+func BackupFolders() string { return In(i18n.Locale()).BackupFolders() }
+
+// BackupFolders says "Backup folders"
+// in the language of msgs.
+func (msgs Messages) BackupFolders() string {
+	return Catalog.Format(msgs.locale, "backupFolders", nil)
+}
+
+// BackupFilesTitle says "Backed up files"
+// in the language the app shows.
+func BackupFilesTitle() string { return In(i18n.Locale()).BackupFilesTitle() }
+
+// BackupFilesTitle says "Backed up files"
+// in the language of msgs.
+func (msgs Messages) BackupFilesTitle() string {
+	return Catalog.Format(msgs.locale, "backupFilesTitle", nil)
+}
+
+// BackupFilesEmptyTitle says "No files backed up yet"
+// in the language the app shows.
+func BackupFilesEmptyTitle() string { return In(i18n.Locale()).BackupFilesEmptyTitle() }
+
+// BackupFilesEmptyTitle says "No files backed up yet"
+// in the language of msgs.
+func (msgs Messages) BackupFilesEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "backupFilesEmptyTitle", nil)
+}
+
+// BackupFilesEmptyBody says "Files appear here after the first backup finishes."
+// in the language the app shows.
+func BackupFilesEmptyBody() string { return In(i18n.Locale()).BackupFilesEmptyBody() }
+
+// BackupFilesEmptyBody says "Files appear here after the first backup finishes."
+// in the language of msgs.
+func (msgs Messages) BackupFilesEmptyBody() string {
+	return Catalog.Format(msgs.locale, "backupFilesEmptyBody", nil)
+}
+
+// BackupFileCount says "{count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+func BackupFileCount(count int) string { return In(i18n.Locale()).BackupFileCount(count) }
+
+// BackupFileCount says "{count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+func (msgs Messages) BackupFileCount(count int) string {
+	return Catalog.Format(msgs.locale, "backupFileCount", map[string]any{"count": count})
+}
+
+// BackupKeepsFolders says "Keeps subfolders"
+// in the language the app shows.
+func BackupKeepsFolders() string { return In(i18n.Locale()).BackupKeepsFolders() }
+
+// BackupKeepsFolders says "Keeps subfolders"
+// in the language of msgs.
+func (msgs Messages) BackupKeepsFolders() string {
+	return Catalog.Format(msgs.locale, "backupKeepsFolders", nil)
+}
+
+// BackupFlat says "All files in one folder"
+// in the language the app shows.
+func BackupFlat() string { return In(i18n.Locale()).BackupFlat() }
+
+// BackupFlat says "All files in one folder"
+// in the language of msgs.
+func (msgs Messages) BackupFlat() string {
+	return Catalog.Format(msgs.locale, "backupFlat", nil)
+}
+
+// ErrorMissing says "This folder or file no longer exists in Amazon Photos."
+// in the language the app shows.
+func ErrorMissing() string { return In(i18n.Locale()).ErrorMissing() }
+
+// ErrorMissing says "This folder or file no longer exists in Amazon Photos."
+// in the language of msgs.
+func (msgs Messages) ErrorMissing() string {
+	return Catalog.Format(msgs.locale, "errorMissing", nil)
+}
+
+// ErrorNetwork says "Couldn't reach Amazon Photos. Check your connection."
+// in the language the app shows.
+func ErrorNetwork() string { return In(i18n.Locale()).ErrorNetwork() }
+
+// ErrorNetwork says "Couldn't reach Amazon Photos. Check your connection."
+// in the language of msgs.
+func (msgs Messages) ErrorNetwork() string {
+	return Catalog.Format(msgs.locale, "errorNetwork", nil)
+}
+
+// ErrorSignIn says "Amazon Photos needs you to sign in again."
+// in the language the app shows.
+func ErrorSignIn() string { return In(i18n.Locale()).ErrorSignIn() }
+
+// ErrorSignIn says "Amazon Photos needs you to sign in again."
+// in the language of msgs.
+func (msgs Messages) ErrorSignIn() string {
+	return Catalog.Format(msgs.locale, "errorSignIn", nil)
+}
+
+// ErrorRateLimited says "Amazon Photos is busy. Try again in a few minutes."
+// in the language the app shows.
+func ErrorRateLimited() string { return In(i18n.Locale()).ErrorRateLimited() }
+
+// ErrorRateLimited says "Amazon Photos is busy. Try again in a few minutes."
+// in the language of msgs.
+func (msgs Messages) ErrorRateLimited() string {
+	return Catalog.Format(msgs.locale, "errorRateLimited", nil)
+}
+
+// RestoreBrowseFolders says "Browse folders…"
+// in the language the app shows.
+func RestoreBrowseFolders() string { return In(i18n.Locale()).RestoreBrowseFolders() }
+
+// RestoreBrowseFolders says "Browse folders…"
+// in the language of msgs.
+func (msgs Messages) RestoreBrowseFolders() string {
+	return Catalog.Format(msgs.locale, "restoreBrowseFolders", nil)
+}
+
+// RestoreFolderLabel says "Folder"
+// in the language the app shows.
+func RestoreFolderLabel() string { return In(i18n.Locale()).RestoreFolderLabel() }
+
+// RestoreFolderLabel says "Folder"
+// in the language of msgs.
+func (msgs Messages) RestoreFolderLabel() string {
+	return Catalog.Format(msgs.locale, "restoreFolderLabel", nil)
+}
+
+// SettingsDecrease says "Decrease"
+// in the language the app shows.
+func SettingsDecrease() string { return In(i18n.Locale()).SettingsDecrease() }
+
+// SettingsDecrease says "Decrease"
+// in the language of msgs.
+func (msgs Messages) SettingsDecrease() string {
+	return Catalog.Format(msgs.locale, "settingsDecrease", nil)
+}
+
+// SettingsIncrease says "Increase"
+// in the language the app shows.
+func SettingsIncrease() string { return In(i18n.Locale()).SettingsIncrease() }
+
+// SettingsIncrease says "Increase"
+// in the language of msgs.
+func (msgs Messages) SettingsIncrease() string {
+	return Catalog.Format(msgs.locale, "settingsIncrease", nil)
 }
 
 // StorageError says "Rainforest Storage Error"
@@ -1488,16 +2692,6 @@ func (msgs Messages) SelectUploadFiles() string {
 	return Catalog.Format(msgs.locale, "selectUploadFiles", nil)
 }
 
-// MainNavigation says "Main navigation"
-// in the language the app shows.
-func MainNavigation() string { return In(i18n.Locale()).MainNavigation() }
-
-// MainNavigation says "Main navigation"
-// in the language of msgs.
-func (msgs Messages) MainNavigation() string {
-	return Catalog.Format(msgs.locale, "mainNavigation", nil)
-}
-
 // ShowRainforest says "Show Rainforest"
 // in the language the app shows.
 func ShowRainforest() string { return In(i18n.Locale()).ShowRainforest() }
@@ -1506,88 +2700,6 @@ func ShowRainforest() string { return In(i18n.Locale()).ShowRainforest() }
 // in the language of msgs.
 func (msgs Messages) ShowRainforest() string {
 	return Catalog.Format(msgs.locale, "showRainforest", nil)
-}
-
-// PhotoCount says "{count, plural, one {# photo} other {# photos}}"
-// in the language the app shows.
-func PhotoCount(count int) string { return In(i18n.Locale()).PhotoCount(count) }
-
-// PhotoCount says "{count, plural, one {# photo} other {# photos}}"
-// in the language of msgs.
-func (msgs Messages) PhotoCount(count int) string {
-	return Catalog.Format(msgs.locale, "photoCount", map[string]any{"count": count})
-}
-
-// VideoCount says "{count, plural, one {# video} other {# videos}}"
-// in the language the app shows.
-func VideoCount(count int) string { return In(i18n.Locale()).VideoCount(count) }
-
-// VideoCount says "{count, plural, one {# video} other {# videos}}"
-// in the language of msgs.
-func (msgs Messages) VideoCount(count int) string {
-	return Catalog.Format(msgs.locale, "videoCount", map[string]any{"count": count})
-}
-
-// ItemCount says "{count, number} items ({size})"
-// in the language the app shows.
-func ItemCount(count int, size string) string { return In(i18n.Locale()).ItemCount(count, size) }
-
-// ItemCount says "{count, number} items ({size})"
-// in the language of msgs.
-func (msgs Messages) ItemCount(count int, size string) string {
-	return Catalog.Format(msgs.locale, "itemCount", map[string]any{"count": count, "size": size})
-}
-
-// SkippedCount says "{count, number} skipped"
-// in the language the app shows.
-func SkippedCount(count int) string { return In(i18n.Locale()).SkippedCount(count) }
-
-// SkippedCount says "{count, number} skipped"
-// in the language of msgs.
-func (msgs Messages) SkippedCount(count int) string {
-	return Catalog.Format(msgs.locale, "skippedCount", map[string]any{"count": count})
-}
-
-// UsageSummary says "{photos, number} photos ({photoSize}) · {videos, number} videos ({videoSize}) · Total {totalSize}"
-// in the language the app shows.
-func UsageSummary(photos int, photoSize string, videos int, videoSize string, totalSize string) string {
-	return In(i18n.Locale()).UsageSummary(photos, photoSize, videos, videoSize, totalSize)
-}
-
-// UsageSummary says "{photos, number} photos ({photoSize}) · {videos, number} videos ({videoSize}) · Total {totalSize}"
-// in the language of msgs.
-func (msgs Messages) UsageSummary(photos int, photoSize string, videos int, videoSize string, totalSize string) string {
-	return Catalog.Format(msgs.locale, "usageSummary", map[string]any{"photos": photos, "photoSize": photoSize, "videos": videos, "videoSize": videoSize, "totalSize": totalSize})
-}
-
-// ConfirmedCount says "{count, number} confirmed"
-// in the language the app shows.
-func ConfirmedCount(count int) string { return In(i18n.Locale()).ConfirmedCount(count) }
-
-// ConfirmedCount says "{count, number} confirmed"
-// in the language of msgs.
-func (msgs Messages) ConfirmedCount(count int) string {
-	return Catalog.Format(msgs.locale, "confirmedCount", map[string]any{"count": count})
-}
-
-// FailedCount says "{count, number} failed"
-// in the language the app shows.
-func FailedCount(count int) string { return In(i18n.Locale()).FailedCount(count) }
-
-// FailedCount says "{count, number} failed"
-// in the language of msgs.
-func (msgs Messages) FailedCount(count int) string {
-	return Catalog.Format(msgs.locale, "failedCount", map[string]any{"count": count})
-}
-
-// UnconfirmedCount says "{count, number} unconfirmed"
-// in the language the app shows.
-func UnconfirmedCount(count int) string { return In(i18n.Locale()).UnconfirmedCount(count) }
-
-// UnconfirmedCount says "{count, number} unconfirmed"
-// in the language of msgs.
-func (msgs Messages) UnconfirmedCount(count int) string {
-	return Catalog.Format(msgs.locale, "unconfirmedCount", map[string]any{"count": count})
 }
 
 // LoginPageFailed says "Amazon sign-in page could not load. Check your connection and try again"

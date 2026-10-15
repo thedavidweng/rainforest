@@ -4,7 +4,7 @@ This guide shows how to control active transfers and retry failed or interrupted
 
 ## Pause and Resume an Active Transfer
 
-In **Transfers / Upload**, every running upload or download card provides queue controls:
+In **Activity**, every running upload or download card provides queue controls:
 
 - **Pause**: Suspends worker dispatch before the next file begins streaming and transitions the transfer to `paused`.
 - **Resume**: Wakes paused workers so remaining `queued` items continue without restarting already `confirmed` items.
@@ -27,4 +27,4 @@ Click **Retry** on a transfer in `failed`, `partial`, `cancelled`, or `unconfirm
 
 ## Clear Finished Transfer History
 
-Click **Clear History** in **Transfers / Upload** to remove terminal transfer records (`completed`, `partial`, `failed`, `cancelled`) from the history list while preserving active transfers, unconfirmed transfers awaiting reconciliation, and `tracked_files` backup baselines.
+Click **Clear history** in **Activity** to remove terminal transfer records (`completed`, `partial`, `failed`, `cancelled`) from the history list while preserving active transfers, unconfirmed transfers awaiting reconciliation, and `tracked_files` backup baselines.
