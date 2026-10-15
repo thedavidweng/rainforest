@@ -1,3 +1,4 @@
+import { messages as m } from "@/locales"
 import { useState } from "react"
 
 import type {
@@ -20,6 +21,9 @@ export interface TransfersViewProps {
   transferItemsMap: Record<string, TransferItemDTO[]>
   pendingPaths: string[] | null
   planIncludeVideos: boolean
+  planDestNodeId: string
+  onSetPlanDestNodeId: (id: string) => void
+  onCheckDestination: () => void
   planConflictPolicy: string
   uploadPlan: UploadPlanDTO | null
   planError: string | null
@@ -45,6 +49,9 @@ export function TransfersView({
   pendingPaths,
   planIncludeVideos,
   planConflictPolicy,
+  planDestNodeId,
+  onSetPlanDestNodeId,
+  onCheckDestination,
   uploadPlan,
   planError,
   onOpenSettings,
@@ -102,7 +109,7 @@ export function TransfersView({
                 onClick={() => void backend.transfers.pause(tr.id)}
                 className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium"
               >
-                Pause
+                {m.pause()}
               </button>
             )}
             {tr.stage === "paused" && (
@@ -111,7 +118,7 @@ export function TransfersView({
                 onClick={() => void backend.transfers.resume(tr.id)}
                 className="px-2.5 py-1 rounded bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-200 text-xs font-medium"
               >
-                Resume
+                {m.resume()}
               </button>
             )}
             {!isTerminalStage(tr.stage) && (
@@ -120,7 +127,7 @@ export function TransfersView({
                 onClick={() => void backend.transfers.cancel(tr.id)}
                 className="px-2.5 py-1 rounded bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-medium"
               >
-                Cancel
+                {m.cancel()}
               </button>
             )}
             {isTerminalStage(tr.stage) && tr.stage !== "completed" && (
@@ -129,7 +136,7 @@ export function TransfersView({
                 onClick={() => void backend.transfers.retry(tr.id)}
                 className="px-2.5 py-1 rounded bg-amber-600/25 hover:bg-amber-600/35 text-amber-200 text-xs font-medium"
               >
-                Retry
+                {m.retry()}
               </button>
             )}
             <button
@@ -137,7 +144,7 @@ export function TransfersView({
               onClick={() => void onToggleDetails(tr.id)}
               className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300"
             >
-              Details
+              {m.details()}
             </button>
           </div>
         </div>
@@ -151,13 +158,18 @@ export function TransfersView({
               {formatBytes(tr.bytesDone)} / {formatBytes(tr.bytesTotal)} ({pct}%)
             </span>
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-emerald-400">{tr.itemsDone} confirmed</span>
-              <span>{tr.itemsSkipped} skipped</span>
-              {tr.itemsFailed > 0 && <span className="text-rose-400">{tr.itemsFailed} failed</span>}
-              {tr.itemsUnconfirmed > 0 && (
-                <span className="text-purple-300">{tr.itemsUnconfirmed} unconfirmed</span>
+              <span className="text-emerald-400">{m.confirmedCount(tr.itemsDone)}</span>
+              <span>{m.skippedCount(tr.itemsSkipped)}</span>
+              {tr.itemsFailed > 0 && (
+                <span className="text-rose-400">{m.failedCount(tr.itemsFailed)}</span>
               )}
-              <span>Total: {tr.itemsTotal}</span>
+              {tr.itemsUnconfirmed > 0 && (
+                <span className="text-purple-300">{m.unconfirmedCount(tr.itemsUnconfirmed)}</span>
+              )}
+              <span>
+                {m.total()}
+                {tr.itemsTotal}
+              </span>
             </div>
           </div>
         </div>
@@ -172,7 +184,7 @@ export function TransfersView({
         {isExpanded && (
           <div className="border-t border-slate-800 pt-2 mt-2 space-y-1.5">
             {items.length === 0 ? (
-              <p className="text-xs text-slate-500">No item records.</p>
+              <p className="text-xs text-slate-500">{m.noItemRecords()}</p>
             ) : (
               items.map((it) => (
                 <div
@@ -211,7 +223,7 @@ export function TransfersView({
       >
         {auth?.authenticated ? (
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-medium text-emerald-400">Connected</span>
+            <span className="font-medium text-emerald-400">{m.connected()}</span>
             <span className="px-2 py-0.5 rounded bg-slate-800 text-xs font-mono uppercase">
               {(auth.region || "us").toUpperCase()}
             </span>
@@ -226,25 +238,27 @@ export function TransfersView({
             </span>
             {usage && (
               <span className="text-slate-300 text-xs">
-                {usage.photo.total.count.toLocaleString("en-US")} photos (
-                {formatBytes(usage.photo.total.bytes)}) ·{" "}
-                {usage.video.total.count.toLocaleString("en-US")} videos (
-                {formatBytes(usage.video.total.bytes)}) · Total {formatBytes(usage.totalBytes)}
+                {m.usageSummary(
+                  usage.photo.total.count,
+                  formatBytes(usage.photo.total.bytes),
+                  usage.video.total.count,
+                  formatBytes(usage.video.total.bytes),
+                  formatBytes(usage.totalBytes),
+                )}
               </span>
             )}
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between w-full gap-3">
             <div className="text-sm text-amber-300">
-              {auth?.errorMessage ||
-                "Not signed in. Import your Amazon Photos browser session cookies in Settings to start transfers."}
+              {auth?.errorMessage || m.notSignedInHint()}
             </div>
             <button
               type="button"
               onClick={onOpenSettings}
               className="px-3 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-medium border border-amber-500/30"
             >
-              Import Cookies in Settings
+              {m.signInInSettings()}
             </button>
           </div>
         )}
@@ -274,11 +288,10 @@ export function TransfersView({
         }`}
       >
         <h2 className="text-base font-semibold text-slate-100">
-          Drop photos, videos, or folders here for one-shot upload
+          {m.dropPhotosVideosOrFoldersHereForOneShotUpload()}
         </h2>
         <p className="text-xs text-slate-400 mt-1">
-          Preflight summary lets you review file count, size, destination, and conflict handling
-          before uploading.
+          {m.preflightSummaryLetsYouReviewFileCountSizeDestinationAndConflictHandlingBeforeUploading()}
         </p>
         <div className="mt-4 flex items-center justify-center gap-3">
           <button
@@ -286,19 +299,19 @@ export function TransfersView({
             onClick={() => void onSelectFiles()}
             className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium"
           >
-            Select Files
+            {m.selectFiles()}
           </button>
           <button
             type="button"
             onClick={() => void onSelectFolder()}
             className="px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-medium border border-slate-700"
           >
-            Select Folder
+            {m.selectFolder()}
           </button>
         </div>
       </section>
 
-      {(uploadPlan || planError) && pendingPaths && (
+      {pendingPaths && (
         <section
           data-testid="upload-plan-modal"
           role="dialog"
@@ -307,96 +320,114 @@ export function TransfersView({
         >
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-emerald-300">
-              Confirm Upload Plan: {uploadPlan?.sourceSummary}
+              {m.confirmUploadPlan()}
+              {uploadPlan?.sourceSummary}
             </h3>
             <span className="text-xs text-slate-400">
               {uploadPlan ? formatBytes(uploadPlan.totalBytes) : ""}
             </span>
           </div>
 
+          <label className="block text-xs text-slate-300">
+            {m.destinationNodeId()}
+            <input
+              aria-label="Destination Node ID"
+              value={planDestNodeId}
+              onChange={(e) => onSetPlanDestNodeId(e.target.value)}
+              placeholder="Leave blank for account root"
+              className="block w-full rounded bg-slate-950 border border-slate-700 px-3 py-2 mt-1"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={onCheckDestination}
+            className="px-2 py-1 rounded bg-slate-800 text-xs"
+          >
+            {m.checkDestination()}
+          </button>
+          {!uploadPlan && !planError && <p className="text-xs">{m.pendingCheckingDestination()}</p>}
           {planError && (
             <div className="rounded bg-rose-950/60 border border-rose-800 px-3 py-2 text-xs text-rose-200">
               {planError}
             </div>
           )}
 
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">{m.mediaFilter()}</span>
+              <button
+                type="button"
+                onClick={() => onSetPlanIncludeVideos(true)}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  planIncludeVideos ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
+                }`}
+              >
+                {m.photosVideos()}
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetPlanIncludeVideos(false)}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  !planIncludeVideos ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
+                }`}
+              >
+                {m.photosOnly()}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="plan-conflict-policy" className="text-slate-400">
+                {m.conflictPolicy()}
+              </label>
+              <select
+                id="plan-conflict-policy"
+                aria-label="Conflict Policy"
+                value={planConflictPolicy}
+                onChange={(e) => onSetPlanConflictPolicy(e.target.value)}
+                className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-slate-100"
+              >
+                <option value="skip">{m.skip()}</option>
+                <option value="rename">{m.rename()}</option>
+                <option value="fail">{m.fail()}</option>
+              </select>
+            </div>
+          </div>
+
           {uploadPlan && (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="rounded bg-slate-950/70 p-2.5 border border-slate-800">
-                  <div className="text-slate-400">Total Selected</div>
+                  <div className="text-slate-400">{m.totalSelected()}</div>
                   <div className="text-sm font-semibold text-slate-100">
-                    {uploadPlan.totalCount} files ({formatBytes(uploadPlan.totalBytes)})
+                    {uploadPlan.totalCount}
+                    {m.files()}
+                    {formatBytes(uploadPlan.totalBytes)})
                   </div>
                 </div>
                 <div className="rounded bg-slate-950/70 p-2.5 border border-slate-800">
-                  <div className="text-slate-400">Photos</div>
+                  <div className="text-slate-400">{m.photos()}</div>
                   <div className="text-sm font-semibold text-slate-100">
-                    {uploadPlan.photoCount} {uploadPlan.photoCount === 1 ? "photo" : "photos"}
+                    {m.photoCount(uploadPlan.photoCount)}
                   </div>
                 </div>
                 <div className="rounded bg-slate-950/70 p-2.5 border border-slate-800">
-                  <div className="text-slate-400">Videos</div>
+                  <div className="text-slate-400">{m.videos()}</div>
                   <div className="text-sm font-semibold text-slate-100">
-                    {uploadPlan.videoCount} {uploadPlan.videoCount === 1 ? "video" : "videos"}
+                    {m.videoCount(uploadPlan.videoCount)}
                   </div>
                 </div>
                 <div className="rounded bg-slate-950/70 p-2.5 border border-slate-800">
-                  <div className="text-slate-400">Skipped</div>
+                  <div className="text-slate-400">{m.skippedLabel()}</div>
                   <div className="text-sm font-semibold text-slate-100">
-                    {uploadPlan.skippedUnsupported} skipped
+                    {m.skippedCount(uploadPlan.skippedUnsupported)}
                   </div>
                 </div>
               </div>
 
               <div className="rounded bg-slate-950/80 border border-slate-800 px-3 py-2 text-xs text-slate-300">
-                <span className="font-medium text-slate-200">Destination: </span>
-                {uploadPlan.destination.message}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Media Filter:</span>
-                  <button
-                    type="button"
-                    onClick={() => onSetPlanIncludeVideos(true)}
-                    className={`px-2.5 py-1 rounded font-medium ${
-                      planIncludeVideos
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-800 text-slate-300"
-                    }`}
-                  >
-                    Photos + Videos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onSetPlanIncludeVideos(false)}
-                    className={`px-2.5 py-1 rounded font-medium ${
-                      !planIncludeVideos
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-800 text-slate-300"
-                    }`}
-                  >
-                    Photos Only
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <label htmlFor="plan-conflict-policy" className="text-slate-400">
-                    Conflict Policy:
-                  </label>
-                  <select
-                    id="plan-conflict-policy"
-                    aria-label="Conflict Policy"
-                    value={planConflictPolicy}
-                    onChange={(e) => onSetPlanConflictPolicy(e.target.value)}
-                    className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-slate-100"
-                  >
-                    <option value="skip">skip</option>
-                    <option value="rename">rename</option>
-                    <option value="fail">fail</option>
-                  </select>
-                </div>
+                <span className="font-medium text-slate-200">{m.destination()}</span>
+                {uploadPlan.destination.name} · {uploadPlan.destination.kind} ·{" "}
+                {uploadPlan.destination.status}. {uploadPlan.destination.message}
               </div>
 
               <div className="max-h-48 overflow-y-auto space-y-1.5 border border-slate-800 rounded p-2 bg-slate-950/50">
@@ -433,15 +464,19 @@ export function TransfersView({
               onClick={onCancelPlan}
               className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300"
             >
-              Cancel
+              {m.cancel()}
             </button>
             <button
               type="button"
-              disabled={!uploadPlan || uploadPlan.totalCount === 0}
+              disabled={
+                !uploadPlan ||
+                uploadPlan.totalCount === 0 ||
+                uploadPlan.destination.status !== "readable"
+              }
               onClick={() => void onConfirmUpload()}
               className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-medium text-white"
             >
-              Confirm &amp; Start Upload
+              {m.confirmAndStartUpload()}
             </button>
           </div>
         </section>
@@ -449,11 +484,12 @@ export function TransfersView({
 
       <section data-testid="active-transfers" className="space-y-3">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-          Active Transfers ({transferList.active.length})
+          {m.activeTransfers()}
+          {transferList.active.length})
         </h3>
         {transferList.active.length === 0 ? (
           <div className="rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 text-xs text-slate-500">
-            No active transfers.
+            {m.noActiveTransfers()}
           </div>
         ) : (
           <div className="space-y-3">{transferList.active.map(renderTransferRow)}</div>
@@ -463,7 +499,8 @@ export function TransfersView({
       <section data-testid="history-transfers" className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Transfer History ({transferList.history.length})
+            {m.transferHistory()}
+            {transferList.history.length})
           </h3>
           {transferList.history.length > 0 && (
             <button
@@ -471,13 +508,13 @@ export function TransfersView({
               onClick={() => void backend.transfers.clearHistory().then(() => onRefreshTransfers())}
               className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300"
             >
-              Clear History
+              {m.clearHistory()}
             </button>
           )}
         </div>
         {transferList.history.length === 0 ? (
           <div className="rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 text-xs text-slate-500">
-            No completed or past transfers.
+            {m.noCompletedOrPastTransfers()}
           </div>
         ) : (
           <div className="space-y-3">{transferList.history.map(renderTransferRow)}</div>

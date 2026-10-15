@@ -24,7 +24,9 @@ type UploadPlanInput struct {
 type DestinationCapabilityDTO struct {
 	Region            string `json:"region"`
 	Evidence          string `json:"evidence"`
-	RootOnly          bool   `json:"rootOnly"`
+	Name              string `json:"name"`
+	Kind              string `json:"kind"`
+	Status            string `json:"status"`
 	DestinationNodeID string `json:"destinationNodeId,omitempty"`
 	Message           string `json:"message"`
 }
@@ -62,6 +64,19 @@ type TransferListDTO struct {
 	Active  []TransferDTO `json:"active"`
 	History []TransferDTO `json:"history"`
 	Warning string        `json:"warning,omitempty"`
+}
+
+func (t *Transfers) ProbeDestination(ctx context.Context, id string) (*DestinationCapabilityDTO, error) {
+	_, eng, err := t.state.deps()
+	if err != nil {
+		return nil, err
+	}
+	d := toDestinationDTO(eng.ProbeDestination(ctx, id))
+	return &d, nil
+}
+
+func toDestinationDTO(d engine.DestinationCapability) DestinationCapabilityDTO {
+	return DestinationCapabilityDTO{Region: string(d.Region), Evidence: string(d.Evidence), Name: d.Name, Kind: d.Kind, Status: d.Status, DestinationNodeID: d.DestinationNodeID, Message: d.Message}
 }
 
 func (t *Transfers) PlanUpload(ctx context.Context, in UploadPlanInput) (*UploadPlanDTO, error) {
@@ -272,14 +287,8 @@ func toUploadPlanDTO(p *engine.UploadPlan) *UploadPlanDTO {
 		TotalBytes:         p.TotalBytes,
 		SkippedUnsupported: p.SkippedUnsupported,
 		ConflictPolicy:     string(p.ConflictPolicy),
-		Destination: DestinationCapabilityDTO{
-			Region:            string(p.Destination.Region),
-			Evidence:          string(p.Destination.Evidence),
-			RootOnly:          p.Destination.RootOnly,
-			DestinationNodeID: p.Destination.DestinationNodeID,
-			Message:           p.Destination.Message,
-		},
-		Items: items,
+		Destination:        toDestinationDTO(p.Destination),
+		Items:              items,
 	}
 }
 

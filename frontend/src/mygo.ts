@@ -46,7 +46,9 @@ export interface BackupRuleInput {
 export interface DestinationCapabilityDTO {
   region: string;
   evidence: string;
-  rootOnly: boolean;
+  name: string;
+  kind: string;
+  status: string;
   destinationNodeId?: string;
   message: string;
 }
@@ -254,11 +256,17 @@ export interface UsageSummary {
 // ---- Services ----
 
 export const Auth = {
+  cancelLogin(): Promise<void> {
+    return call("Auth.CancelLogin");
+  },
   importCookieFile(path: string, region: string): Promise<AuthStatus | null> {
     return call("Auth.ImportCookieFile", path, region);
   },
   importCookies(in_: ImportCookiesInput): Promise<AuthStatus | null> {
     return call("Auth.ImportCookies", in_);
+  },
+  login(region: string): Promise<AuthStatus | null> {
+    return call("Auth.Login", region);
   },
   logout(): Promise<AuthStatus | null> {
     return call("Auth.Logout");
@@ -298,6 +306,9 @@ export const Transfers = {
   },
   planUpload(in_: UploadPlanInput): Promise<UploadPlanDTO | null> {
     return call("Transfers.PlanUpload", in_);
+  },
+  probeDestination(id: string): Promise<DestinationCapabilityDTO | null> {
+    return call("Transfers.ProbeDestination", id);
   },
   resume(transferID: string): Promise<TransferDTO | null> {
     return call("Transfers.Resume", transferID);

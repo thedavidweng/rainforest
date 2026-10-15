@@ -58,7 +58,7 @@ func (e *Engine) ListRecoverySources(ctx context.Context) (*RecoverySources, err
 		}
 	}
 
-	destCap := e.resolveDestinationCapability(ctx, "")
+	destCap := e.ProbeDestination(ctx, "")
 	out := &RecoverySources{
 		Region:         destCap.Region,
 		Evidence:       destCap.Evidence,
@@ -71,9 +71,7 @@ func (e *Engine) ListRecoverySources(ctx context.Context) (*RecoverySources, err
 		return out, nil
 	}
 
-	if root, err := client.GetRoot(ctx); err == nil && root != nil {
-		out.RootNodeID = root.ID
-	}
+	out.RootNodeID = destCap.rootID
 
 	if folders, _, err := client.ListFolders(ctx, "", 100, 0); err == nil {
 		for i := range folders {

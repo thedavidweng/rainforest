@@ -142,6 +142,14 @@ func (e *Engine) SetClient(c *aphotos.Client) {
 	old := e.client
 	e.client = c
 	e.mu.Unlock()
+	if old != c {
+		e.activeMu.Lock()
+		for _, ctrl := range e.active {
+			ctrl.setPaused(false)
+			ctrl.cancel()
+		}
+		e.activeMu.Unlock()
+	}
 	if old != nil && old != c {
 		_ = old.Close()
 	}
@@ -250,6 +258,22 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		destination := DestinationCapability{}
+		destinationReadable := false
+		if client != nil && (tr.Kind == store.TransferKindUpload || tr.Kind == store.TransferKindBackup) {
+			destination = e.probeDestination(ctx, client, tr.DestNodeID)
+			probeErr := destination.requireReadable()
+			if probeErr == nil {
+				probeErr = e.bindDestination(ctx, "transfer:"+tr.ID, destination)
+			}
+			if probeErr != nil {
+				if firstRemoteErr == nil {
+					firstRemoteErr = probeErr
+				}
+			} else {
+				destinationReadable = true
+			}
+		}
 		items, iErr := st.ListTransferItems(ctx, tr.ID)
 		if iErr != nil {
 			return iErr
@@ -260,13 +284,13 @@ func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
 				continue
 			}
 			if tr.Kind == store.TransferKindUpload || tr.Kind == store.TransferKindBackup {
-				if client != nil && (it.Status == store.ItemStatusRunning || it.Status == store.ItemStatusUnconfirmed) {
-					node, fErr := findRemoteNodeForItem(ctx, client, *it, tr.DestNodeID)
+				if destinationReadable && (it.Status == store.ItemStatusRunning || it.Status == store.ItemStatusUnconfirmed) {
+					node, fErr := findRemoteNodeForItem(ctx, client, *it, destination.parentID)
 					if fErr != nil && firstRemoteErr == nil {
 						firstRemoteErr = fErr
 					}
 					if fErr == nil && node != nil && strings.TrimSpace(node.ID) != "" {
-						it.Status = store.ItemStatusConfirmed
+						it.Status = reconciledStatus(destination)
 						it.RemoteNodeID = node.ID
 						it.BytesDone = it.Size
 						it.ErrorMessage = ""
@@ -415,13 +439,19 @@ func recomputeAndPersistTransfer(ctx context.Context, st *store.Store, transferI
 	}
 
 	var bytesDone, bytesTotal int64
-	var doneCount, skippedCount, failedCount, unconfirmedCount, cancelledCount, runningOrQueued int
+	var doneCount, skippedCount, failedCount, unconfirmedCount, cancelledCount, runningOrQueued, albumPending int
 	var firstErr string
 
 	for i := range items {
 		it := &items[i]
 		bytesTotal += it.Size
 		switch it.Status {
+		case store.ItemStatusAlbumPending:
+			albumPending++
+			bytesDone += it.Size
+			if firstErr == "" {
+				firstErr = it.ErrorMessage
+			}
 		case store.ItemStatusConfirmed:
 			doneCount++
 			bytesDone += it.Size
@@ -453,7 +483,7 @@ func recomputeAndPersistTransfer(ctx context.Context, st *store.Store, transferI
 	tr.ItemsDone = doneCount
 	tr.ItemsSkipped = skippedCount
 	tr.ItemsFailed = failedCount
-	tr.ItemsUnconfirmed = unconfirmedCount
+	tr.ItemsUnconfirmed = unconfirmedCount + albumPending
 	tr.ItemsTotal = len(items)
 
 	switch {
@@ -463,6 +493,8 @@ func recomputeAndPersistTransfer(ctx context.Context, st *store.Store, transferI
 		if tr.Stage != store.StagePaused {
 			tr.Stage = store.StageRunning
 		}
+	case albumPending > 0:
+		tr.Stage = store.StagePartial
 	case unconfirmedCount > 0:
 		tr.Stage = store.StageUnconfirmed
 	case cancelledCount > 0 && doneCount == 0 && failedCount == 0:

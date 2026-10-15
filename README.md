@@ -11,7 +11,18 @@
 
 **Rainforest** is a lightweight, cross-platform desktop client for **one-time upload, one-way automatic folder backup, transfer queue monitoring, and verified recovery download** for Amazon Photos—**NOT** a web gallery clone.
 
-Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.4.8 (`CGO_ENABLED=0`), Rainforest layers a React + TypeScript interface over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` without WebView cookie races ([MyGo #343](https://github.com/egoist/mygo/issues/343)) or custom-scheme video streaming pitfalls ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
+Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (`CGO_ENABLED=0`), Rainforest layers a React + TypeScript interface over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` using native HttpOnly Cookie capture for web sign-in ([MyGo #343](https://github.com/egoist/mygo/issues/343)), shared English/Simplified Chinese i18n catalogs, and local upload previews ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
+
+## Sign in
+
+Open **Settings**, choose your Amazon marketplace, and click **Sign in to Amazon**.
+Complete Amazon's password/MFA steps in the separate Amazon window; Rainforest
+captures the session natively and checks read access before saving it. Cancel or
+failure keeps the current account. Manual Cookie import is under the advanced
+section. See [sign-in help](docs/how-to/sign-in.md).
+
+The interface follows the system language (English or Simplified Chinese) using
+MyGo 0.5's built-in i18n, independently of your Amazon marketplace.
 
 ## Highlights
 
@@ -26,6 +37,8 @@ Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidwe
 ### Install
 
 Download the latest installer or archive for your platform (`macOS` Apple Silicon / Intel, `Windows` x64 / ARM64, `Linux` x64 / ARM64 `.deb` or `.tar.gz` with `install.sh`) from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases).
+
+The macOS v0.1.0 release contains `.app` archives, not a `.dmg` installer. The inspected Apple Silicon bundle is ad-hoc signed, without a Developer ID signature or stapled notarization ticket. First-install Gatekeeper approval and the complete in-app update flow have not been verified. See [release acceptance status](docs/reference/platforms-and-packages.md#v010-release-acceptance).
 
 ### Build from Source
 
@@ -87,7 +100,7 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 
 - [`thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) (MIT) — Go SDK (`pkg/aphotos`) and CLI
 - [`thedavidweng/tg-drive`](https://github.com/thedavidweng/tg-drive) (AGPL-3.0-only) — Architectural inspiration for the GUI facade and frontend testing seam
-- [`egoist/mygo`](https://github.com/egoist/mygo) v0.4.8 (MIT) — Pure-Go desktop application framework
+- [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (MIT) — Pure-Go desktop application framework
 - Upstream Amazon Photos protocol research: [`trevorhobenshield/amazon_photos`](https://github.com/trevorhobenshield/amazon_photos), [`kpfitzgerald/amazon-photos-mcp`](https://github.com/kpfitzgerald/amazon-photos-mcp), and [`vanessa/immich-amazon-sync`](https://github.com/vanessa/immich-amazon-sync)
 
 ## License
@@ -95,3 +108,5 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 Copyright (C) 2026 Davy Weng and contributors.
 
 Licensed under the **GNU Affero General Public License v3.0 only (`AGPL-3.0-only`)** — see [LICENSE](LICENSE).
+
+Choose existing folder or album targets with [runtime destination validation](docs/how-to/choose-upload-destination.md); regional evidence never restricts upload permissions.

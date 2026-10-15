@@ -53,9 +53,10 @@ func newTestClient(t *testing.T, region aphotos.Region, rt http.RoundTripper) *a
 		rc.RequiredCookies[2]: "Atza|TestToken",
 	}
 	client, err := aphotos.NewClient(aphotos.Options{
-		Region:     region,
-		Cookies:    cookies,
-		HTTPClient: &http.Client{Transport: rt},
+		Region:         region,
+		Cookies:        cookies,
+		HTTPClient:     &http.Client{Transport: rt},
+		DisableRetries: true,
 	})
 	if err != nil {
 		t.Fatalf("NewClient: %v", err)
@@ -137,8 +138,7 @@ func TestPlanUploadCountsMediaPreviewAndDestinationCapability(t *testing.T) {
 	ctx := context.Background()
 
 	client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		t.Fatalf("PlanUpload must not perform network I/O, got %s %s", req.Method, req.URL)
-		return nil, nil
+		return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
 	}))
 	eng, _ := newTestEngine(t, client)
 
@@ -166,8 +166,8 @@ func TestPlanUploadCountsMediaPreviewAndDestinationCapability(t *testing.T) {
 	if plan.SkippedUnsupported != 1 {
 		t.Errorf("SkippedUnsupported = %d, want 1", plan.SkippedUnsupported)
 	}
-	if !plan.Destination.RootOnly || plan.Destination.Evidence != aphotos.EvidenceExperimental {
-		t.Errorf("Destination = %+v, want RootOnly=true and Evidence=experimental for CA", plan.Destination)
+	if plan.Destination.Status != "readable" || plan.Destination.Evidence != aphotos.EvidenceExperimental {
+		t.Errorf("Destination = %+v, want readable and Evidence=experimental for CA", plan.Destination)
 	}
 
 	var foundPhotoPreview bool
@@ -208,7 +208,7 @@ func TestStartUploadPauseResumeCancelAndRetryWithoutDuplicatePost(t *testing.T) 
 			if strings.Contains(f, "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-us", "ownerId": "owner-1", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "root-us", "ownerId": "owner-1", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			if strings.Contains(f, md52) {
@@ -313,6 +313,9 @@ func TestReconcileOnStartupPromotesMatchedAndMarksInterruptedUnconfirmed(t *test
 	client := newTestClient(t, aphotos.RegionUS, roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes" {
 			f := req.URL.Query().Get("filters")
+			if strings.Contains(f, "isRoot:true") {
+				return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+			}
 			if strings.Contains(f, matchedMD5) {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
@@ -420,7 +423,7 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 			if strings.Contains(req.URL.Query().Get("filters"), "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-backup", "ownerId": "owner-1", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "root-backup", "ownerId": "owner-1", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
@@ -534,6 +537,21 @@ func TestOneWayBackupIncrementalMediaFilterMidWriteAndNoRemoteDelete(t *testing.
 		t.Fatalf("expected unconfirmed file not to be re-POSTed on periodic scan, got uploads=%v", uploadedNames)
 	}
 
+	forgotten, err := st.ListTransferItems(ctx, midTr.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range forgotten {
+		forgotten[i].Status = store.ItemStatusFailed
+		if err := st.UpdateTransferItem(ctx, forgotten[i]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, _ = eng.ScanNow(ctx, rule.ID)
+	if len(uploadedNames) != postsBeforeRescan {
+		t.Fatalf("unconfirmed tracked file without an open item was re-uploaded: %v", uploadedNames)
+	}
+
 	// Remove changing.png and photo1 -> MUST NEVER call trash/delete
 	_ = os.Remove(changingPath)
 	if err := os.Remove(photo1); err != nil {
@@ -581,7 +599,7 @@ func TestRecoveryDownloadVerifiedAndErrorReporting(t *testing.T) {
 			if strings.Contains(f, "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-dl", "ownerId": "owner-dl", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "root-dl", "ownerId": "owner-dl", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			if strings.Contains(f, "VISUAL_COLLECTION") {
@@ -593,7 +611,7 @@ func TestRecoveryDownloadVerifiedAndErrorReporting(t *testing.T) {
 			if strings.Contains(f, "kind:FOLDER") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "folder-1", "name": "2026", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "folder-1", "name": "2026", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
@@ -744,7 +762,7 @@ func TestCancelTransferAndBackupPauseResumeAndGlobalStop(t *testing.T) {
 		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes" {
 			return jsonResponse(http.StatusOK, map[string]any{
 				"count": 1,
-				"data":  []map[string]any{{"id": "root-cancel", "ownerId": "owner-c", "kind": "FOLDER"}},
+				"data":  []map[string]any{{"id": "root-cancel", "ownerId": "owner-c", "kind": "FOLDER", "status": "AVAILABLE"}},
 			}), nil
 		}
 		if req.Method == http.MethodPost && strings.Contains(req.URL.Path, "/cdproxy/nodes") {
@@ -817,7 +835,7 @@ func TestReconcileRejectsSameNameSameSizeWithDifferentOrMissingMD5AndHandlesNilC
 			if strings.Contains(f, "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-1", "ownerId": "owner-1", "kind": "FOLDER", "isRoot": true}},
+					"data":  []map[string]any{{"id": "root-1", "ownerId": "owner-1", "kind": "FOLDER", "status": "AVAILABLE", "isRoot": true}},
 				}), nil
 			}
 			if strings.Contains(f, localMD5) {
@@ -963,5 +981,354 @@ func TestBackupScanReportsPartialDirectoryWalkError(t *testing.T) {
 	}
 	if updatedRule.Status != store.BackupStatusError || updatedRule.LastError == "" {
 		t.Fatalf("expected rule status error with LastError populated, got %+v", updatedRule)
+	}
+}
+
+func TestDestinationProbeRegionsAndFailures(t *testing.T) {
+	for _, region := range []aphotos.Region{aphotos.RegionUS, aphotos.RegionCA, aphotos.RegionUK, aphotos.RegionJP, aphotos.RegionDE} {
+		for _, tc := range []struct {
+			name, id, kind, status string
+			code                   int
+			network                bool
+			want                   string
+		}{
+			{name: "folder", id: "target", kind: "FOLDER", status: "AVAILABLE", want: "readable"},
+			{name: "album", id: "target", kind: "VISUAL_COLLECTION", status: "AVAILABLE", want: "readable"},
+			{name: "literal ALBUM unsupported", id: "target", kind: "ALBUM", status: "AVAILABLE", want: "failed"},
+			{name: "file", id: "target", kind: "FILE", status: "AVAILABLE", want: "failed"},
+			{name: "trash", id: "target", kind: "FOLDER", status: "TRASH", want: "failed"},
+			{name: "wrong ID", id: "other", kind: "FOLDER", status: "AVAILABLE", want: "failed"},
+			{name: "401", code: 401, want: "failed"},
+			{name: "403", code: 403, want: "failed"},
+			{name: "404", code: 404, want: "failed"},
+			{name: "429", code: 429, want: "pending"},
+			{name: "offline", network: true, want: "pending"},
+		} {
+			t.Run(string(region)+"/"+tc.name, func(t *testing.T) {
+				c := newTestClient(t, region, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					if tc.network {
+						return nil, context.DeadlineExceeded
+					}
+					if tc.code != 0 {
+						return jsonResponse(tc.code, map[string]any{"message": "probe failed"}), nil
+					}
+					if r.URL.Path == "/drive/v1/nodes" {
+						return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+					}
+					if r.Method != "GET" {
+						t.Errorf("probe wrote: %s", r.Method)
+					}
+					return jsonResponse(200, map[string]any{"id": tc.id, "name": "Chosen target", "kind": tc.kind, "status": tc.status}), nil
+				}))
+				eng, _ := newTestEngine(t, c)
+				got := eng.ProbeDestination(context.Background(), "target")
+				if got.Status != tc.want || got.DestinationNodeID != "target" {
+					t.Fatalf("probe=%+v want %s", got, tc.want)
+				}
+			})
+		}
+	}
+}
+
+func TestAlbumRetryOnlyAssociatesPersistedMedia(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "photo.png")
+	_, hash := writePNGFile(t, path, 4, 4)
+	var uploads, patches atomic.Int32
+	var fail atomic.Bool
+	fail.Store(true)
+	client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		switch {
+		case r.Method == "GET" && r.URL.Path == "/drive/v1/nodes/album":
+			return jsonResponse(200, map[string]any{"id": "album", "kind": "VISUAL_COLLECTION", "status": "AVAILABLE", "name": "Trip"}), nil
+		case r.Method == "GET":
+			if strings.Contains(r.URL.Query().Get("filters"), "isRoot:true") {
+				return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+			}
+			return jsonResponse(200, map[string]any{"data": []any{}}), nil
+		case r.Method == "POST":
+			uploads.Add(1)
+			if r.URL.Query().Get("parentNodeId") != "root" {
+				t.Error("album media must use the account root as parent")
+			}
+			_, _ = io.Copy(io.Discard, r.Body)
+			return jsonResponse(201, map[string]any{"id": "media", "kind": "FILE", "contentProperties": map[string]any{"md5": hash}}), nil
+		case r.Method == "PATCH":
+			if r.URL.Path != "/drive/v1/nodes/album/children" {
+				t.Errorf("wrong album endpoint: %s", r.URL.Path)
+			}
+			var payload struct {
+				Op    string   `json:"op"`
+				Value []string `json:"value"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || payload.Op != "add" || len(payload.Value) != 1 || payload.Value[0] != "media" {
+				t.Errorf("wrong membership payload: %+v %v", payload, err)
+			}
+			patches.Add(1)
+			if fail.Load() {
+				return jsonResponse(403, map[string]any{"message": "denied"}), nil
+			}
+			return jsonResponse(200, map[string]any{}), nil
+		default:
+			t.Errorf("unexpected %s", r.Method)
+			return jsonResponse(500, nil), nil
+		}
+	}))
+	eng, st := newTestEngine(t, client)
+	tr, err := eng.StartUpload(ctx, engine.UploadJobRequest{Paths: []string{path}, DestinationNodeID: "album"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := waitForTransferTerminal(t, eng, tr.ID)
+	if got.Stage != store.StagePartial {
+		t.Fatalf("stage=%s want partial", got.Stage)
+	}
+	items, _ := st.ListTransferItems(ctx, tr.ID)
+	if items[0].RemoteNodeID != "media" {
+		t.Fatalf("lost uploaded ID: %+v", items)
+	}
+	fail.Store(false)
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	recovered := engine.New(engine.Config{Store: st, Client: client})
+	t.Cleanup(func() { _ = recovered.Close() })
+	if err := recovered.ReconcileOnStartup(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if uploads.Load() != 1 || patches.Load() != 1 {
+		t.Fatal("startup reconciliation performed writes")
+	}
+	if _, err := recovered.RetryTransfer(ctx, tr.ID); err != nil {
+		t.Fatal(err)
+	}
+	got = waitForTransferTerminal(t, recovered, tr.ID)
+	if got.Stage != store.StageCompleted || uploads.Load() != 1 || patches.Load() != 2 {
+		t.Fatalf("stage=%s uploads=%d patches=%d", got.Stage, uploads.Load(), patches.Load())
+	}
+}
+
+func TestBackupAlbumRecoveryWithRemovedSource(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "photo.png")
+	_, hash := writePNGFile(t, path, 4, 4)
+	var uploads, patches atomic.Int32
+	var st *store.Store
+	var fail atomic.Bool
+	fail.Store(true)
+	client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		switch {
+		case r.Method == "GET" && r.URL.Path == "/drive/v1/nodes/album":
+			return jsonResponse(200, map[string]any{"id": "album", "kind": "VISUAL_COLLECTION", "status": "AVAILABLE", "name": "Trip"}), nil
+		case r.Method == "GET":
+			if strings.Contains(r.URL.Query().Get("filters"), "isRoot:true") {
+				return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+			}
+			return jsonResponse(200, map[string]any{"data": []any{}}), nil
+		case r.Method == "POST":
+			uploads.Add(1)
+			if r.URL.Query().Get("parentNodeId") == "album" {
+				t.Error("album used as parent")
+			}
+			_, _ = io.Copy(io.Discard, r.Body)
+			return jsonResponse(201, map[string]any{"id": "media", "kind": "FILE", "contentProperties": map[string]any{"md5": hash}}), nil
+		case r.Method == "PATCH":
+			rules, err := st.ListBackupRules(ctx)
+			if err != nil || len(rules) != 1 {
+				t.Errorf("rules at checkpoint: %v %v", rules, err)
+			} else {
+				checkpoint, err := st.GetTrackedFile(ctx, rules[0].ID, "photo.png")
+				if err != nil || checkpoint.RemoteNodeID != "media" || checkpoint.Status != store.ItemStatusAlbumPending {
+					t.Errorf("backup media checkpoint must precede membership write: %+v %v", checkpoint, err)
+				}
+			}
+			if r.URL.Path != "/drive/v1/nodes/album/children" {
+				t.Errorf("wrong album endpoint: %s", r.URL.Path)
+			}
+			var payload struct {
+				Op    string   `json:"op"`
+				Value []string `json:"value"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || payload.Op != "add" || len(payload.Value) != 1 || payload.Value[0] != "media" {
+				t.Errorf("wrong membership payload: %+v %v", payload, err)
+			}
+			patches.Add(1)
+			if fail.Load() {
+				return jsonResponse(403, map[string]any{"message": "denied"}), nil
+			}
+			return jsonResponse(200, map[string]any{}), nil
+		default:
+			t.Errorf("unexpected %s", r.Method)
+			return jsonResponse(500, nil), nil
+		}
+	}))
+	eng, st := newTestEngine(t, client)
+	rule, err := eng.AddBackupRule(ctx, engine.BackupRuleInput{LocalPath: filepath.Dir(path), DestinationNodeID: "album", Paused: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := eng.ScanNow(ctx, rule.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := waitForTransferTerminal(t, eng, tr.ID)
+	if got.Stage != store.StagePartial {
+		t.Fatalf("stage=%s want partial", got.Stage)
+	}
+	items, _ := st.ListTransferItems(ctx, tr.ID)
+	if items[0].RemoteNodeID != "media" {
+		t.Fatalf("lost uploaded ID: %+v", items)
+	}
+	fail.Store(false)
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := eng.ScanNow(ctx, rule.ID); err != nil {
+		t.Fatal(err)
+	}
+	transfers, _ := eng.ListTransfers(ctx, 10)
+	got = transfers[0]
+	if got.Stage != store.StageCompleted || uploads.Load() != 1 || patches.Load() != 2 {
+		t.Fatalf("stage=%s uploads=%d patches=%d", got.Stage, uploads.Load(), patches.Load())
+	}
+}
+
+func TestDestinationReconnectAndAccountChange(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "photo.png")
+	_, hash := writePNGFile(t, path, 2, 2)
+	var offline, forbidden atomic.Bool
+	var writes atomic.Int32
+	clientFor := func(region aphotos.Region, root string) *aphotos.Client {
+		return newTestClient(t, region, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+			if offline.Load() {
+				return nil, context.DeadlineExceeded
+			}
+			if r.Method != "GET" {
+				writes.Add(1)
+				_, _ = io.Copy(io.Discard, r.Body)
+				return jsonResponse(201, map[string]any{"id": "media", "contentProperties": map[string]any{"md5": hash}}), nil
+			}
+			if r.URL.Path == "/drive/v1/nodes/target" {
+				if forbidden.Load() {
+					return jsonResponse(403, map[string]any{}), nil
+				}
+				return jsonResponse(200, map[string]any{"id": "target", "kind": "FOLDER", "status": "AVAILABLE"}), nil
+			}
+			return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": root, "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+		}))
+	}
+	eng, st := newTestEngine(t, clientFor(aphotos.RegionCA, "account-a"))
+	offline.Store(true)
+	if d := eng.ProbeDestination(ctx, "target"); d.Status != "pending" {
+		t.Fatal(d)
+	}
+	if _, err := eng.StartUpload(ctx, engine.UploadJobRequest{Paths: []string{path}, DestinationNodeID: "target"}); err == nil {
+		t.Fatal("offline upload accepted")
+	}
+	offline.Store(false)
+	plan, err := eng.PlanUpload(ctx, []string{path}, engine.PlanOptions{DestinationNodeID: "target"})
+	if err != nil || plan.Destination.Status != "readable" {
+		t.Fatalf("reconnect: %+v %v", plan, err)
+	}
+	forbidden.Store(true)
+	if _, err := eng.StartUpload(ctx, engine.UploadJobRequest{Plan: plan}); err == nil {
+		t.Fatal("stale readable result accepted")
+	}
+	if writes.Load() != 0 {
+		t.Fatal("probe wrote remotely")
+	}
+	forbidden.Store(false)
+	rule, err := eng.AddBackupRule(ctx, engine.BackupRuleInput{LocalPath: filepath.Dir(path), DestinationNodeID: "target", Paused: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := eng.ScanNow(ctx, rule.ID)
+	if err != nil || first == nil || first.Stage != store.StageCompleted {
+		t.Fatalf("scan %+v %v", first, err)
+	}
+	for _, switchTo := range []struct {
+		region aphotos.Region
+		root   string
+	}{{aphotos.RegionCA, "account-b"}, {aphotos.RegionUK, "account-a"}} {
+		eng.SetClient(clientFor(switchTo.region, switchTo.root))
+		if _, err := eng.ScanNow(ctx, rule.ID); err == nil {
+			t.Fatal("old baseline reused after account/region switch")
+		}
+		items, _ := st.ListTransferItems(ctx, first.ID)
+		items[0].Status = store.ItemStatusFailed
+		if err := st.UpdateTransferItem(ctx, items[0]); err != nil {
+			t.Fatal(err)
+		}
+		first.Stage = store.StageFailed
+		if err := st.UpdateTransfer(ctx, *first); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := eng.RetryTransfer(ctx, first.ID); err != nil {
+			t.Fatal(err)
+		}
+		if got := waitForTransferTerminal(t, eng, first.ID); got.Stage != store.StageFailed {
+			t.Fatalf("old transfer reused: %+v", got)
+		}
+	}
+	eng.SetClient(clientFor(aphotos.RegionCA, "account-a"))
+	_, err = eng.UpdateBackupRule(ctx, rule.ID, engine.BackupRuleInput{LocalPath: filepath.Dir(path), DestinationNodeID: "", Paused: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tracked, _ := st.ListTrackedFiles(ctx, rule.ID)
+	if len(tracked) != 0 {
+		t.Fatal("old destination baseline retained")
+	}
+	second, err := eng.ScanNow(ctx, rule.ID)
+	if err != nil || second == nil || second.Stage != store.StageCompleted {
+		t.Fatalf("changed target %+v %v", second, err)
+	}
+	if writes.Load() != 2 {
+		t.Fatalf("writes=%d", writes.Load())
+	}
+}
+
+func TestUploadChangedDuringPostRemainsUnconfirmed(t *testing.T) {
+	for _, kind := range []string{"FOLDER", "VISUAL_COLLECTION"} {
+		t.Run(kind, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "photo.png")
+			_, hash := writePNGFile(t, path, 4, 4)
+			var patches atomic.Int32
+			client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+				switch r.Method {
+				case "GET":
+					if r.URL.Path == "/drive/v1/nodes/target" {
+						return jsonResponse(200, map[string]any{"id": "target", "kind": kind, "status": "AVAILABLE"}), nil
+					}
+					return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+				case "POST":
+					_, _ = io.Copy(io.Discard, r.Body)
+					if err := os.WriteFile(path, []byte("changed while uploading"), 0o600); err != nil {
+						t.Error(err)
+					}
+					return jsonResponse(201, map[string]any{"id": "media", "kind": "FILE", "contentProperties": map[string]any{"md5": hash}}), nil
+				case "PATCH":
+					patches.Add(1)
+					return jsonResponse(200, map[string]any{}), nil
+				default:
+					t.Errorf("unexpected method %s", r.Method)
+					return jsonResponse(500, nil), nil
+				}
+			}))
+			eng, st := newTestEngine(t, client)
+			tr, err := eng.StartUpload(context.Background(), engine.UploadJobRequest{Paths: []string{path}, DestinationNodeID: "target"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			waitForTransferTerminal(t, eng, tr.ID)
+			items, err := st.ListTransferItems(context.Background(), tr.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if items[0].Status != store.ItemStatusUnconfirmed || !strings.Contains(items[0].ErrorMessage, "modified") || patches.Load() != 0 {
+				t.Fatalf("changed file must remain unconfirmed without album writes: item=%+v patches=%d", items[0], patches.Load())
+			}
+		})
 	}
 }

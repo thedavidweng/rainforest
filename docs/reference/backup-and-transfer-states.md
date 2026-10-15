@@ -20,7 +20,7 @@ Reference for Rainforest's backup rule states, transfer job stages, and individu
 | `running` | No | Workers are actively transferring items. |
 | `paused` | No | Dispatch is paused by the user; in-flight workers wait before starting the next item. |
 | `completed` | Yes | All items finished as `confirmed` or `skipped` with zero `failed` or `unconfirmed` items. |
-| `partial` | Yes | At least one item succeeded (`confirmed` or `skipped`) and at least one item `failed` (with no `unconfirmed` items). |
+| `partial` | Yes | One or more `album_pending` items, or at least one item succeeded (`confirmed` or `skipped`) and at least one item `failed` (with no `unconfirmed` items). |
 | `unconfirmed` | Yes | One or more items finished in `unconfirmed` state and require reconciliation or manual retry. |
 | `failed` | Yes | All non-cancelled items failed. |
 | `cancelled` | Yes | Job was cancelled by the user before any item completed or failed. |
@@ -31,8 +31,9 @@ Reference for Rainforest's backup rule states, transfer job stages, and individu
 |---|---|
 | `queued` | Waiting in the transfer queue. |
 | `running` | Currently streaming upload or download bytes. |
-| `confirmed` | Upload returned HTTP `200`/`201` with a verified remote `nodeId` (and stable local `size`/`mtime_ns`), or reconciled by matching remote MD5; or download passed size and MD5 verification. |
+| `confirmed` | Upload returned HTTP `200`/`201` with a verified remote `nodeId` (and stable local `size`/`mtime_ns`), or reconciled by matching remote MD5; album media additionally requires a successful membership response and retains its committed media ID even if the source changes; or download passed size and MD5 verification. |
 | `skipped` | Upload `--on-conflict skip` verified an existing remote node with matching MD5, or download `--on-conflict skip` preserved an existing local file. |
+| `album_pending` | Media Node ID saved; album membership failed or is pending. Retry associates only, without uploading media again. Counted in `itemsUnconfirmed` for queue totals. |
 | `unconfirmed` | Commit state could not be proven (interrupted mid-flight, missing remote node ID, conflict candidate lacking MD5, or local file mutated during upload). |
 | `failed` | Transfer failed with a definite error (`401`, `403`, `409` under `fail` policy, network exhaustion, or checksum mismatch). |
 | `cancelled` | Cancelled by user action or global backup stop. |

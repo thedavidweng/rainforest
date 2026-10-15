@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 	"github.com/thedavidweng/rainforest/internal/credstore"
@@ -12,7 +13,10 @@ import (
 )
 
 type Auth struct {
-	state *appState
+	state       *appState
+	mu          sync.Mutex
+	loginMu     sync.Mutex
+	cancelLogin context.CancelFunc
 }
 
 type AuthStatus struct {
@@ -143,6 +147,9 @@ func (a *Auth) Status(ctx context.Context) (*AuthStatus, error) {
 }
 
 func (a *Auth) ImportCookies(ctx context.Context, in ImportCookiesInput) (*AuthStatus, error) {
+	a.CancelLogin()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	cs, err := a.state.credVault()
 	if err != nil {
 		return nil, err
@@ -166,6 +173,9 @@ func (a *Auth) ImportCookies(ctx context.Context, in ImportCookiesInput) (*AuthS
 }
 
 func (a *Auth) ImportCookieFile(ctx context.Context, path, region string) (*AuthStatus, error) {
+	a.CancelLogin()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	cs, err := a.state.credVault()
 	if err != nil {
 		return nil, err
@@ -200,6 +210,9 @@ func (a *Auth) PickAndImportCookieFile(ctx context.Context, region string) (*Aut
 }
 
 func (a *Auth) Logout(ctx context.Context) (*AuthStatus, error) {
+	a.CancelLogin()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	cs, err := a.state.credVault()
 	if err != nil {
 		return nil, err

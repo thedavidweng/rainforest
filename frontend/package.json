@@ -15,7 +15,7 @@
   "dependencies": {
     "@tailwindcss/vite": "4.3.3",
     "lucide-react": "1.49.0",
-    "mygo-runtime": "0.4.8",
+    "mygo-runtime": "0.5.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tailwindcss": "4.3.3"
@@ -34,7 +34,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.7",
     "globals": "17.13.0",
-    "mygo-cli": "0.4.8",
+    "mygo-cli": "0.5.1",
     "prettier": "3.5.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",

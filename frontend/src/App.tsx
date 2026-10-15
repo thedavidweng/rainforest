@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react"
+import { isMyGo, locale, direction, onLocaleChange } from "mygo-runtime"
+import { messages as m } from "@/locales"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import type {
   AuthStatus,
@@ -26,6 +28,17 @@ export interface AppProps {
 type ViewTab = "transfers" | "backups" | "downloads" | "settings"
 
 export function App({ backend }: AppProps) {
+  const [, refreshLocale] = useState(0)
+  useEffect(() => {
+    if (!isMyGo()) return
+    document.documentElement.lang = locale()
+    document.documentElement.dir = direction()
+    return onLocaleChange((tag, dir) => {
+      document.documentElement.lang = tag
+      document.documentElement.dir = dir
+      refreshLocale((n) => n + 1)
+    })
+  }, [])
   const [activeView, setActiveView] = useState<ViewTab>("transfers")
   const [auth, setAuth] = useState<AuthStatus | null>(null)
   const [usage, setUsage] = useState<UsageSummary | null>(null)
@@ -39,8 +52,30 @@ export function App({ backend }: AppProps) {
   const [planIncludeVideos, setPlanIncludeVideos] = useState<boolean>(true)
   const [planConflictPolicy, setPlanConflictPolicy] = useState<string>("skip")
   const [planDestNodeId, setPlanDestNodeId] = useState<string>("")
-  const [uploadPlan, setUploadPlan] = useState<UploadPlanDTO | null>(null)
-  const [planError, setPlanError] = useState<string | null>(null)
+  const [storedUploadPlan, setUploadPlan] = useState<UploadPlanDTO | null>(null)
+  const [storedPlanError, setPlanError] = useState<string | null>(null)
+
+  const planRequest = useMemo(
+    () => ({
+      paths: pendingPaths ?? [],
+      includeVideos: planIncludeVideos,
+      conflictPolicy: planConflictPolicy,
+      destinationNodeId: planDestNodeId || undefined,
+      includePreviews: true,
+    }),
+    [pendingPaths, planIncludeVideos, planConflictPolicy, planDestNodeId],
+  )
+  const [resolvedPlan, setResolvedPlan] = useState<{
+    request: typeof planRequest
+    auth: AuthStatus | null
+    backend: Backend
+  } | null>(null)
+  const currentPlan =
+    resolvedPlan?.request === planRequest &&
+    resolvedPlan.auth === auth &&
+    resolvedPlan.backend === backend
+  const uploadPlan = currentPlan ? storedUploadPlan : null
+  const planError = currentPlan ? storedPlanError : null
 
   const [backupRules, setBackupRules] = useState<BackupRuleDTO[]>([])
   const [settingsState, setSettingsState] = useState<SettingsDTO | null>(null)
@@ -81,31 +116,26 @@ export function App({ backend }: AppProps) {
       return
     }
     let live = true
-    backend.transfers
-      .planUpload({
-        paths: pendingPaths,
-        includeVideos: planIncludeVideos,
-        conflictPolicy: planConflictPolicy,
-        destinationNodeId: planDestNodeId || undefined,
-        includePreviews: true,
-      })
-      .then(
-        (plan) => {
-          if (live) {
-            setUploadPlan(plan)
-            setPlanError(null)
-          }
-        },
-        (err) => {
-          if (live) {
-            setPlanError(errorMessageFrom(err))
-          }
-        },
-      )
+    backend.transfers.planUpload(planRequest).then(
+      (plan) => {
+        if (live) {
+          setResolvedPlan({ request: planRequest, auth, backend })
+          setUploadPlan(plan)
+          setPlanError(null)
+        }
+      },
+      (err) => {
+        if (live) {
+          setResolvedPlan({ request: planRequest, auth, backend })
+          setUploadPlan(null)
+          setPlanError(errorMessageFrom(err))
+        }
+      },
+    )
     return () => {
       live = false
     }
-  }, [backend, pendingPaths, planIncludeVideos, planConflictPolicy, planDestNodeId])
+  }, [backend, pendingPaths, planRequest, auth])
 
   useEffect(() => {
     let mounted = true
@@ -309,10 +339,10 @@ export function App({ backend }: AppProps) {
   }
 
   const navItems: { id: ViewTab; label: string }[] = [
-    { id: "transfers", label: "Transfers / Upload" },
-    { id: "backups", label: "Backups" },
-    { id: "downloads", label: "Downloads" },
-    { id: "settings", label: "Settings" },
+    { id: "transfers", label: m.transfers() },
+    { id: "backups", label: m.backups() },
+    { id: "downloads", label: m.downloads() },
+    { id: "settings", label: m.settings() },
   ]
 
   return (
@@ -321,9 +351,9 @@ export function App({ backend }: AppProps) {
         <div>
           <div className="mb-6 px-2">
             <h1 className="text-lg font-bold tracking-tight text-emerald-400">Rainforest</h1>
-            <p className="text-xs text-slate-400">Amazon Photos Transfer &amp; Backup</p>
+            <p className="text-xs text-slate-400">{m.amazonPhotosTransferAndBackup()}</p>
           </div>
-          <nav aria-label="Main navigation" className="space-y-1">
+          <nav aria-label={m.mainNavigation()} className="space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -342,7 +372,7 @@ export function App({ backend }: AppProps) {
           </nav>
         </div>
         <div className="px-2 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-          Unofficial client · AGPL-3.0-only
+          {m.unofficialClientAgpl30Only()}
         </div>
       </aside>
 
@@ -358,7 +388,7 @@ export function App({ backend }: AppProps) {
               onClick={() => setGlobalError(null)}
               className="px-2 py-0.5 rounded bg-rose-900/50 hover:bg-rose-900 text-rose-100"
             >
-              Dismiss
+              {m.dismiss()}
             </button>
           </div>
         )}
@@ -374,6 +404,9 @@ export function App({ backend }: AppProps) {
             pendingPaths={pendingPaths}
             planIncludeVideos={planIncludeVideos}
             planConflictPolicy={planConflictPolicy}
+            planDestNodeId={planDestNodeId}
+            onSetPlanDestNodeId={setPlanDestNodeId}
+            onCheckDestination={() => setPendingPaths((paths) => (paths ? [...paths] : null))}
             uploadPlan={uploadPlan}
             planError={planError}
             onOpenSettings={() => setActiveView("settings")}
@@ -397,6 +430,7 @@ export function App({ backend }: AppProps) {
           <BackupsView
             backend={backend}
             backupRules={backupRules}
+            auth={auth}
             settingsState={settingsState}
             onSetBackupRules={setBackupRules}
             onToggleAllStopped={handleToggleAllBackupsStopped}

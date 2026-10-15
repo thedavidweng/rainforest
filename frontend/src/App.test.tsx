@@ -51,10 +51,10 @@ describe("Rainforest App — Scope & Navigation (Spec §H.2 & §H.3)", () => {
     render(<App backend={backend} />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("account-banner").textContent).toMatch(/import.*cookie/i)
+      expect(screen.getByTestId("account-banner").textContent).toMatch(/sign in/i)
     })
 
-    fireEvent.click(screen.getByRole("button", { name: /open settings|import cookies/i }))
+    fireEvent.click(screen.getByRole("button", { name: /sign in in settings/i }))
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /account & session/i })).toBeTruthy()
@@ -116,7 +116,7 @@ describe("View 1: Transfers / Upload — Dropzone, Preflight Confirmation, and T
     expect(modal.textContent).toContain("1 photo")
     expect(modal.textContent).toContain("1 video")
     expect(modal.textContent).toContain("1 skipped")
-    expect(modal.textContent).toContain("Uploading to Amazon Photos root")
+    expect(modal.textContent).toContain("Account root")
     // Local thumbnail preview rendered for photo
     expect(modal.querySelector("img[alt='IMG_2001.JPG']")).toBeTruthy()
 
@@ -134,6 +134,12 @@ describe("View 1: Transfers / Upload — Dropzone, Preflight Confirmation, and T
     expect((screen.getByLabelText(/conflict policy/i) as HTMLSelectElement).value).toBe("rename")
 
     // Confirm & Start Upload
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: /confirm & start upload/i }) as HTMLButtonElement)
+          .disabled,
+      ).toBe(false),
+    )
     fireEvent.click(screen.getByRole("button", { name: /confirm & start upload/i }))
 
     await screen.findByTestId("transfer-card-tr-1")
@@ -390,7 +396,7 @@ describe("View 3: Downloads — Lightweight Recovery Download", () => {
     fireEvent.click(screen.getByRole("button", { name: /start recovery download/i }))
     await screen.findByText("recovered_album-family.jpg")
   })
-  test("disables remote albums/folders selector with clear explanation when regional listing is experimental", async () => {
+  test("disables an empty remote selector and retains experimental evidence notice", async () => {
     const backend = memoryBackend({
       recoverySources: {
         region: "uk",
@@ -473,8 +479,9 @@ describe("View 4: Settings & Diagnostics", () => {
     const regionSelect = screen.getByLabelText(/marketplace region/i) as HTMLSelectElement
     expect(regionSelect.value).toBe("")
     const optionValues = Array.from(regionSelect.options).map((o) => o.value)
-    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp"])
+    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp", "de", "fr", "it", "es"])
 
+    fireEvent.click(screen.getByText(/import session cookies \(advanced\)/i))
     // Attempt cookie import with ambiguous cookies and no region selected -> shows explicit region error
     fireEvent.change(screen.getByLabelText(/session cookies/i), {
       target: { value: "session-id=135-9999999-9999999" },
@@ -491,16 +498,16 @@ describe("View 4: Settings & Diagnostics", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /import pasted cookies/i }))
 
-    await screen.findByText(/authenticated \(CA/i)
+    await screen.findByText(/signed in \(CA/i)
 
     // Sign Out
     fireEvent.click(screen.getByRole("button", { name: /sign out/i }))
-    await screen.findByText(/not authenticated/i)
+    await screen.findByText(/not signed in/i)
 
     // Import Cookie File button
     fireEvent.change(regionSelect, { target: { value: "us" } })
     fireEvent.click(screen.getByRole("button", { name: /import cookie file/i }))
-    await screen.findByText(/authenticated \(US/i)
+    await screen.findByText(/signed in \(US/i)
     await screen.findByText(/1,420 items/i)
 
     // Transfer & Desktop Behavior settings update
@@ -549,4 +556,181 @@ describe("View 4: Settings & Diagnostics", () => {
     )
     expect(disclaimer.textContent).toContain("AGPL-3.0-only")
   })
+})
+
+describe("Runtime destination probe", () => {
+  test("preserves custom destinations in experimental regions and displays read-only status", async () => {
+    const backend = memoryBackend({
+      auth: { region: "ca", evidence: "experimental" },
+      settings: { region: "ca" },
+      destinations: { "folder-ca": { name: "Canadian photos", kind: "FOLDER" } },
+    })
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    await screen.findByTestId("upload-plan-modal")
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), {
+      target: { value: "folder-ca" },
+    })
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("readable"),
+    )
+    expect(screen.getByTestId("upload-plan-modal").textContent).toContain("FOLDER")
+    expect(screen.getByTestId("account-banner").textContent).toContain("experimental")
+    fireEvent.click(screen.getByRole("button", { name: /confirm & start upload/i }))
+    await waitFor(async () =>
+      expect((await backend.transfers.list()).active[0]?.destNodeId).toBe("folder-ca"),
+    )
+  })
+  test("rechecks a pending upload target after reconnecting", async () => {
+    const backend = memoryBackend()
+    const planUpload = backend.transfers.planUpload
+    let connected = false
+    backend.transfers.planUpload = async (input) => {
+      const plan = await planUpload(input)
+      return connected
+        ? plan
+        : {
+            ...plan,
+            destination: { ...plan.destination, status: "pending", message: "Network unavailable" },
+          }
+    }
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("Network unavailable"),
+    )
+    const confirm = screen.getByRole("button", {
+      name: /confirm & start upload/i,
+    }) as HTMLButtonElement
+    expect(confirm.disabled).toBe(true)
+    connected = true
+    fireEvent.click(screen.getByRole("button", { name: /check destination/i }))
+    await waitFor(() => expect(confirm.disabled).toBe(false))
+  })
+  test("invalidates readable targets when the ID or account changes", async () => {
+    const backend = memoryBackend({ destinations: { folder: { name: "Folder", kind: "FOLDER" } } })
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    const confirm = await screen.findByRole("button", { name: /confirm & start upload/i })
+    await waitFor(() => expect((confirm as HTMLButtonElement).disabled).toBe(false))
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), { target: { value: "missing" } })
+    expect((confirm as HTMLButtonElement).disabled).toBe(true)
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("failed"),
+    )
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), { target: { value: "folder" } })
+    await waitFor(() => expect((confirm as HTMLButtonElement).disabled).toBe(false))
+    await act(async () => {
+      await backend.auth.logout()
+    })
+    expect((confirm as HTMLButtonElement).disabled).toBe(true)
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("pending"),
+    )
+  })
+  test("saves and edits a pending backup destination without credentials", async () => {
+    const backend = memoryBackend({ auth: { configured: false, authenticated: false } })
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Backups" }))
+    fireEvent.click(screen.getByRole("button", { name: /add backup folder/i }))
+    fireEvent.change(screen.getByLabelText("Local Folder Path"), { target: { value: "/Pictures" } })
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), {
+      target: { value: "album-ca" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /check destination/i }))
+    await waitFor(() => expect(screen.getByRole("dialog").textContent).toContain("pending"))
+    fireEvent.click(screen.getByRole("button", { name: /save backup rule/i }))
+    await screen.findByTestId("backup-rule-backup-1")
+    expect((await backend.backups.list())[0]?.destinationNodeId).toBe("album-ca")
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }))
+    expect((screen.getByLabelText("Destination Node ID") as HTMLInputElement).value).toBe(
+      "album-ca",
+    )
+    await waitFor(() => expect(screen.getByRole("dialog").textContent).toContain("pending"))
+  })
+})
+
+describe("Web sign-in", () => {
+  test("offers Amazon web sign-in, reports progress, and preserves experimental evidence", async () => {
+    const backend = memoryBackend({
+      auth: { configured: false, authenticated: false, region: "" },
+      settings: { region: "" },
+    })
+    let complete!: () => void
+    let chosen = ""
+    backend.auth.login = async (region) => {
+      chosen = region
+      await new Promise<void>((resolve) => {
+        complete = resolve
+      })
+      return {
+        configured: true,
+        authenticated: true,
+        region,
+        evidence: "experimental",
+        ownerId: "new-owner",
+      }
+    }
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Settings" }))
+    const signIn = screen.getByRole("button", { name: "Sign in to Amazon" }) as HTMLButtonElement
+    expect(signIn.disabled).toBe(true)
+    fireEvent.change(screen.getByLabelText(/marketplace region/i), { target: { value: "ca" } })
+    fireEvent.click(signIn)
+    await screen.findByText(/complete sign-in in the Amazon window/i)
+    expect(chosen).toBe("ca")
+    expect((screen.getByLabelText(/marketplace region/i) as HTMLSelectElement).disabled).toBe(true)
+    expect(screen.getByRole("button", { name: "Cancel sign-in" })).toBeTruthy()
+    await act(async () => {
+      complete()
+    })
+    await screen.findByText(/signed in \(CA/i)
+    expect(screen.getByText(/Experimental protocol evidence/)).toBeTruthy()
+  })
+
+  test("cancelled and failed sign-ins keep the current account and allow retry", async () => {
+    const backend = memoryBackend()
+    let rejectLogin!: (reason: unknown) => void
+    backend.auth.login = () =>
+      new Promise((_, reject) => {
+        rejectLogin = reject
+      })
+    backend.auth.cancelLogin = async () => {
+      rejectLogin({ code: "INTERRUPTED", message: "operation interrupted" })
+    }
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Settings" }))
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to Amazon" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel sign-in" }))
+    await screen.findByText("Sign-in cancelled. Your account has not changed.")
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeTruthy()
+    backend.auth.login = async () => {
+      throw { code: "NETWORK_ERROR", message: "Check your connection and try again." }
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to Amazon" }))
+    expect((await screen.findByRole("alert")).textContent).toContain("Check your connection")
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeTruthy()
+  })
+})
+
+test("renders the web sign-in flow in the system's Chinese language independently of marketplace", async () => {
+  const original = Object.getOwnPropertyDescriptor(navigator, "languages")
+  Object.defineProperty(navigator, "languages", { configurable: true, value: ["zh-CN"] })
+  try {
+    const backend = memoryBackend({
+      auth: { configured: false, authenticated: false },
+      settings: { region: "" },
+    })
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "设置" }))
+    expect(screen.getByRole("button", { name: "登录 Amazon" })).toBeTruthy()
+    expect(screen.getByText(/密码和验证码仅由 Amazon 处理/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "传输／上传" })).toBeTruthy()
+  } finally {
+    if (original) Object.defineProperty(navigator, "languages", original)
+    else Reflect.deleteProperty(navigator, "languages")
+  }
 })
