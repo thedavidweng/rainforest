@@ -116,7 +116,7 @@ describe("View 1: Transfers / Upload — Dropzone, Preflight Confirmation, and T
     expect(modal.textContent).toContain("1 photo")
     expect(modal.textContent).toContain("1 video")
     expect(modal.textContent).toContain("1 skipped")
-    expect(modal.textContent).toContain("Uploading to Amazon Photos root")
+    expect(modal.textContent).toContain("Account root")
     // Local thumbnail preview rendered for photo
     expect(modal.querySelector("img[alt='IMG_2001.JPG']")).toBeTruthy()
 
@@ -134,6 +134,12 @@ describe("View 1: Transfers / Upload — Dropzone, Preflight Confirmation, and T
     expect((screen.getByLabelText(/conflict policy/i) as HTMLSelectElement).value).toBe("rename")
 
     // Confirm & Start Upload
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: /confirm & start upload/i }) as HTMLButtonElement)
+          .disabled,
+      ).toBe(false),
+    )
     fireEvent.click(screen.getByRole("button", { name: /confirm & start upload/i }))
 
     await screen.findByTestId("transfer-card-tr-1")
@@ -390,7 +396,7 @@ describe("View 3: Downloads — Lightweight Recovery Download", () => {
     fireEvent.click(screen.getByRole("button", { name: /start recovery download/i }))
     await screen.findByText("recovered_album-family.jpg")
   })
-  test("disables remote albums/folders selector with clear explanation when regional listing is experimental", async () => {
+  test("disables an empty remote selector and retains experimental evidence notice", async () => {
     const backend = memoryBackend({
       recoverySources: {
         region: "uk",
@@ -548,5 +554,73 @@ describe("View 4: Settings & Diagnostics", () => {
       "Rainforest is an independent, unofficial client and is not affiliated with or endorsed by Amazon.com, Inc.",
     )
     expect(disclaimer.textContent).toContain("AGPL-3.0-only")
+  })
+})
+
+describe("Runtime destination probe", () => {
+  test("preserves custom destinations in experimental regions and displays read-only status", async () => {
+    const backend = memoryBackend({
+      auth: { region: "ca", evidence: "experimental" },
+      settings: { region: "ca" },
+      destinations: { "folder-ca": { name: "Canadian photos", kind: "FOLDER" } },
+    })
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    await screen.findByTestId("upload-plan-modal")
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), {
+      target: { value: "folder-ca" },
+    })
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("readable"),
+    )
+    expect(screen.getByTestId("upload-plan-modal").textContent).toContain("FOLDER")
+    expect(screen.getByTestId("account-banner").textContent).toContain("experimental")
+    fireEvent.click(screen.getByRole("button", { name: /confirm & start upload/i }))
+    await waitFor(async () =>
+      expect((await backend.transfers.list()).active[0]?.destNodeId).toBe("folder-ca"),
+    )
+  })
+  test("invalidates readable targets when the ID or account changes", async () => {
+    const backend = memoryBackend({ destinations: { folder: { name: "Folder", kind: "FOLDER" } } })
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    const confirm = await screen.findByRole("button", { name: /confirm & start upload/i })
+    await waitFor(() => expect((confirm as HTMLButtonElement).disabled).toBe(false))
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), { target: { value: "missing" } })
+    expect((confirm as HTMLButtonElement).disabled).toBe(true)
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("failed"),
+    )
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), { target: { value: "folder" } })
+    await waitFor(() => expect((confirm as HTMLButtonElement).disabled).toBe(false))
+    await act(async () => {
+      await backend.auth.logout()
+    })
+    expect((confirm as HTMLButtonElement).disabled).toBe(true)
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("pending"),
+    )
+  })
+  test("saves and edits a pending backup destination without credentials", async () => {
+    const backend = memoryBackend({ auth: { configured: false, authenticated: false } })
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Backups" }))
+    fireEvent.click(screen.getByRole("button", { name: /add backup folder/i }))
+    fireEvent.change(screen.getByLabelText("Local Folder Path"), { target: { value: "/Pictures" } })
+    fireEvent.change(screen.getByLabelText("Destination Node ID"), {
+      target: { value: "album-ca" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /check destination/i }))
+    await waitFor(() => expect(screen.getByRole("dialog").textContent).toContain("pending"))
+    fireEvent.click(screen.getByRole("button", { name: /save backup rule/i }))
+    await screen.findByTestId("backup-rule-backup-1")
+    expect((await backend.backups.list())[0]?.destinationNodeId).toBe("album-ca")
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }))
+    expect((screen.getByLabelText("Destination Node ID") as HTMLInputElement).value).toBe(
+      "album-ca",
+    )
+    await waitFor(() => expect(screen.getByRole("dialog").textContent).toContain("pending"))
   })
 })

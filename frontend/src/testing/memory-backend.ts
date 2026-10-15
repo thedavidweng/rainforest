@@ -54,6 +54,7 @@ export interface MemoryBackendOptions {
   usage?: Partial<UsageSummary>
   settings?: Partial<SettingsDTO>
   doctor?: DoctorReportDTO
+  destinations?: Record<string, { name: string; kind: string; status?: string }>
   backups?: BackupRuleDTO[]
   transfers?: TransferDTO[]
   transferItems?: Record<string, TransferItemDTO[]>
@@ -176,6 +177,7 @@ export class MemoryBackend implements Backend {
   private pickedDirectory: string
   private pickedCookieFile: string
   private pickedCookieContent: string
+  private destinations: NonNullable<MemoryBackendOptions["destinations"]>
   private seq = 1
 
   private readonly transferStageEvents = eventEmitter<TransferDTO>()
@@ -186,6 +188,7 @@ export class MemoryBackend implements Backend {
   private readonly notificationEvents = eventEmitter<NotificationEvent>()
 
   constructor(opts: MemoryBackendOptions = {}) {
+    this.destinations = opts.destinations ?? {}
     const defaultRegion = opts.auth?.region ?? opts.settings?.region ?? "us"
     const configured = opts.auth?.configured ?? true
     const authenticated = opts.auth?.authenticated ?? configured
@@ -426,6 +429,32 @@ export class MemoryBackend implements Backend {
   }
 
   readonly transfers: Backend["transfers"] = {
+    probeDestination: async (id: string) => {
+      const region = this.settingsState.region
+      const node = id ? this.destinations[id] : { name: "Account root", kind: "FOLDER" }
+      const authenticated = this.authState.authenticated
+      const status = !authenticated
+        ? "pending"
+        : node &&
+            (!node.status || node.status === "AVAILABLE") &&
+            ["FOLDER", "VISUAL_COLLECTION"].includes(node.kind)
+          ? "readable"
+          : "failed"
+      return {
+        region,
+        evidence: evidenceForRegion(region),
+        destinationNodeId: id,
+        name: node?.name ?? "",
+        kind: node?.kind ?? "",
+        status,
+        message:
+          status === "pending"
+            ? "Credentials unavailable; authenticate before uploading."
+            : status === "readable"
+              ? "Target is readable. Upload and album membership are confirmed separately."
+              : "Destination unavailable or unsupported.",
+      }
+    },
     planUpload: async (input: UploadPlanInput) => {
       const rawPaths = (input.paths ?? []).map((p) => p.trim()).filter(Boolean)
       if (rawPaths.length === 0) {
@@ -477,11 +506,6 @@ export class MemoryBackend implements Backend {
         })
       }
 
-      const region = this.settingsState.region || this.authState.region || "us"
-      const evidence = evidenceForRegion(region) || "verified"
-      const destNodeID = (input.destinationNodeId ?? "").trim()
-      const rootOnly = destNodeID === "" || evidence !== "verified"
-
       return {
         sourceSummary:
           rawPaths.length === 1
@@ -493,18 +517,7 @@ export class MemoryBackend implements Backend {
         totalBytes,
         skippedUnsupported,
         conflictPolicy: policy,
-        destination: {
-          region,
-          evidence,
-          rootOnly,
-          ...(destNodeID ? { destinationNodeId: destNodeID } : {}),
-          message:
-            evidence === "verified"
-              ? destNodeID
-                ? `Uploading to remote node ${destNodeID} (${region.toUpperCase()}, verified).`
-                : `Uploading to Amazon Photos root (${region.toUpperCase()}, verified).`
-              : `Experimental region (${region.toUpperCase()}): root upload only; custom folder destinations are unverified.`,
-        },
+        destination: await this.transfers.probeDestination((input.destinationNodeId ?? "").trim()),
         items,
       }
     },
@@ -517,6 +530,7 @@ export class MemoryBackend implements Backend {
         includeVideos: input.includeVideos,
         includePreviews: false,
       })
+      if (plan.destination.status !== "readable") throw new Error(plan.destination.message)
       if (plan.totalCount === 0) {
         throw {
           code: "VALIDATION_FAILED",
@@ -1335,6 +1349,7 @@ export function failingBackend(err: BackendError): Backend {
       usage: fail,
     },
     transfers: {
+      probeDestination: fail,
       planUpload: fail,
       startUpload: fail,
       list: fail,

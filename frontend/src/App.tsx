@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import type {
   AuthStatus,
@@ -39,8 +39,30 @@ export function App({ backend }: AppProps) {
   const [planIncludeVideos, setPlanIncludeVideos] = useState<boolean>(true)
   const [planConflictPolicy, setPlanConflictPolicy] = useState<string>("skip")
   const [planDestNodeId, setPlanDestNodeId] = useState<string>("")
-  const [uploadPlan, setUploadPlan] = useState<UploadPlanDTO | null>(null)
-  const [planError, setPlanError] = useState<string | null>(null)
+  const [storedUploadPlan, setUploadPlan] = useState<UploadPlanDTO | null>(null)
+  const [storedPlanError, setPlanError] = useState<string | null>(null)
+
+  const planRequest = useMemo(
+    () => ({
+      paths: pendingPaths ?? [],
+      includeVideos: planIncludeVideos,
+      conflictPolicy: planConflictPolicy,
+      destinationNodeId: planDestNodeId || undefined,
+      includePreviews: true,
+    }),
+    [pendingPaths, planIncludeVideos, planConflictPolicy, planDestNodeId],
+  )
+  const [resolvedPlan, setResolvedPlan] = useState<{
+    request: typeof planRequest
+    auth: AuthStatus | null
+    backend: Backend
+  } | null>(null)
+  const currentPlan =
+    resolvedPlan?.request === planRequest &&
+    resolvedPlan.auth === auth &&
+    resolvedPlan.backend === backend
+  const uploadPlan = currentPlan ? storedUploadPlan : null
+  const planError = currentPlan ? storedPlanError : null
 
   const [backupRules, setBackupRules] = useState<BackupRuleDTO[]>([])
   const [settingsState, setSettingsState] = useState<SettingsDTO | null>(null)
@@ -81,31 +103,26 @@ export function App({ backend }: AppProps) {
       return
     }
     let live = true
-    backend.transfers
-      .planUpload({
-        paths: pendingPaths,
-        includeVideos: planIncludeVideos,
-        conflictPolicy: planConflictPolicy,
-        destinationNodeId: planDestNodeId || undefined,
-        includePreviews: true,
-      })
-      .then(
-        (plan) => {
-          if (live) {
-            setUploadPlan(plan)
-            setPlanError(null)
-          }
-        },
-        (err) => {
-          if (live) {
-            setPlanError(errorMessageFrom(err))
-          }
-        },
-      )
+    backend.transfers.planUpload(planRequest).then(
+      (plan) => {
+        if (live) {
+          setResolvedPlan({ request: planRequest, auth, backend })
+          setUploadPlan(plan)
+          setPlanError(null)
+        }
+      },
+      (err) => {
+        if (live) {
+          setResolvedPlan({ request: planRequest, auth, backend })
+          setUploadPlan(null)
+          setPlanError(errorMessageFrom(err))
+        }
+      },
+    )
     return () => {
       live = false
     }
-  }, [backend, pendingPaths, planIncludeVideos, planConflictPolicy, planDestNodeId])
+  }, [backend, pendingPaths, planRequest, auth])
 
   useEffect(() => {
     let mounted = true
@@ -374,6 +391,8 @@ export function App({ backend }: AppProps) {
             pendingPaths={pendingPaths}
             planIncludeVideos={planIncludeVideos}
             planConflictPolicy={planConflictPolicy}
+            planDestNodeId={planDestNodeId}
+            onSetPlanDestNodeId={setPlanDestNodeId}
             uploadPlan={uploadPlan}
             planError={planError}
             onOpenSettings={() => setActiveView("settings")}
@@ -397,6 +416,7 @@ export function App({ backend }: AppProps) {
           <BackupsView
             backend={backend}
             backupRules={backupRules}
+            auth={auth}
             settingsState={settingsState}
             onSetBackupRules={setBackupRules}
             onToggleAllStopped={handleToggleAllBackupsStopped}

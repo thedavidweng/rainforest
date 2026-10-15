@@ -19,7 +19,7 @@ Rainforest's `findRemoteNodeForItem` requires cryptographic content evidence (`M
    - `cand.ContentProperties.MD5` must be non-empty and match the local MD5 case-insensitively.
    - If both local and remote sizes are positive, `cand.ContentProperties.Size` must equal `item.Size`.
    - If a destination parent folder ID is specified and `cand.Parents` is populated, the parent ID must match.
-4. Only when a candidate passes all checks is the local item promoted to `confirmed` with `RemoteNodeID = cand.ID`. If a same-named remote node has a different MD5 or nil `ContentProperties`, the item stays `unconfirmed`.
+4. Only when a candidate passes all checks is the local item promoted to `confirmed` (or `album_pending` for an album destination, awaiting separate membership confirmation) with `RemoteNodeID = cand.ID`. If a same-named remote node has a different MD5 or nil `ContentProperties`, the item stays `unconfirmed`.
 
 ## Preventing Automatic Re-Upload of `unconfirmed` Backup Files
 
@@ -29,8 +29,12 @@ When a backup upload finishes as `unconfirmed`:
 - On the next scheduled or manual `ScanNow`:
   1. `ScanNow` identifies any `tracked_files` entry in `unconfirmed` status as `reconcileOnly`.
   2. Before creating a new upload job, `ScanNow` calls `findRemoteNodeForItem` to check whether the previous upload landed on Amazon Photos.
-  3. If found with matching MD5, `ScanNow` updates both `tracked_files` and the open `TransferItem` to `confirmed` without uploading again.
+  3. If found with matching MD5, `ScanNow` updates both `tracked_files` and the open `TransferItem` to `confirmed` for folders or `album_pending` for albums, without uploading again.
   4. If still unconfirmed and an open `unconfirmed` transfer item exists for that file, `ScanNow` **does not** re-POST the file automatically; it preserves the `unconfirmed` state and reports that the item is awaiting confirmation or manual retry.
+
+## Album Membership and Destination Scope
+
+See [runtime destination validation](runtime-destination-validation.md) for separate upload/membership checkpoints and account-bound task recovery. Target probe and reconciliation query errors block replay rather than authorizing a new upload.
 
 ## Startup Reconciliation Error Visibility
 

@@ -124,6 +124,7 @@ export const mygoBackend: Backend = {
     usage: () => callRequired(Auth.usage(), "usage summary"),
   },
   transfers: {
+    probeDestination: (id) => callRequired(Transfers.probeDestination(id), "destination probe"),
     planUpload: (input) => callRequired(Transfers.planUpload(input), "upload plan"),
     startUpload: (input) => callRequired(Transfers.startUpload(input), "transfer"),
     list: async () => (await call(Transfers.list())) ?? { active: [], history: [] },

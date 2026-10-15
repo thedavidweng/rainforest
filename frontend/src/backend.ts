@@ -109,6 +109,7 @@ export interface Backend {
     usage(): Promise<UsageSummary>
   }
   transfers: {
+    probeDestination(id: string): Promise<DestinationCapabilityDTO>
     planUpload(input: UploadPlanInput): Promise<UploadPlanDTO>
     startUpload(input: StartUploadInput): Promise<TransferDTO>
     list(): Promise<TransferListDTO>

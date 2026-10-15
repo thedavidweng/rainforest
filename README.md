@@ -97,3 +97,5 @@ Organized following the [Diátaxis](https://diataxis.fr/) framework:
 Copyright (C) 2026 Davy Weng and contributors.
 
 Licensed under the **GNU Affero General Public License v3.0 only (`AGPL-3.0-only`)** — see [LICENSE](LICENSE).
+
+Choose existing folder or album targets with [runtime destination validation](docs/how-to/choose-upload-destination.md); regional evidence never restricts upload permissions.

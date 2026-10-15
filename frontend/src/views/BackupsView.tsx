@@ -1,9 +1,11 @@
 import { useState } from "react"
 
-import type { Backend, BackupRuleDTO, SettingsDTO } from "@/backend"
+import type { AuthStatus, Backend, BackupRuleDTO, SettingsDTO } from "@/backend"
 import { errorMessageFrom } from "@/backend"
+import { DestinationProbe } from "./DestinationProbe"
 
 export interface BackupsViewProps {
+  auth: AuthStatus | null
   backend: Backend
   backupRules: BackupRuleDTO[]
   settingsState: SettingsDTO | null
@@ -13,6 +15,7 @@ export interface BackupsViewProps {
 
 export function BackupsView({
   backend,
+  auth,
   backupRules,
   settingsState,
   onSetBackupRules,
@@ -20,6 +23,7 @@ export function BackupsView({
 }: BackupsViewProps) {
   const [backupModalOpen, setBackupModalOpen] = useState(false)
   const [editingBackupRule, setEditingBackupRule] = useState<BackupRuleDTO | null>(null)
+  const [backupDestination, setBackupDestination] = useState("")
   const [backupLocalPath, setBackupLocalPath] = useState("")
   const [backupIncludeVideos, setBackupIncludeVideos] = useState(true)
   const [backupScheduleMode, setBackupScheduleMode] = useState("immediate")
@@ -30,6 +34,7 @@ export function BackupsView({
   const openAddBackupModal = () => {
     setEditingBackupRule(null)
     setBackupLocalPath("")
+    setBackupDestination("")
     setBackupIncludeVideos(true)
     setBackupScheduleMode("immediate")
     setBackupIntervalMinutes(30)
@@ -41,6 +46,7 @@ export function BackupsView({
   const openEditBackupModal = (rule: BackupRuleDTO) => {
     setEditingBackupRule(rule)
     setBackupLocalPath(rule.localPath)
+    setBackupDestination(rule.destinationNodeId ?? "")
     setBackupIncludeVideos(rule.includeVideos)
     setBackupScheduleMode(rule.scheduleMode || "immediate")
     setBackupIntervalMinutes(rule.intervalMinutes || 30)
@@ -65,6 +71,7 @@ export function BackupsView({
     try {
       const input = {
         localPath: backupLocalPath.trim(),
+        destinationNodeId: backupDestination.trim(),
         includeVideos: backupIncludeVideos,
         scheduleMode: backupScheduleMode,
         intervalMinutes: backupIntervalMinutes,
@@ -135,6 +142,17 @@ export function BackupsView({
             </div>
           )}
 
+          <label className="block text-xs text-slate-300">
+            Destination Node ID
+            <input
+              aria-label="Destination Node ID"
+              value={backupDestination}
+              onChange={(e) => setBackupDestination(e.target.value)}
+              placeholder="Leave blank for account root"
+              className="block w-full rounded bg-slate-950 border border-slate-700 px-3 py-2 mt-1"
+            />
+          </label>
+          <DestinationProbe backend={backend} auth={auth} id={backupDestination.trim()} />
           <div className="space-y-3 text-xs">
             <div>
               <label htmlFor="backup-folder-path" className="block text-slate-300 mb-1">
@@ -357,6 +375,8 @@ export function BackupsView({
                 {rule.lastScanAt && <span>Last scan: {rule.lastScanAt}</span>}
               </div>
 
+              <DestinationProbe backend={backend} auth={auth} id={rule.destinationNodeId ?? ""} />
+              {rule.lastError && <p className="text-xs text-rose-300">{rule.lastError}</p>}
               {rule.status === "source_unavailable" && (
                 <div className="rounded bg-amber-950/60 border border-amber-700/60 px-3 py-2 text-xs text-amber-200">
                   External drive or folder is currently offline — cloud files are untouched.

@@ -50,6 +50,11 @@ func (e *Engine) StartUpload(ctx context.Context, req UploadJobRequest) (*store.
 		}
 	}
 
+	destination := e.ProbeDestination(ctx, plan.Destination.DestinationNodeID)
+	if err := destination.requireReadable(); err != nil {
+		return nil, err
+	}
+
 	now := time.Now().UTC()
 	trID := uuid.NewString()
 	items := make([]store.TransferItem, 0, len(plan.Items))
@@ -82,6 +87,9 @@ func (e *Engine) StartUpload(ctx context.Context, req UploadJobRequest) (*store.
 		return nil, err
 	}
 
+	if err := e.bindDestination(ctx, "transfer:"+tr.ID, destination); err != nil {
+		return nil, err
+	}
 	e.emitTransferStage(tr)
 	e.launchUploadWorkers(tr.ID, false)
 	return &tr, nil
@@ -261,7 +269,7 @@ func (e *Engine) RetryTransfer(ctx context.Context, transferID string) (*store.T
 	hasRetryable := false
 	for i := range items {
 		it := &items[i]
-		if it.Status == store.ItemStatusFailed || it.Status == store.ItemStatusCancelled || it.Status == store.ItemStatusUnconfirmed || it.Status == store.ItemStatusQueued {
+		if it.Status == store.ItemStatusAlbumPending || it.Status == store.ItemStatusFailed || it.Status == store.ItemStatusCancelled || it.Status == store.ItemStatusUnconfirmed || it.Status == store.ItemStatusQueued {
 			it.Status = store.ItemStatusQueued
 			it.ErrorMessage = ""
 			it.BytesDone = 0
@@ -340,6 +348,21 @@ func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, c
 		e.emitTransferStage(tr)
 	}
 
+	client := e.Client()
+	destination := e.probeDestination(ctx, client, tr.DestNodeID)
+	probeErr := destination.requireReadable()
+	if probeErr == nil {
+		probeErr = e.bindDestination(ctx, "transfer:"+tr.ID, destination)
+	}
+	if probeErr != nil {
+		tr.Stage = store.StageFailed
+		tr.ErrorMessage = formatErrMsg(probeErr)
+		tr.UpdatedAt = time.Now().UTC()
+		_ = st.UpdateTransfer(context.Background(), tr)
+		e.emitTransferStage(tr)
+		return
+	}
+
 	items, err := st.ListTransferItems(ctx, transferID)
 	if err != nil {
 		return
@@ -373,7 +396,7 @@ func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, c
 				if wErr := ctrl.waitIfPaused(ctx); wErr != nil {
 					return
 				}
-				e.processSingleUploadItem(ctx, st, tr, items[idx], checkRemoteBeforePost)
+				e.processSingleUploadItem(ctx, st, client, destination, tr, items[idx], checkRemoteBeforePost)
 			}
 		}()
 	}
@@ -391,16 +414,22 @@ func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, c
 func (e *Engine) processSingleUploadItem(
 	ctx context.Context,
 	st *store.Store,
+	client *aphotos.Client,
+	destination DestinationCapability,
 	tr store.Transfer,
 	item store.TransferItem,
 	checkRemoteBeforePost bool,
 ) {
-	client := e.Client()
-	if client == nil {
+	if client == nil || client != e.Client() {
 		item.Status = store.ItemStatusFailed
 		item.ErrorMessage = ErrOffline.Error()
 		item.UpdatedAt = time.Now().UTC()
 		_ = st.UpdateTransferItem(context.Background(), item)
+		return
+	}
+
+	if destination.Kind == string(aphotos.NodeKindVisualCollection) && item.RemoteNodeID != "" {
+		e.associateAlbum(ctx, st, client, destination, &item)
 		return
 	}
 
@@ -428,12 +457,23 @@ func (e *Engine) processSingleUploadItem(
 				return
 			}
 		}
-		if existing, fErr := findRemoteNodeForItem(ctx, client, item, tr.DestNodeID); fErr == nil && existing != nil && strings.TrimSpace(existing.ID) != "" {
+		existing, fErr := findRemoteNodeForItem(ctx, client, item, destination.parentID)
+		if fErr != nil {
+			item.Status = store.ItemStatusUnconfirmed
+			item.ErrorMessage = formatErrMsg(fErr)
+			item.UpdatedAt = time.Now().UTC()
+			_ = st.UpdateTransferItem(context.Background(), item)
+			return
+		}
+		if existing != nil && strings.TrimSpace(existing.ID) != "" {
 			item.Status = store.ItemStatusConfirmed
 			item.RemoteNodeID = existing.ID
 			item.BytesDone = item.Size
 			item.ErrorMessage = ""
 			item.UpdatedAt = time.Now().UTC()
+			if destination.Kind == string(aphotos.NodeKindVisualCollection) {
+				e.associateAlbum(ctx, st, client, destination, &item)
+			}
 			_ = st.UpdateTransferItem(context.Background(), item)
 			if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {
 				e.emitTransferProgress(curTr, item)
@@ -448,14 +488,22 @@ func (e *Engine) processSingleUploadItem(
 
 	res, upErr := client.UploadFile(ctx, item.LocalPath, aphotos.UploadOptions{
 		Name:            item.Name,
-		ParentNodeID:    tr.DestNodeID,
-		AutoResolveRoot: strings.TrimSpace(tr.DestNodeID) == "",
+		ParentNodeID:    destination.parentID,
+		AutoResolveRoot: false,
 		ConflictPolicy:  tr.ConflictPolicy,
 		Progress: func(p aphotos.TransferProgress) {
 			item.BytesDone = p.BytesTransferred
 			e.emitTransferProgress(tr, item)
 		},
 	})
+
+	if res != nil && res.Status == aphotos.TransferConfirmed && res.NodeID != "" && destination.Kind == string(aphotos.NodeKindVisualCollection) {
+		item.RemoteNodeID = res.NodeID
+		item.MD5 = res.MD5
+		item.BytesDone = item.Size
+		e.associateAlbum(ctx, st, client, destination, &item)
+		return
+	}
 
 	infoAfter, afterErr := os.Stat(item.LocalPath)
 	if afterErr != nil || infoAfter.Size() != sizeBefore || infoAfter.ModTime().UnixNano() != mtimeBefore {
@@ -476,6 +524,9 @@ func (e *Engine) processSingleUploadItem(
 		item.RemoteNodeID = res.NodeID
 		item.BytesDone = item.Size
 		item.ErrorMessage = ""
+	case res != nil && res.Status == aphotos.TransferSkipped && res.NodeID == "" && destination.Kind == string(aphotos.NodeKindVisualCollection):
+		item.Status = store.ItemStatusUnconfirmed
+		item.ErrorMessage = "Cannot associate album: skipped upload returned no media Node ID."
 	case res != nil && res.Status == aphotos.TransferSkipped:
 		item.Status = store.ItemStatusSkipped
 		item.RemoteNodeID = res.NodeID
@@ -501,6 +552,9 @@ func (e *Engine) processSingleUploadItem(
 		}
 	}
 
+	if destination.Kind == string(aphotos.NodeKindVisualCollection) && item.RemoteNodeID != "" && (item.Status == store.ItemStatusConfirmed || item.Status == store.ItemStatusSkipped) {
+		e.associateAlbum(ctx, st, client, destination, &item)
+	}
 	item.UpdatedAt = time.Now().UTC()
 	_ = st.UpdateTransferItem(context.Background(), item)
 	if curTr, rErr := recomputeAndPersistTransfer(context.Background(), st, tr.ID, ""); rErr == nil {

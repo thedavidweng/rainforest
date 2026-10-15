@@ -2,6 +2,10 @@
 
 This guide shows how to configure, update, pause, and stop one-way folder backup rules in Rainforest.
 
+## Select a Destination
+
+Set **Destination Node ID** when adding or editing a rule; blank means account root. Check its name, type and probe status. Pending configurations may be saved offline, but every scan must validate the target before uploading. See [Choose an upload destination](choose-upload-destination.md).
+
 ## Choose Between Photos-Only and Photos + Videos
 
 Amazon Prime accounts typically include unlimited full-resolution photo storage alongside a fixed video/file storage quota. Per backup rule, you can toggle **Include Videos**:

@@ -46,7 +46,9 @@ export interface BackupRuleInput {
 export interface DestinationCapabilityDTO {
   region: string;
   evidence: string;
-  rootOnly: boolean;
+  name: string;
+  kind: string;
+  status: string;
   destinationNodeId?: string;
   message: string;
 }
@@ -298,6 +300,9 @@ export const Transfers = {
   },
   planUpload(in_: UploadPlanInput): Promise<UploadPlanDTO | null> {
     return call("Transfers.PlanUpload", in_);
+  },
+  probeDestination(id: string): Promise<DestinationCapabilityDTO | null> {
+    return call("Transfers.ProbeDestination", id);
   },
   resume(transferID: string): Promise<TransferDTO | null> {
     return call("Transfers.Resume", transferID);

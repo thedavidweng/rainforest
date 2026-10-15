@@ -73,14 +73,6 @@ func ClassifyMediaFile(name string) (store.MediaType, bool) {
 	return "", false
 }
 
-type DestinationCapability struct {
-	Region            aphotos.Region         `json:"region"`
-	Evidence          aphotos.EvidenceStatus `json:"evidence"`
-	RootOnly          bool                   `json:"rootOnly"`
-	DestinationNodeID string                 `json:"destinationNodeId"`
-	Message           string                 `json:"message"`
-}
-
 type PlanItem struct {
 	LocalPath        string          `json:"localPath"`
 	Name             string          `json:"name"`
@@ -108,44 +100,6 @@ type PlanOptions struct {
 	ConflictPolicy    aphotos.ConflictPolicy
 	IncludeVideos     *bool
 	IncludePreviews   bool
-}
-
-func (e *Engine) resolveDestinationCapability(ctx context.Context, destNodeID string) DestinationCapability {
-	region := aphotos.RegionUS
-	evidence := aphotos.EvidenceExperimental
-
-	if c := e.Client(); c != nil {
-		rc := c.RegionConfig()
-		region = rc.Region
-		evidence = rc.Evidence
-	} else {
-		if st := e.Store(); st != nil {
-			if cfg, err := st.GetSettings(ctx); err == nil && strings.TrimSpace(cfg.Region) != "" {
-				if rc, rErr := aphotos.ResolveRegion(aphotos.Region(strings.ToLower(strings.TrimSpace(cfg.Region)))); rErr == nil {
-					region = rc.Region
-					evidence = rc.Evidence
-				}
-			}
-		}
-	}
-
-	cleanDest := strings.TrimSpace(destNodeID)
-	rootOnly := evidence != aphotos.EvidenceVerified
-	if rootOnly && cleanDest != "" {
-		cleanDest = ""
-	}
-
-	msg := "Verified US region: supports root and folder/album destinations."
-	if rootOnly {
-		msg = fmt.Sprintf("Region %q has experimental protocol status: uploads target the account root node only.", region)
-	}
-	return DestinationCapability{
-		Region:            region,
-		Evidence:          evidence,
-		RootOnly:          rootOnly,
-		DestinationNodeID: cleanDest,
-		Message:           msg,
-	}
 }
 
 func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOptions) (*UploadPlan, error) {
@@ -278,7 +232,7 @@ func (e *Engine) PlanUpload(ctx context.Context, paths []string, opts PlanOption
 		return items[i].LocalPath < items[j].LocalPath
 	})
 
-	destCap := e.resolveDestinationCapability(ctx, opts.DestinationNodeID)
+	destCap := e.ProbeDestination(ctx, opts.DestinationNodeID)
 	summary := summarizePaths(paths, len(items))
 
 	return &UploadPlan{

@@ -161,7 +161,6 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
             type="button"
             disabled={
               recoverySources !== null &&
-              recoverySources.evidence !== "verified" &&
               recoverySources.folders.length === 0 &&
               recoverySources.albums.length === 0
             }

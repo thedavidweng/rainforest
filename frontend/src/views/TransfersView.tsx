@@ -20,6 +20,8 @@ export interface TransfersViewProps {
   transferItemsMap: Record<string, TransferItemDTO[]>
   pendingPaths: string[] | null
   planIncludeVideos: boolean
+  planDestNodeId: string
+  onSetPlanDestNodeId: (id: string) => void
   planConflictPolicy: string
   uploadPlan: UploadPlanDTO | null
   planError: string | null
@@ -45,6 +47,8 @@ export function TransfersView({
   pendingPaths,
   planIncludeVideos,
   planConflictPolicy,
+  planDestNodeId,
+  onSetPlanDestNodeId,
   uploadPlan,
   planError,
   onOpenSettings,
@@ -298,7 +302,7 @@ export function TransfersView({
         </div>
       </section>
 
-      {(uploadPlan || planError) && pendingPaths && (
+      {pendingPaths && (
         <section
           data-testid="upload-plan-modal"
           role="dialog"
@@ -314,11 +318,63 @@ export function TransfersView({
             </span>
           </div>
 
+          <label className="block text-xs text-slate-300">
+            Destination Node ID
+            <input
+              aria-label="Destination Node ID"
+              value={planDestNodeId}
+              onChange={(e) => onSetPlanDestNodeId(e.target.value)}
+              placeholder="Leave blank for account root"
+              className="block w-full rounded bg-slate-950 border border-slate-700 px-3 py-2 mt-1"
+            />
+          </label>
+          {!uploadPlan && !planError && <p className="text-xs">pending — checking destination</p>}
           {planError && (
             <div className="rounded bg-rose-950/60 border border-rose-800 px-3 py-2 text-xs text-rose-200">
               {planError}
             </div>
           )}
+
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Media Filter:</span>
+              <button
+                type="button"
+                onClick={() => onSetPlanIncludeVideos(true)}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  planIncludeVideos ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
+                }`}
+              >
+                Photos + Videos
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetPlanIncludeVideos(false)}
+                className={`px-2.5 py-1 rounded font-medium ${
+                  !planIncludeVideos ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
+                }`}
+              >
+                Photos Only
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="plan-conflict-policy" className="text-slate-400">
+                Conflict Policy:
+              </label>
+              <select
+                id="plan-conflict-policy"
+                aria-label="Conflict Policy"
+                value={planConflictPolicy}
+                onChange={(e) => onSetPlanConflictPolicy(e.target.value)}
+                className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-slate-100"
+              >
+                <option value="skip">skip</option>
+                <option value="rename">rename</option>
+                <option value="fail">fail</option>
+              </select>
+            </div>
+          </div>
 
           {uploadPlan && (
             <>
@@ -351,52 +407,8 @@ export function TransfersView({
 
               <div className="rounded bg-slate-950/80 border border-slate-800 px-3 py-2 text-xs text-slate-300">
                 <span className="font-medium text-slate-200">Destination: </span>
-                {uploadPlan.destination.message}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Media Filter:</span>
-                  <button
-                    type="button"
-                    onClick={() => onSetPlanIncludeVideos(true)}
-                    className={`px-2.5 py-1 rounded font-medium ${
-                      planIncludeVideos
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-800 text-slate-300"
-                    }`}
-                  >
-                    Photos + Videos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onSetPlanIncludeVideos(false)}
-                    className={`px-2.5 py-1 rounded font-medium ${
-                      !planIncludeVideos
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-800 text-slate-300"
-                    }`}
-                  >
-                    Photos Only
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <label htmlFor="plan-conflict-policy" className="text-slate-400">
-                    Conflict Policy:
-                  </label>
-                  <select
-                    id="plan-conflict-policy"
-                    aria-label="Conflict Policy"
-                    value={planConflictPolicy}
-                    onChange={(e) => onSetPlanConflictPolicy(e.target.value)}
-                    className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-slate-100"
-                  >
-                    <option value="skip">skip</option>
-                    <option value="rename">rename</option>
-                    <option value="fail">fail</option>
-                  </select>
-                </div>
+                {uploadPlan.destination.name} · {uploadPlan.destination.kind} ·{" "}
+                {uploadPlan.destination.status}. {uploadPlan.destination.message}
               </div>
 
               <div className="max-h-48 overflow-y-auto space-y-1.5 border border-slate-800 rounded p-2 bg-slate-950/50">
@@ -437,7 +449,11 @@ export function TransfersView({
             </button>
             <button
               type="button"
-              disabled={!uploadPlan || uploadPlan.totalCount === 0}
+              disabled={
+                !uploadPlan ||
+                uploadPlan.totalCount === 0 ||
+                uploadPlan.destination.status !== "readable"
+              }
               onClick={() => void onConfirmUpload()}
               className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-medium text-white"
             >

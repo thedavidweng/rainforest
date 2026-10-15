@@ -68,13 +68,14 @@ func IsTerminalStage(stage TransferStage) bool {
 type ItemStatus string
 
 const (
-	ItemStatusQueued      ItemStatus = "queued"
-	ItemStatusRunning     ItemStatus = "running"
-	ItemStatusConfirmed   ItemStatus = "confirmed"
-	ItemStatusUnconfirmed ItemStatus = "unconfirmed"
-	ItemStatusSkipped     ItemStatus = "skipped"
-	ItemStatusFailed      ItemStatus = "failed"
-	ItemStatusCancelled   ItemStatus = "cancelled"
+	ItemStatusAlbumPending ItemStatus = "album_pending"
+	ItemStatusQueued       ItemStatus = "queued"
+	ItemStatusRunning      ItemStatus = "running"
+	ItemStatusConfirmed    ItemStatus = "confirmed"
+	ItemStatusUnconfirmed  ItemStatus = "unconfirmed"
+	ItemStatusSkipped      ItemStatus = "skipped"
+	ItemStatusFailed       ItemStatus = "failed"
+	ItemStatusCancelled    ItemStatus = "cancelled"
 )
 
 type MediaType string
@@ -229,6 +230,7 @@ func (s *Store) Close() error {
 
 func (s *Store) migrate(ctx context.Context) error {
 	stmts := []string{
+		`CREATE TABLE IF NOT EXISTS destination_bindings (id TEXT PRIMARY KEY, scope TEXT NOT NULL);`,
 		`PRAGMA journal_mode = WAL;`,
 		`PRAGMA synchronous = NORMAL;`,
 		`PRAGMA foreign_keys = ON;`,
@@ -473,7 +475,24 @@ func (s *Store) UpdateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 		}
 	}
 
-	res, err := s.db.ExecContext(ctx, `
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return BackupRule{}, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	var previousDestination, previousPath string
+	if err := tx.QueryRowContext(ctx, `SELECT destination_node_id, local_path FROM backup_rules WHERE id = ?`, rule.ID).Scan(&previousDestination, &previousPath); err != nil {
+		return BackupRule{}, err
+	}
+	if previousDestination != strings.TrimSpace(rule.DestinationNodeID) || previousPath != rule.LocalPath {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM tracked_files WHERE backup_rule_id = ?`, rule.ID); err != nil {
+			return BackupRule{}, err
+		}
+		if _, err := tx.ExecContext(ctx, `DELETE FROM destination_bindings WHERE id = ?`, "backup:"+rule.ID); err != nil {
+			return BackupRule{}, err
+		}
+	}
+	res, err := tx.ExecContext(ctx, `
 		UPDATE backup_rules SET
 			local_path = ?,
 			include_videos = ?,
@@ -507,6 +526,9 @@ func (s *Store) UpdateBackupRule(ctx context.Context, rule BackupRule) (BackupRu
 	n, _ := res.RowsAffected()
 	if n == 0 {
 		return BackupRule{}, ErrNotFound
+	}
+	if err := tx.Commit(); err != nil {
+		return BackupRule{}, err
 	}
 	return s.GetBackupRule(ctx, rule.ID)
 }

@@ -285,7 +285,7 @@ func TestAuthOfflineBootCookieImportUsageAndLogout(t *testing.T) {
 		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes" && strings.Contains(req.URL.Query().Get("filters"), "isRoot:true") {
 			return jsonResponse(http.StatusOK, map[string]any{
 				"count": 1,
-				"data":  []map[string]any{{"id": "root-us-1", "ownerId": "owner-us-1", "kind": "FOLDER"}},
+				"data":  []map[string]any{{"id": "root-us-1", "ownerId": "owner-us-1", "kind": "FOLDER", "status": "AVAILABLE"}},
 			}), nil
 		}
 		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/account/usage" {
@@ -477,13 +477,13 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 			if strings.Contains(f, "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-us", "ownerId": "owner-1", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "root-us", "ownerId": "owner-1", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			if strings.Contains(f, "kind:FOLDER") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "folder-2026", "name": "2026 Trips", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "folder-2026", "name": "2026 Trips", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			if strings.Contains(f, "kind:VISUAL_COLLECTION") {
@@ -537,7 +537,7 @@ func TestFullEndToEndFacadeFlow(t *testing.T) {
 			return jsonResponse(http.StatusCreated, map[string]any{
 				"id":   "probe-folder-1",
 				"name": ".rainforest-doctor-probe",
-				"kind": "FOLDER",
+				"kind": "FOLDER", "status": "AVAILABLE",
 			}), nil
 
 		case req.Method == http.MethodPatch && req.URL.Path == "/drive/v1/trash":
@@ -828,11 +828,14 @@ func TestTransferControlsPickerAndExperimentalRegionCapability(t *testing.T) {
 	failUploads.Store(true)
 
 	rt := roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes/custom-folder-ca" {
+			return jsonResponse(http.StatusOK, map[string]any{"id": "custom-folder-ca", "name": "Photos", "kind": "FOLDER", "status": "AVAILABLE"}), nil
+		}
 		if req.Method == http.MethodGet && req.URL.Path == "/drive/v1/nodes" {
 			if strings.Contains(req.URL.Query().Get("filters"), "isRoot:true") {
 				return jsonResponse(http.StatusOK, map[string]any{
 					"count": 1,
-					"data":  []map[string]any{{"id": "root-ca", "ownerId": "owner-ca", "kind": "FOLDER"}},
+					"data":  []map[string]any{{"id": "root-ca", "ownerId": "owner-ca", "kind": "FOLDER", "status": "AVAILABLE"}},
 				}), nil
 			}
 			return jsonResponse(http.StatusOK, map[string]any{"count": 0, "data": []any{}}), nil
@@ -902,13 +905,13 @@ func TestTransferControlsPickerAndExperimentalRegionCapability(t *testing.T) {
 
 	tr, err := svc.Transfers.StartUpload(ctx, gui.StartUploadInput{
 		Paths:             []string{imgPath},
-		DestinationNodeID: "custom-folder-ignored-in-experimental",
+		DestinationNodeID: "custom-folder-ca",
 	})
 	if err != nil {
 		t.Fatalf("StartUpload: %v", err)
 	}
-	if tr.DestNodeID != "" {
-		t.Errorf("expected empty DestNodeID in experimental region, got %q", tr.DestNodeID)
+	if tr.DestNodeID != "custom-folder-ca" {
+		t.Errorf("expected preserved DestNodeID in experimental region, got %q", tr.DestNodeID)
 	}
 
 	paused, err := svc.Transfers.Pause(ctx, tr.ID)
