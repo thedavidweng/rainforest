@@ -1288,3 +1288,47 @@ func TestDestinationReconnectAndAccountChange(t *testing.T) {
 		t.Fatalf("writes=%d", writes.Load())
 	}
 }
+
+func TestUploadChangedDuringPostRemainsUnconfirmed(t *testing.T) {
+	for _, kind := range []string{"FOLDER", "VISUAL_COLLECTION"} {
+		t.Run(kind, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "photo.png")
+			_, hash := writePNGFile(t, path, 4, 4)
+			var patches atomic.Int32
+			client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+				switch r.Method {
+				case "GET":
+					if r.URL.Path == "/drive/v1/nodes/target" {
+						return jsonResponse(200, map[string]any{"id": "target", "kind": kind, "status": "AVAILABLE"}), nil
+					}
+					return jsonResponse(200, map[string]any{"data": []any{map[string]any{"id": "root", "kind": "FOLDER", "status": "AVAILABLE"}}}), nil
+				case "POST":
+					_, _ = io.Copy(io.Discard, r.Body)
+					if err := os.WriteFile(path, []byte("changed while uploading"), 0o600); err != nil {
+						t.Error(err)
+					}
+					return jsonResponse(201, map[string]any{"id": "media", "kind": "FILE", "contentProperties": map[string]any{"md5": hash}}), nil
+				case "PATCH":
+					patches.Add(1)
+					return jsonResponse(200, map[string]any{}), nil
+				default:
+					t.Errorf("unexpected method %s", r.Method)
+					return jsonResponse(500, nil), nil
+				}
+			}))
+			eng, st := newTestEngine(t, client)
+			tr, err := eng.StartUpload(context.Background(), engine.UploadJobRequest{Paths: []string{path}, DestinationNodeID: "target"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			waitForTransferTerminal(t, eng, tr.ID)
+			items, err := st.ListTransferItems(context.Background(), tr.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if items[0].Status != store.ItemStatusUnconfirmed || !strings.Contains(items[0].ErrorMessage, "modified") || patches.Load() != 0 {
+				t.Fatalf("changed file must remain unconfirmed without album writes: item=%+v patches=%d", items[0], patches.Load())
+			}
+		})
+	}
+}

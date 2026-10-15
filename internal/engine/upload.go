@@ -498,14 +498,6 @@ func (e *Engine) processSingleUploadItem(
 		},
 	})
 
-	if res != nil && res.Status == aphotos.TransferConfirmed && res.NodeID != "" && destination.Kind == string(aphotos.NodeKindVisualCollection) {
-		item.RemoteNodeID = res.NodeID
-		item.MD5 = res.MD5
-		item.BytesDone = item.Size
-		e.associateAlbum(ctx, st, client, destination, &item, tracked)
-		return
-	}
-
 	infoAfter, afterErr := os.Stat(item.LocalPath)
 	if afterErr != nil || infoAfter.Size() != sizeBefore || infoAfter.ModTime().UnixNano() != mtimeBefore {
 		item.Status = store.ItemStatusUnconfirmed

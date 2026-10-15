@@ -6,7 +6,7 @@
 
 ## Core Concepts
 
-- **Rainforest** — The AGPL-3.0-only cross-platform desktop application built on MyGo v0.4.8 and `github.com/thedavidweng/amazon-photos/pkg/aphotos`.
+- **Rainforest** — The AGPL-3.0-only cross-platform desktop application built on MyGo v0.5.1 and `github.com/thedavidweng/amazon-photos/pkg/aphotos`.
 - **Credential Store (`internal/credstore`)** — OS-protected credential adapter (`0600` on Unix, restricted user ACL via `icacls` on Windows) storing canonical browser cookies (`session-id`, `ubid-*`, `at-*`), explicit region, and optional diagnostic host overrides. Never falls back to `.com` on ambiguous regions and scrubs secrets via `aphotos.Redact`.
 - **State Store (`internal/store`)** — Local SQLite database (`modernc.org/sqlite`) persisting application `Settings`, `BackupRule` definitions, `TrackedFile` local inventory, `Transfer` jobs, and `TransferItem` records. Never builds a full remote cloud media index or triggers full-library scans on startup.
 - **Upload Plan (`UploadPlan`)** — Preflight inspection result computed before starting a one-time upload: counts supported photos and videos, calculates total bytes, identifies skipped unsupported files, reports runtime destination readability independently of regional protocol evidence, and optionally generates local preview metadata/thumbnails for small local images.
@@ -20,6 +20,6 @@
 ## Architectural Sources of Truth
 
 - Core engine, SQLite state store, one-way backup & reconciliation architecture: `docs/adr/0001-rainforest-architecture.md`
-- MyGo v0.4.8 desktop shell, generated TypeScript bindings, and frontend `Backend` seam: `docs/adr/0002-mygo-desktop-shell.md`
+- MyGo desktop shell and frontend `Backend` seam: `docs/adr/0002-mygo-desktop-shell.md`; current MyGo v0.5.1 runtime and localization: `docs/adr/0004-web-sign-in-and-native-i18n.md`
 - Domain terms: `GLOSSARY.md`
 - Agent & repository rules: `AGENTS.md`
