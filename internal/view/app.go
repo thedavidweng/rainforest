@@ -92,9 +92,13 @@ func New(svc *gui.Services, opts Options) *App {
 	if update == nil {
 		update = func(fn func()) { fn() }
 	}
+	setLocale := opts.SetLocale
+	if setLocale == nil {
+		setLocale = func(string) {}
+	}
 	icon, _ := ui.DecodeBitmap(opts.Icon)
 	return &App{
-		setLocale: opts.SetLocale,
+		setLocale: setLocale,
 		icon:      icon,
 		svc:       svc,
 		update:    update,

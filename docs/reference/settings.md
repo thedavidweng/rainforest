@@ -29,10 +29,11 @@ Reference for all persistent settings stored in the SQLite `settings` table (`in
 
 ## Interface Language
 
-The native MyGo 0.5 i18n system chooses English (`en`) or Simplified Chinese
-(`zh-Hans`) from the user's system language preferences. This is independent of
-`SettingsDTO.region`, which controls Amazon routing. It is not stored in the
-SQLite settings table. Native views follow locale changes using the same catalogs. Framework menus/dialog strings use MyGo's bundled
+The native MyGo 0.5 i18n system uses the interface language the user selects;
+with `Follow System` it chooses English (`en`) or Simplified Chinese (`zh-Hans`)
+from the system language preferences. MyGo persists this choice; it is
+independent of `SettingsDTO.region`, which controls Amazon routing, and is not
+stored in the SQLite settings table. Native views follow locale changes using the same catalogs. Framework menus/dialog strings use MyGo's bundled
 translations. Protocol error details and remote data are not translated.
 
 For contributors: edit both `locales/*.json` catalogs, run
