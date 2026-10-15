@@ -581,6 +581,33 @@ describe("Runtime destination probe", () => {
       expect((await backend.transfers.list()).active[0]?.destNodeId).toBe("folder-ca"),
     )
   })
+  test("rechecks a pending upload target after reconnecting", async () => {
+    const backend = memoryBackend()
+    const planUpload = backend.transfers.planUpload
+    let connected = false
+    backend.transfers.planUpload = async (input) => {
+      const plan = await planUpload(input)
+      return connected
+        ? plan
+        : {
+            ...plan,
+            destination: { ...plan.destination, status: "pending", message: "Network unavailable" },
+          }
+    }
+    render(<App backend={backend} />)
+    await screen.findByTestId("account-banner")
+    act(() => backend.emitFilesDropped(["/Pictures/photo.jpg"]))
+    await waitFor(() =>
+      expect(screen.getByTestId("upload-plan-modal").textContent).toContain("Network unavailable"),
+    )
+    const confirm = screen.getByRole("button", {
+      name: /confirm & start upload/i,
+    }) as HTMLButtonElement
+    expect(confirm.disabled).toBe(true)
+    connected = true
+    fireEvent.click(screen.getByRole("button", { name: /check destination/i }))
+    await waitFor(() => expect(confirm.disabled).toBe(false))
+  })
   test("invalidates readable targets when the ID or account changes", async () => {
     const backend = memoryBackend({ destinations: { folder: { name: "Folder", kind: "FOLDER" } } })
     render(<App backend={backend} />)

@@ -393,6 +393,7 @@ export function App({ backend }: AppProps) {
             planConflictPolicy={planConflictPolicy}
             planDestNodeId={planDestNodeId}
             onSetPlanDestNodeId={setPlanDestNodeId}
+            onCheckDestination={() => setPendingPaths((paths) => (paths ? [...paths] : null))}
             uploadPlan={uploadPlan}
             planError={planError}
             onOpenSettings={() => setActiveView("settings")}

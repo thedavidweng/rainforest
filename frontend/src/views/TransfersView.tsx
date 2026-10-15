@@ -22,6 +22,7 @@ export interface TransfersViewProps {
   planIncludeVideos: boolean
   planDestNodeId: string
   onSetPlanDestNodeId: (id: string) => void
+  onCheckDestination: () => void
   planConflictPolicy: string
   uploadPlan: UploadPlanDTO | null
   planError: string | null
@@ -49,6 +50,7 @@ export function TransfersView({
   planConflictPolicy,
   planDestNodeId,
   onSetPlanDestNodeId,
+  onCheckDestination,
   uploadPlan,
   planError,
   onOpenSettings,
@@ -328,6 +330,13 @@ export function TransfersView({
               className="block w-full rounded bg-slate-950 border border-slate-700 px-3 py-2 mt-1"
             />
           </label>
+          <button
+            type="button"
+            onClick={onCheckDestination}
+            className="px-2 py-1 rounded bg-slate-800 text-xs"
+          >
+            Check Destination
+          </button>
           {!uploadPlan && !planError && <p className="text-xs">pending — checking destination</p>}
           {planError && (
             <div className="rounded bg-rose-950/60 border border-rose-800 px-3 py-2 text-xs text-rose-200">

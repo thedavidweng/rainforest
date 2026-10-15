@@ -2,7 +2,7 @@
 
 1. In **Transfers / Upload**, select or drop local files. In the confirmation dialog, enter an existing folder or album's exact **Destination Node ID**. Leave it blank to use the current account root.
 2. Check the displayed target name, protocol type, and `pending` / `readable` / `failed` status. Rainforest accepts `AVAILABLE` folders and albums (`VISUAL_COLLECTION`), without creating or browsing a full cloud library.
-3. Start when the target is `readable`. Rainforest checks again before execution. Readability does not prove upload permission or successful album association.
+3. Use **Check Destination** to recheck after reconnecting. Start when the target is `readable`. Rainforest checks again before execution. Readability does not prove upload permission or successful album association.
 
 For automatic backups, open **Backups → Add Backup Folder** or **Edit**, set **Destination Node ID**, and use **Check Destination**. You can save a `pending` configuration while offline or without credentials. A failed or pending probe blocks execution; Rainforest keeps your ID and never silently redirects uploads to root.
 
