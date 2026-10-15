@@ -42,6 +42,7 @@ type App struct {
 	router  *ui.Router
 	toasts  []ui.Toast
 
+	authSeq    int
 	authLoaded bool
 	auth       gui.AuthStatus
 
@@ -113,9 +114,14 @@ func (a *App) Start() {
 }
 
 func (a *App) do(work func(ctx context.Context) func()) {
+	seq := a.authSeq
 	a.spawn(func() {
 		if apply := work(context.Background()); apply != nil {
-			a.update(apply)
+			a.update(func() {
+				if a.authSeq == seq {
+					apply()
+				}
+			})
 		}
 	})
 }
@@ -159,10 +165,26 @@ func (a *App) HandleEvent(name string, data any) {
 
 func (a *App) setAuth(st gui.AuthStatus) {
 	was := a.signedIn()
+	changed := a.auth.Authenticated != st.Authenticated || a.auth.OwnerID != st.OwnerID || a.auth.RootNodeID != st.RootNodeID || a.auth.Region != st.Region
+	if changed {
+		a.authSeq++
+		a.welcomeUI = welcomeState{}
+		a.settingsUI = settingsState{}
+		a.backup = backupState{}
+		a.files = map[string]*filesState{}
+		a.items = map[string]*itemsState{}
+		a.active, a.history, a.transferWarning = nil, nil, ""
+		a.transfersLoaded = false
+		a.rules, a.rulesLoaded = nil, false
+		a.pages = pageState{}
+		a.picker = pickerState{}
+		a.restore = restoreState{}
+		a.recent, a.lastUpload = nil, ""
+	}
 	a.auth = st
 	a.authLoaded = true
 	switch now := a.signedIn(); {
-	case now && !was:
+	case now && (!was || changed):
 		a.usageState = loadIdle
 		a.usage = nil
 		a.probes = map[string]*probeState{}
@@ -177,9 +199,6 @@ func (a *App) setAuth(st gui.AuthStatus) {
 		a.recovery, a.recoveryState = nil, loadIdle
 		a.probes = map[string]*probeState{}
 		a.folders = map[string]*folderState{}
-		a.files = map[string]*filesState{}
-		a.items = map[string]*itemsState{}
-		a.recent, a.lastUpload = nil, ""
 		a.router.Replace("/upload")
 	}
 }

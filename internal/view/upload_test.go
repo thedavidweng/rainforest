@@ -127,3 +127,37 @@ func TestUploadPageShowsRecentActivity(t *testing.T) {
 	h.noText(locales.UploadNothingYet())
 	h.wantText("Holiday")
 }
+
+func TestNewReviewRejectsPreviousPlan(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	first, second := t.TempDir(), t.TempDir()
+	writeJPEGs(t, first, 1)
+	writeJPEGs(t, second, 2)
+	h.app.openUploadReview([]string{first})
+	old := h.queue
+	h.queue = nil
+	h.app.openUploadReview([]string{second})
+	h.drain()
+	for _, fn := range old {
+		fn()
+	}
+	h.drain()
+	if got := h.app.pages.review.plan; got == nil || got.TotalCount != 2 {
+		t.Fatalf("previous review replaced current plan (expected two files)")
+	}
+}
+
+func TestOpeningReviewDefersDirectoryInspection(t *testing.T) {
+	h := newHarness(t, true)
+	h.start()
+	dir := t.TempDir()
+	h.app.openUploadReview([]string{dir})
+	if h.app.pages.review.hasFolder {
+		t.Fatal("directory inspection ran before background work")
+	}
+	h.drain()
+	if !h.app.pages.review.hasFolder {
+		t.Fatal("directory inspection result missing")
+	}
+}

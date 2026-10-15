@@ -168,7 +168,7 @@ func (a *App) pickerFolders(c *ui.Context, m locales.Messages, st *folderState) 
 		switch {
 		case st.listing == nil && st.state == loadFailed:
 			ui.Column(c).Grow(1).Center().Gap(10).Padding(16).Children(func() {
-				ui.Text(c, st.err).TextColor(t.Danger).TextAlign(ui.Center)
+				errorText(c, "", st.err).TextColor(t.Danger).TextAlign(ui.Center)
 				if secondaryButton(c, nil, m.CommonRetry(), false).Clicked() {
 					st.state = loadIdle
 				}
@@ -237,11 +237,7 @@ func (a *App) pickerFooter(c *ui.Context, m locales.Messages, st *folderState) {
 			p.open = false
 		}
 		if primaryButton(c, nil, m.PickerChoose(), st.listing == nil).Clicked() {
-			id := st.listing.ID
-			if len(st.listing.Path) <= 1 {
-				id = ""
-			}
-			a.pickerConfirm(id)
+			a.pickerConfirm(st.listing.ID)
 		}
 	})
 }

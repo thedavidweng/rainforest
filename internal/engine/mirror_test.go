@@ -469,3 +469,32 @@ func TestLocalThumbnailHonorsEXIFOrientationAndRecentUploads(t *testing.T) {
 }
 
 func jsonUnmarshal(raw []byte, v any) error { return json.Unmarshal(raw, v) }
+
+func TestRetryKeepsMissingMirroredParentUnconfirmed(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	drive := newFakeDrive()
+	eng, st := newTestEngine(t, newTestClient(t, aphotos.RegionUS, drive.transport(t)))
+	file := filepath.Join(t.TempDir(), "p.png")
+	size, hash := writePNGFile(t, file, 8, 8)
+	now := time.Now().UTC()
+	_, err := st.CreateTransfer(ctx, store.Transfer{ID: "retry-mirror", Kind: store.TransferKindUpload, Stage: store.StageUnconfirmed, DestNodeID: "dest", CreatedAt: now, UpdatedAt: now}, []store.TransferItem{
+		{ID: "retry-item", LocalPath: file, Name: "p.png", Size: size, MD5: hash, Status: store.ItemStatusUnconfirmed, RemoteDir: "Trips/sub", UpdatedAt: now},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := eng.RetryTransfer(ctx, "retry-mirror"); err != nil {
+		t.Fatal(err)
+	}
+	waitForTransferTerminal(t, eng, "retry-mirror")
+	item, err := st.GetTransferItem(ctx, "retry-item")
+	if err != nil {
+		t.Fatal(err)
+	}
+	drive.mu.Lock()
+	defer drive.mu.Unlock()
+	if item.Status != store.ItemStatusUnconfirmed || drive.creates != 0 || len(drive.uploads) != 0 {
+		t.Fatalf("retry must preserve uncertainty without remote writes: item=%+v creates=%d uploads=%v", item, drive.creates, drive.uploads)
+	}
+}

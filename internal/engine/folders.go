@@ -117,8 +117,11 @@ func remoteDirFromLocalRel(rel string) string {
 
 func findExistingInDestination(ctx context.Context, client *aphotos.Client, d DestinationCapability, item store.TransferItem) (*aphotos.Node, error) {
 	parentID, found, err := d.uploadParent(ctx, item.RemoteDir, false)
-	if err != nil || !found {
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("cannot reconcile upload: destination folder %q is missing", item.RemoteDir)
 	}
 	return findRemoteNodeForItem(ctx, client, item, parentID)
 }
