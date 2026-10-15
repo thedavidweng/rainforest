@@ -1,3 +1,4 @@
+import { messages as m } from "@/locales"
 import { useState } from "react"
 
 import type { AuthStatus, Backend, DoctorReportDTO, SettingsDTO, UsageSummary } from "@/backend"
@@ -50,11 +51,30 @@ export function SettingsView({
   onSetSettingsState,
   onSetGlobalError,
 }: SettingsViewProps) {
+  const [signingIn, setSigningIn] = useState(false)
+  const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [cookieInput, setCookieInput] = useState<string>("")
   const [authFormError, setAuthFormError] = useState<string | null>(null)
   const [settingsSavedMsg, setSettingsSavedMsg] = useState<string | null>(null)
   const [doctorReport, setDoctorReport] = useState<DoctorReportDTO | null>(null)
   const [writeProbeConfirm, setWriteProbeConfirm] = useState<boolean>(false)
+
+  const handleLogin = async () => {
+    setAuthFormError(null)
+    setAuthMessage(null)
+    setSigningIn(true)
+    try {
+      const st = await backend.auth.login(selectedRegion)
+      onSetAuth(st)
+      if (st.region) onSetSelectedRegion(st.region)
+    } catch (err) {
+      if (typeof err === "object" && err !== null && "code" in err && err.code === "INTERRUPTED") {
+        setAuthMessage(m.signInCancelled())
+      } else setAuthFormError(errorMessageFrom(err))
+    } finally {
+      setSigningIn(false)
+    }
+  }
 
   const handleImportPastedCookies = async () => {
     setAuthFormError(null)
@@ -107,7 +127,7 @@ export function SettingsView({
         notificationsEnabled,
       })
       onSetSettingsState(updated)
-      setSettingsSavedMsg("Settings saved.")
+      setSettingsSavedMsg(m.settingsSaved())
     } catch (err) {
       onSetGlobalError(errorMessageFrom(err))
     }
@@ -130,36 +150,41 @@ export function SettingsView({
       <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">Account &amp; Session</h2>
+            <h2 className="text-lg font-semibold text-slate-100">{m.accountAndSession()}</h2>
             <p className="text-xs text-slate-400">
-              Import browser session cookies and choose your explicit Amazon marketplace region.
+              {m.chooseYourAmazonMarketplaceThenSignInOnAmazonSWebsiteYourPasswordAndVerificationCodesStayWithAmazon()}
             </p>
           </div>
           <div className="flex items-center gap-2 text-xs">
             {auth?.authenticated ? (
               <>
                 <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-medium">
-                  Authenticated ({(auth.region || selectedRegion || "us").toUpperCase()} ·{" "}
+                  {m.signedIn()}
+                  {(auth.region || selectedRegion || "us").toUpperCase()} ·{" "}
                   {auth.evidence || "verified"})
                 </span>
                 <button
                   type="button"
+                  disabled={signingIn}
                   onClick={() => void handleLogout()}
                   className="px-3 py-1 rounded bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 font-medium"
                 >
-                  Sign Out
+                  {m.signOut()}
                 </button>
               </>
             ) : (
               <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-medium">
-                Not Authenticated
+                {m.notSignedIn()}
               </span>
             )}
           </div>
         </div>
 
         {authFormError && (
-          <div className="rounded bg-rose-950/60 border border-rose-800 px-3 py-2 text-xs text-rose-200">
+          <div
+            role="alert"
+            className="rounded bg-rose-950/60 border border-rose-800 px-3 py-2 text-xs text-rose-200"
+          >
             {authFormError}
           </div>
         )}
@@ -167,26 +192,71 @@ export function SettingsView({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
             <label htmlFor="settings-region-select" className="block text-slate-300 mb-1">
-              Marketplace Region (Never silent .com)
+              {m.marketplaceRegion()}
             </label>
             <select
+              disabled={signingIn}
               id="settings-region-select"
               aria-label="Marketplace Region"
               value={selectedRegion}
               onChange={(e) => onSetSelectedRegion(e.target.value)}
               className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-100"
             >
-              <option value="">-- Select Region --</option>
+              <option value="">{m.selectRegion()}</option>
               <option value="us">US (amazon.com · verified)</option>
               <option value="ca">CA (amazon.ca · experimental)</option>
               <option value="uk">UK (amazon.co.uk · experimental)</option>
               <option value="jp">JP (amazon.co.jp · experimental)</option>
+              <option value="de">DE (amazon.de · experimental)</option>
+              <option value="fr">FR (amazon.fr · experimental)</option>
+              <option value="it">IT (amazon.it · experimental)</option>
+              <option value="es">ES (amazon.es · experimental)</option>
             </select>
           </div>
 
-          <div className="sm:col-span-2">
-            <label htmlFor="settings-cookie-input" className="block text-slate-300 mb-1">
-              Session Cookies (Raw Cookie Header, Netscape cookies.txt, or JSON)
+          <div className="sm:col-span-2 flex items-end gap-3">
+            {signingIn ? (
+              <>
+                <p role="status" className="text-slate-300">
+                  {m.completeSignInInTheAmazonWindow()}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void backend.auth
+                      .cancelLogin()
+                      .catch((err) => setAuthFormError(errorMessageFrom(err)))
+                  }
+                  className="px-4 py-2 rounded bg-slate-800"
+                >
+                  {m.cancelSignIn()}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={!selectedRegion}
+                onClick={() => void handleLogin()}
+                className="px-4 py-2 rounded bg-emerald-600 text-white disabled:opacity-40"
+              >
+                {m.signInToAmazon()}
+              </button>
+            )}
+          </div>
+        </div>
+        {authMessage && (
+          <p role="status" className="text-xs text-slate-300">
+            {authMessage}
+          </p>
+        )}
+        {auth?.evidence === "experimental" && (
+          <p className="text-xs text-amber-300">{m.experimental()}</p>
+        )}
+        <details className="text-xs text-slate-400">
+          <summary className="cursor-pointer">{m.importSessionCookiesAdvanced()}</summary>
+          <fieldset disabled={signingIn} className="space-y-3 pt-3">
+            <label htmlFor="settings-cookie-input">
+              {m.sessionCookiesRawCookieHeaderNetscapeCookiesTxtOrJson()}
             </label>
             <textarea
               id="settings-cookie-input"
@@ -194,78 +264,70 @@ export function SettingsView({
               rows={2}
               value={cookieInput}
               onChange={(e) => setCookieInput(e.target.value)}
-              placeholder="session-id=...; ubid-main=...; at-main=..."
-              className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-100 font-mono"
+              className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 font-mono"
             />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => void handlePickAndImportCookieFile()}
-            className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700"
-          >
-            Import Cookie File
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleImportPastedCookies()}
-            className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white"
-          >
-            Import Pasted Cookies
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => void handlePickAndImportCookieFile()}
+              className="px-3 py-2 rounded bg-slate-800 mr-2"
+            >
+              {m.importCookieFile()}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleImportPastedCookies()}
+              className="px-3 py-2 rounded bg-slate-800"
+            >
+              {m.importPastedCookies()}
+            </button>
+          </fieldset>
+        </details>
       </section>
 
       <section
         data-testid="settings-storage-usage"
         className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-3"
       >
-        <h2 className="text-lg font-semibold text-slate-100">Storage Usage Breakdown</h2>
+        <h2 className="text-lg font-semibold text-slate-100">{m.storageUsageBreakdown()}</h2>
         {usage ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="rounded bg-slate-950/70 p-3 border border-slate-800">
-              <div className="text-slate-400">Photos</div>
+              <div className="text-slate-400">{m.photos()}</div>
               <div className="text-sm font-semibold text-slate-100">
-                {usage.photo.total.count.toLocaleString("en-US")} items (
-                {formatBytes(usage.photo.total.bytes)})
+                {m.itemCount(usage.photo.total.count, formatBytes(usage.photo.total.bytes))}
               </div>
             </div>
             <div className="rounded bg-slate-950/70 p-3 border border-slate-800">
-              <div className="text-slate-400">Videos</div>
+              <div className="text-slate-400">{m.videos()}</div>
               <div className="text-sm font-semibold text-slate-100">
-                {usage.video.total.count.toLocaleString("en-US")} items (
-                {formatBytes(usage.video.total.bytes)})
+                {m.itemCount(usage.video.total.count, formatBytes(usage.video.total.bytes))}
               </div>
             </div>
             <div className="rounded bg-slate-950/70 p-3 border border-slate-800">
-              <div className="text-slate-400">Total Used</div>
+              <div className="text-slate-400">{m.totalUsed()}</div>
               <div className="text-sm font-semibold text-slate-100">
                 {formatBytes(usage.totalBytes)}
               </div>
             </div>
             <div className="rounded bg-slate-950/70 p-3 border border-slate-800">
-              <div className="text-slate-400">Billable Used</div>
+              <div className="text-slate-400">{m.billableUsed()}</div>
               <div className="text-sm font-semibold text-slate-100">
                 {formatBytes(usage.totalBillableBytes)}
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-xs text-slate-400">
-            Sign in with valid Amazon Photos cookies to view storage usage breakdown.
-          </p>
+          <p className="text-xs text-slate-400">{m.signInToAmazonToViewStorageUsageBreakdown()}</p>
         )}
       </section>
 
       <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-100">Transfer &amp; Desktop Behavior</h2>
+        <h2 className="text-lg font-semibold text-slate-100">{m.transferAndDesktopBehavior()}</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
             <label htmlFor="settings-metadata-concurrency" className="block text-slate-300 mb-1">
-              Metadata Concurrency (1–16)
+              {m.metadataConcurrency116()}
             </label>
             <input
               id="settings-metadata-concurrency"
@@ -281,7 +343,7 @@ export function SettingsView({
 
           <div>
             <label htmlFor="settings-upload-concurrency" className="block text-slate-300 mb-1">
-              Upload Concurrency (1–8)
+              {m.uploadConcurrency18()}
             </label>
             <input
               id="settings-upload-concurrency"
@@ -297,7 +359,7 @@ export function SettingsView({
 
           <div>
             <label htmlFor="settings-default-conflict" className="block text-slate-300 mb-1">
-              Default Conflict Policy
+              {m.defaultConflictPolicy()}
             </label>
             <select
               id="settings-default-conflict"
@@ -306,9 +368,9 @@ export function SettingsView({
               onChange={(e) => onSetDefaultConflictPolicy(e.target.value)}
               className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-100"
             >
-              <option value="skip">skip</option>
-              <option value="rename">rename</option>
-              <option value="fail">fail</option>
+              <option value="skip">{m.skip()}</option>
+              <option value="rename">{m.rename()}</option>
+              <option value="fail">{m.fail()}</option>
             </select>
           </div>
         </div>
@@ -320,7 +382,7 @@ export function SettingsView({
               checked={closeToTray}
               onChange={(e) => onSetCloseToTray(e.target.checked)}
             />
-            <span>Close window to system tray</span>
+            <span>{m.closeWindowToSystemTray()}</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer text-slate-200">
@@ -329,7 +391,7 @@ export function SettingsView({
               checked={launchAtLogin}
               onChange={(e) => onSetLaunchAtLogin(e.target.checked)}
             />
-            <span>Launch at login</span>
+            <span>{m.launchAtLogin()}</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer text-slate-200">
@@ -338,7 +400,7 @@ export function SettingsView({
               checked={notificationsEnabled}
               onChange={(e) => onSetNotificationsEnabled(e.target.checked)}
             />
-            <span>Desktop notifications</span>
+            <span>{m.desktopNotifications()}</span>
           </label>
         </div>
 
@@ -347,25 +409,24 @@ export function SettingsView({
           className="rounded-lg border border-slate-800 bg-slate-950/70 p-3.5 space-y-1.5 text-xs text-slate-300"
         >
           <div className="font-semibold text-slate-200">
-            Desktop Lifecycle &amp; Action Reference:
+            {m.desktopLifecycleAndActionReference()}
           </div>
           <ul className="space-y-1 text-slate-400 list-disc list-inside">
             <li>
-              <strong className="text-slate-200">Pause Task</strong>: Pauses one active upload or
-              download transfer in the queue; other transfers and backups continue.
+              <strong className="text-slate-200">{m.pauseTask()}</strong>
+              {m.pausesOneActiveUploadOrDownloadTransferInTheQueueOtherTransfersAndBackupsContinue()}
             </li>
             <li>
-              <strong className="text-slate-200">Stop Backups</strong>: Halts background folder
-              scans across all configured backup rules until resumed.
+              <strong className="text-slate-200">{m.stopBackups()}</strong>
+              {m.haltsBackgroundFolderScansAcrossAllConfiguredBackupRulesUntilResumed()}
             </li>
             <li>
-              <strong className="text-slate-200">Close Window</strong>: Hides the window to the
-              system tray (when enabled) while active transfers and backups continue running in the
-              background.
+              <strong className="text-slate-200">{m.closeWindow()}</strong>
+              {m.hidesTheWindowToTheSystemTrayWhenEnabledWhileActiveTransfersAndBackupsContinueRunningInTheBackground()}
             </li>
             <li>
-              <strong className="text-slate-200">Quit Rainforest</strong>: Safely stops background
-              workers and exits the application completely.
+              <strong className="text-slate-200">{m.quitRainforest()}</strong>
+              {m.safelyStopsBackgroundWorkersAndExitsTheApplicationCompletely()}
             </li>
           </ul>
         </div>
@@ -377,7 +438,7 @@ export function SettingsView({
             onClick={() => void handleSaveSettings()}
             className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white"
           >
-            Save Settings
+            {m.saveSettings()}
           </button>
         </div>
       </section>
@@ -385,10 +446,9 @@ export function SettingsView({
       <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">Doctor Diagnostics</h2>
+            <h2 className="text-lg font-semibold text-slate-100">{m.doctorDiagnostics()}</h2>
             <p className="text-xs text-slate-400">
-              Graded connectivity, credential vault, region routing, read-probe, and opt-in
-              write-probe diagnostics.
+              {m.gradedConnectivityCredentialVaultRegionRoutingReadProbeAndOptInWriteProbeDiagnostics()}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -398,14 +458,14 @@ export function SettingsView({
                 checked={writeProbeConfirm}
                 onChange={(e) => setWriteProbeConfirm(e.target.checked)}
               />
-              <span>Confirm temporary folder write probe (Grade 5)</span>
+              <span>{m.confirmTemporaryFolderWriteProbeGrade5()}</span>
             </label>
             <button
               type="button"
               onClick={() => void handleRunDoctor()}
               className="px-3.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 border border-slate-700"
             >
-              Run Doctor
+              {m.runDoctor()}
             </button>
           </div>
         </div>
@@ -419,7 +479,8 @@ export function SettingsView({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono font-medium text-slate-200">
-                    [Grade {chk.grade}] {chk.name}
+                    {m.grade()}
+                    {chk.grade}] {chk.name}
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded uppercase font-semibold text-[11px] ${
@@ -436,7 +497,12 @@ export function SettingsView({
                   </span>
                 </div>
                 {chk.message && <p className="text-slate-300">{chk.message}</p>}
-                {chk.hint && <p className="text-amber-300">Hint: {chk.hint}</p>}
+                {chk.hint && (
+                  <p className="text-amber-300">
+                    {m.hint()}
+                    {chk.hint}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -447,12 +513,11 @@ export function SettingsView({
         data-testid="about-disclaimer"
         className="rounded-xl border border-slate-800 bg-slate-900/30 p-4 text-xs text-slate-400 space-y-1"
       >
-        <div className="font-semibold text-slate-300">About Rainforest</div>
+        <div className="font-semibold text-slate-300">{m.aboutRainforest()}</div>
         <p>
-          Rainforest is an independent, unofficial client and is not affiliated with or endorsed by
-          Amazon.com, Inc.
+          {m.rainforestIsAnIndependentUnofficialClientAndIsNotAffiliatedWithOrEndorsedByAmazonComInc()}
         </p>
-        <p>License: AGPL-3.0-only</p>
+        <p>{m.licenseAgpl30Only()}</p>
       </section>
     </div>
   )

@@ -47,3 +47,27 @@ Writes are performed atomically via a temporary `.credentials-*.tmp` file in the
 - `tracked_files`: Per-rule baseline of local relative path, byte size, `mtime_ns`, MD5, remote node ID, and confirmation status.
 - `transfers`: Upload, backup, and download job summaries.
 - `transfer_items`: Individual file records within each transfer.
+
+## Native Web Sign-in
+
+MyGo 0.5.1 exposes the app's WebView Cookie store, including HttpOnly cookies.
+Rainforest opens only HTTPS Amazon marketplace pages in a separate, untrusted
+window: remote pages cannot call its Go services. Password/MFA entry is handled
+by Amazon. Cookie values stay in Go and are never returned through bindings.
+
+The login operation selects only the chosen marketplace's required cookies and
+performs a read-only `GetRoot` probe. It saves credentials after this probe and
+browser cleanup succeed. Cancellation, timeout, and rejection leave the previous
+vault intact. Amazon cookies in Rainforest's WebView store are removed before
+and after each attempt, so account switching starts a fresh browser session.
+This store belongs to Rainforest; it does not clear your normal browser cookies.
+The file vault is protected by permissions, not OS Keychain encryption.
+
+## Native Internationalization
+
+`locales/en.json` and `locales/zh-Hans.json` are MyGo ICU catalogs shared by the
+native shell and React UI. Generated Go/TypeScript accessors come from
+`mygo generate`. The app follows MyGo's OS language selection, and reacts to
+`mygo:locale` updates without recreating services or changing the marketplace.
+Backend protocol identifiers, remote names, and diagnostic details retain their
+original values. Language does not alter region evidence or destination status.

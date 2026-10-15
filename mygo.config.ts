@@ -9,6 +9,7 @@ export default {
   devUrl: "http://localhost:5173",
   buildCommand: "bun run --cwd frontend build",
   frontendDist: "frontend/dist",
+  i18n: { dir: "locales", source: "en" },
   bindings: "frontend/src/mygo.ts",
   updates: {
     github: "thedavidweng/rainforest",

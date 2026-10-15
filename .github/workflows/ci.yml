@@ -81,7 +81,7 @@ jobs:
           go test ./...
           go test -race ./...
       - name: Package desktop build via MyGo (dry run)
-        run: bunx mygo build -platform "${{ matrix.platform }}" -skip-dmg -skip-notarize -o dist
+        run: bun frontend/node_modules/mygo-cli/bin/mygo.js build -platform "${{ matrix.platform }}" -skip-dmg -skip-notarize -o dist
       - name: Verify packaged artifacts and SHA-256
         env:
           ARCHIVE_NAME: ${{ matrix.archive_name }}

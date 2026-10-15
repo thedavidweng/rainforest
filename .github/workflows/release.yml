@@ -113,7 +113,7 @@ jobs:
           else
             FLAGS+=(-skip-dmg -skip-notarize)
           fi
-          bunx mygo build "${FLAGS[@]}"
+          bun frontend/node_modules/mygo-cli/bin/mygo.js build "${FLAGS[@]}"
           if [[ -n "${MYGO_UPDATER_PRIVATE_KEY:-}" ]]; then
             manifest="dist/${DIR_NAME}/update-${DIR_NAME}.json"
             test -s "$manifest"

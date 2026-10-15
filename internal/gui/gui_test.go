@@ -233,13 +233,6 @@ func TestTrayTrackerAndQuitLifecycleDecisions(t *testing.T) {
 	if got := gui.DecideQuit(1, 1, true); got != gui.QuitPromptConfirm {
 		t.Errorf("DecideQuit(1, 1, true) = %v, want QuitPromptConfirm", got)
 	}
-
-	msg := gui.QuitMessage(2, 1, true)
-	for _, phrase := range []string{"Pause Task", "Stop Backups", "Close Window to Tray", "Quit Rainforest"} {
-		if !containsString(msg, phrase) {
-			t.Errorf("QuitMessage(%d, %d, true) = %q, missing %q", 2, 1, msg, phrase)
-		}
-	}
 }
 
 type roundTripFunc func(req *http.Request) (*http.Response, error)

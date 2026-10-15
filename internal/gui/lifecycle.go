@@ -123,32 +123,3 @@ func DecideQuit(activeTransfers, activeBackups int, closeToTray bool) QuitDecisi
 	}
 	return QuitImmediately
 }
-
-func QuitMessage(activeTransfers, activeBackups int, closeToTray bool) string {
-	var head string
-	switch {
-	case activeTransfers == 1 && activeBackups > 0:
-		head = fmt.Sprintf("1 transfer is currently running and %d backup folder rule(s) are enabled.", activeBackups)
-	case activeTransfers > 1 && activeBackups > 0:
-		head = fmt.Sprintf("%d transfers are currently running and %d backup folder rule(s) are enabled.", activeTransfers, activeBackups)
-	case activeTransfers == 1:
-		head = "1 transfer is currently running."
-	case activeTransfers > 1:
-		head = fmt.Sprintf("%d transfers are currently running.", activeTransfers)
-	case activeBackups > 0:
-		head = fmt.Sprintf("%d backup folder rule(s) are enabled.", activeBackups)
-	default:
-		head = "No transfers are currently running."
-	}
-
-	trayNote := "Close Window to Tray keeps Rainforest running in the system tray."
-	if !closeToTray {
-		trayNote = "Close Window to Tray can be enabled in Settings to keep Rainforest running in the background."
-	}
-
-	return fmt.Sprintf(
-		"%s Choose Pause Task to pause a single transfer, Stop Backups to suspend background folder scans, %s, or Quit Rainforest to exit the application and interrupt active transfers.",
-		head,
-		trayNote,
-	)
-}

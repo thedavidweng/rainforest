@@ -315,6 +315,9 @@ export class MemoryBackend implements Backend {
   }
 
   readonly auth: Backend["auth"] = {
+    login: async (region) =>
+      this.auth.importCookies({ rawCookies: "session-id=mock-browser-session", region }),
+    cancelLogin: async () => {},
     status: async () => ({ ...this.authState }),
 
     importCookies: async (input: ImportCookiesInput) => {
@@ -1341,6 +1344,8 @@ export function failingBackend(err: BackendError): Backend {
   const fail = (): Promise<never> => Promise.reject(err)
   return {
     auth: {
+      login: fail,
+      cancelLogin: fail,
       status: fail,
       importCookies: fail,
       importCookieFile: fail,

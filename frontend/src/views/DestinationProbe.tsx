@@ -1,3 +1,4 @@
+import { messages as m } from "@/locales"
 import { useEffect, useMemo, useState } from "react"
 
 import type { AuthStatus, Backend, DestinationCapabilityDTO } from "@/backend"
@@ -38,7 +39,8 @@ export function DestinationProbe({
   return (
     <div className="text-xs text-slate-300 space-y-1">
       <p>
-        Destination: {probe?.name || id || "Account root"} · {probe?.kind} ·{" "}
+        {m.destination()}
+        {probe?.name || id || "Account root"} · {probe?.kind} ·{" "}
         {error ? "failed" : probe?.status || "pending"}
       </p>
       <p>{error || probe?.message}</p>
@@ -47,7 +49,7 @@ export function DestinationProbe({
         className="px-2 py-1 rounded bg-slate-800"
         onClick={() => setRevision(revision + 1)}
       >
-        Check Destination
+        {m.checkDestination()}
       </button>
     </div>
   )

@@ -24,6 +24,7 @@ type Options struct {
 	Emitter         Emitter
 	Picker          FilePicker
 	LaunchAtLoginFn func(enabled bool) error
+	BrowserLogin    func(context.Context, aphotos.RegionConfig, func(map[string]string) error) error
 }
 
 type FilePicker interface {
@@ -162,6 +163,7 @@ func (s *Services) Close() {
 	if s == nil || s.state == nil {
 		return
 	}
+	s.Auth.CancelLogin()
 	s.state.close()
 }
 

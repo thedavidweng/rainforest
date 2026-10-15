@@ -114,6 +114,8 @@ function safeSubscribe<T>(
 
 export const mygoBackend: Backend = {
   auth: {
+    login: (region) => callRequired(Auth.login(region), "auth status"),
+    cancelLogin: () => call(Auth.cancelLogin()),
     status: () => callRequired(Auth.status(), "auth status"),
     importCookies: (input) => callRequired(Auth.importCookies(input), "auth status"),
     importCookieFile: (path, region) =>

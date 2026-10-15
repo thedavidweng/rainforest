@@ -256,11 +256,17 @@ export interface UsageSummary {
 // ---- Services ----
 
 export const Auth = {
+  cancelLogin(): Promise<void> {
+    return call("Auth.CancelLogin");
+  },
   importCookieFile(path: string, region: string): Promise<AuthStatus | null> {
     return call("Auth.ImportCookieFile", path, region);
   },
   importCookies(in_: ImportCookiesInput): Promise<AuthStatus | null> {
     return call("Auth.ImportCookies", in_);
+  },
+  login(region: string): Promise<AuthStatus | null> {
+    return call("Auth.Login", region);
   },
   logout(): Promise<AuthStatus | null> {
     return call("Auth.Logout");

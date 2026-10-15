@@ -51,7 +51,7 @@ run = '''
 for f in CLAUDE.md .cursorrules .windsurfrules .clinerules GEMINI.md; do
   if [ -e "$f" ]; then echo "forbidden per-tool agent file: $f (use AGENTS.md)"; exit 1; fi
 done
-files=$(find . -path './frontend' -prune -o -path './.git' -prune -o -name '*.go' ! -name '*_test.go' -print)
+files=$(find . -path './frontend' -prune -o -path './.git' -prune -o -name '*.go' ! -name '*_test.go' ! -name '*_gen.go' -print)
 if [ -n "$files" ]; then
   total=$(cat $files | grep -cv '^[[:space:]]*$')
   comments=$(cat $files | grep -E '^[[:space:]]*//' | grep -cvE '^[[:space:]]*//(go:|nolint)' || true)
@@ -63,10 +63,16 @@ fi
 
 [tasks.bindings-check]
 run = '''
-tmp=$(mktemp)
-trap 'rm -f "$tmp"' EXIT
-MYGO_GENERATE="$tmp" go run .
-diff -u frontend/src/mygo.ts "$tmp"
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
+cp frontend/src/mygo.ts "$tmp_dir/mygo.ts"
+cp frontend/src/locales.ts "$tmp_dir/locales.ts"
+cp locales/catalog_gen.go "$tmp_dir/catalog_gen.go"
+bun frontend/node_modules/mygo-cli/bin/mygo.js i18n check
+bun frontend/node_modules/mygo-cli/bin/mygo.js generate
+diff -u "$tmp_dir/mygo.ts" frontend/src/mygo.ts
+diff -u "$tmp_dir/locales.ts" frontend/src/locales.ts
+diff -u "$tmp_dir/catalog_gen.go" locales/catalog_gen.go
 '''
 
 [tasks.frontend-check]

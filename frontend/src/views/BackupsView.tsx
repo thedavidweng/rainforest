@@ -1,3 +1,4 @@
+import { messages as m } from "@/locales"
 import { useState } from "react"
 
 import type { AuthStatus, Backend, BackupRuleDTO, SettingsDTO } from "@/backend"
@@ -97,15 +98,14 @@ export function BackupsView({
         data-testid="one-way-backup-banner"
         className="rounded-lg border border-emerald-500/30 bg-emerald-950/20 p-4 text-xs text-emerald-200"
       >
-        One-way incremental backup: deleting, moving, or renaming local files never deletes your
-        Amazon Photos cloud copies.
+        {m.oneWayIncrementalBackupDeletingMovingOrRenamingLocalFilesNeverDeletesYourAmazonPhotosCloudCopies()}
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-100">Automatic Folder Backups</h2>
+          <h2 className="text-lg font-semibold text-slate-100">{m.automaticFolderBackups()}</h2>
           <p className="text-xs text-slate-400">
-            Configured local folders are scanned incrementally while Rainforest is running.
+            {m.configuredLocalFoldersAreScannedIncrementallyWhileRainforestIsRunning()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -121,7 +121,7 @@ export function BackupsView({
             onClick={openAddBackupModal}
             className="px-3.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white"
           >
-            Add Backup Folder
+            {m.addBackupFolder()}
           </button>
         </div>
       </div>
@@ -143,7 +143,7 @@ export function BackupsView({
           )}
 
           <label className="block text-xs text-slate-300">
-            Destination Node ID
+            {m.destinationNodeId()}
             <input
               aria-label="Destination Node ID"
               value={backupDestination}
@@ -156,7 +156,7 @@ export function BackupsView({
           <div className="space-y-3 text-xs">
             <div>
               <label htmlFor="backup-folder-path" className="block text-slate-300 mb-1">
-                Local Folder Path
+                {m.localFolderPath()}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -173,14 +173,14 @@ export function BackupsView({
                   onClick={() => void handlePickBackupFolder()}
                   className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium border border-slate-700"
                 >
-                  Pick Folder
+                  {m.pickFolder()}
                 </button>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">Media Types:</span>
+                <span className="text-slate-400">{m.mediaTypes()}</span>
                 <button
                   type="button"
                   onClick={() => setBackupIncludeVideos(true)}
@@ -190,7 +190,7 @@ export function BackupsView({
                       : "bg-slate-800 text-slate-300"
                   }`}
                 >
-                  Photos + Videos
+                  {m.photosVideos()}
                 </button>
                 <button
                   type="button"
@@ -201,12 +201,12 @@ export function BackupsView({
                       : "bg-slate-800 text-slate-300"
                   }`}
                 >
-                  Photos Only
+                  {m.photosOnly()}
                 </button>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">Schedule:</span>
+                <span className="text-slate-400">{m.schedule()}</span>
                 <button
                   type="button"
                   onClick={() => setBackupScheduleMode("immediate")}
@@ -216,7 +216,7 @@ export function BackupsView({
                       : "bg-slate-800 text-slate-300"
                   }`}
                 >
-                  Immediate + Periodic
+                  {m.immediatePeriodic()}
                 </button>
                 <button
                   type="button"
@@ -227,7 +227,7 @@ export function BackupsView({
                       : "bg-slate-800 text-slate-300"
                   }`}
                 >
-                  Scheduled Interval
+                  {m.scheduledInterval()}
                 </button>
               </div>
             </div>
@@ -235,7 +235,7 @@ export function BackupsView({
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <label htmlFor="backup-interval-minutes" className="text-slate-400">
-                  Interval (minutes):
+                  {m.intervalMinutes()}
                 </label>
                 <input
                   id="backup-interval-minutes"
@@ -250,7 +250,7 @@ export function BackupsView({
 
               <div className="flex items-center gap-2">
                 <label htmlFor="backup-conflict-policy" className="text-slate-400">
-                  Conflict Policy:
+                  {m.conflictPolicy()}
                 </label>
                 <select
                   id="backup-conflict-policy"
@@ -259,8 +259,8 @@ export function BackupsView({
                   onChange={(e) => setBackupConflictPolicy(e.target.value)}
                   className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-slate-100"
                 >
-                  <option value="skip">skip</option>
-                  <option value="rename">rename</option>
+                  <option value="skip">{m.skip()}</option>
+                  <option value="rename">{m.rename()}</option>
                 </select>
               </div>
             </div>
@@ -275,14 +275,14 @@ export function BackupsView({
               }}
               className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300"
             >
-              Cancel
+              {m.cancel()}
             </button>
             <button
               type="button"
               onClick={() => void handleSaveBackupRule()}
               className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white"
             >
-              Save Backup Rule
+              {m.saveBackupRule()}
             </button>
           </div>
         </section>
@@ -291,8 +291,7 @@ export function BackupsView({
       <section className="space-y-3">
         {backupRules.length === 0 ? (
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-500">
-            No backup folders configured. Click &quot;Add Backup Folder&quot; to start one-way
-            automatic backup.
+            {m.noBackupFoldersConfiguredClickQuotAddBackupFolderQuotToStartOneWayAutomaticBackup()}
           </div>
         ) : (
           backupRules.map((rule) => (
@@ -325,7 +324,7 @@ export function BackupsView({
                     onClick={() => void backend.backups.scanNow(rule.id)}
                     className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200"
                   >
-                    Scan Now
+                    {m.scanNow()}
                   </button>
                   {rule.paused ? (
                     <button
@@ -333,7 +332,7 @@ export function BackupsView({
                       onClick={() => void backend.backups.resume(rule.id)}
                       className="px-2.5 py-1 rounded bg-emerald-600/30 hover:bg-emerald-600/40 text-xs font-medium text-emerald-200"
                     >
-                      Resume
+                      {m.resume()}
                     </button>
                   ) : (
                     <button
@@ -341,7 +340,7 @@ export function BackupsView({
                       onClick={() => void backend.backups.pause(rule.id)}
                       className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200"
                     >
-                      Pause
+                      {m.pause()}
                     </button>
                   )}
                   <button
@@ -349,7 +348,7 @@ export function BackupsView({
                     onClick={() => openEditBackupModal(rule)}
                     className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300"
                   >
-                    Edit
+                    {m.edit()}
                   </button>
                   <button
                     type="button"
@@ -361,7 +360,7 @@ export function BackupsView({
                     }
                     className="px-2.5 py-1 rounded bg-rose-600/20 hover:bg-rose-600/30 text-xs font-medium text-rose-300"
                   >
-                    Remove
+                    {m.remove()}
                   </button>
                 </div>
               </div>
@@ -369,17 +368,26 @@ export function BackupsView({
               <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                 <span>{rule.includeVideos ? "Photos + Videos" : "Photos Only"}</span>
                 <span>
-                  Schedule: {rule.scheduleMode} ({rule.intervalMinutes}m)
+                  {m.schedule()}
+                  {rule.scheduleMode} ({rule.intervalMinutes}m)
                 </span>
-                <span>Conflict: {rule.conflictPolicy}</span>
-                {rule.lastScanAt && <span>Last scan: {rule.lastScanAt}</span>}
+                <span>
+                  {m.conflict()}
+                  {rule.conflictPolicy}
+                </span>
+                {rule.lastScanAt && (
+                  <span>
+                    {m.lastScan()}
+                    {rule.lastScanAt}
+                  </span>
+                )}
               </div>
 
               <DestinationProbe backend={backend} auth={auth} id={rule.destinationNodeId ?? ""} />
               {rule.lastError && <p className="text-xs text-rose-300">{rule.lastError}</p>}
               {rule.status === "source_unavailable" && (
                 <div className="rounded bg-amber-950/60 border border-amber-700/60 px-3 py-2 text-xs text-amber-200">
-                  External drive or folder is currently offline — cloud files are untouched.
+                  {m.externalDriveOrFolderIsCurrentlyOfflineCloudFilesAreUntouched()}
                 </div>
               )}
             </div>

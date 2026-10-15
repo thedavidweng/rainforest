@@ -12,6 +12,7 @@ import (
 	"github.com/thedavidweng/rainforest/internal/autostart"
 	"github.com/thedavidweng/rainforest/internal/credstore"
 	"github.com/thedavidweng/rainforest/internal/gui"
+	"github.com/thedavidweng/rainforest/locales"
 )
 
 var version = "0.1.0"
@@ -67,7 +68,7 @@ func setupDesktop(svc *gui.Services) {
 	primaryDir, _ := mygo.App.Path(mygo.PathUserData)
 	userDataDir, err := resolveDesktopDataDir(primaryDir)
 	if err != nil {
-		mygo.Dialog.Error("Rainforest Storage Error", err.Error())
+		mygo.Dialog.Error(locales.StorageError(), err.Error())
 		mygo.App.Exit(1)
 		return
 	}
@@ -80,11 +81,12 @@ func setupDesktop(svc *gui.Services) {
 	if _, err := svc.Init(gui.Options{
 		DBPath:          filepath.Join(userDataDir, "rainforest.db"),
 		VaultPath:       filepath.Join(userDataDir, "credentials.json"),
+		BrowserLogin:    browserLogin,
 		Emitter:         shell.handleEvent,
 		Picker:          newFilePicker(),
 		LaunchAtLoginFn: autostartMgr.SetEnabled,
 	}); err != nil {
-		mygo.Dialog.Error("Rainforest Startup Error", err.Error())
+		mygo.Dialog.Error(locales.StartupError(), err.Error())
 		mygo.App.Exit(1)
 		return
 	}
@@ -99,6 +101,7 @@ func setupDesktop(svc *gui.Services) {
 		StateKey:  "main",
 	})
 	shell.win = win
+	mygo.App.OnLocaleChanged(func(_ string) { shell.rebuildTrayMenu() })
 
 	win.OnFileDrop(func(e *mygo.FileDropEvent) {
 		if e == nil || len(e.Paths) == 0 {
@@ -226,14 +229,14 @@ func (d *desktopShell) rebuildTrayMenu() {
 			items = append(items, mygo.Separator())
 		case gui.TrayActionShow:
 			items = append(items, &mygo.MenuItem{
-				Label: row.Label,
+				Label: locales.ShowRainforest(),
 				Click: func(_ *mygo.MenuItem, _ *mygo.Window) {
 					d.showWindow()
 				},
 			})
 		case gui.TrayActionQuit:
 			items = append(items, &mygo.MenuItem{
-				Label: row.Label,
+				Label: locales.QuitRainforest(),
 				Click: func(_ *mygo.MenuItem, _ *mygo.Window) {
 					go d.requestQuit()
 				},
@@ -300,9 +303,9 @@ func (d *desktopShell) requestQuit() {
 	res, err := mygo.Dialog.Message(mygo.MessageOptions{
 		Parent:        d.win,
 		Type:          mygo.MessageQuestion,
-		Title:         "Quit Rainforest?",
-		Message:       gui.QuitMessage(activeTransfers, activeBackups, closeToTray),
-		Buttons:       []string{"Keep Running", "Quit Rainforest"},
+		Title:         locales.QuitTitle(),
+		Message:       locales.QuitMessage(activeTransfers, activeBackups),
+		Buttons:       []string{locales.KeepRunning(), locales.QuitRainforest()},
 		DefaultButton: 0,
 		CancelButton:  0,
 	})
@@ -333,11 +336,11 @@ func (nativeFilePicker) PickCookieFile(ctx context.Context) (string, error) {
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
 		Parent:   mygo.CallerWindow(ctx),
-		Title:    "Select Amazon Photos Cookie File",
+		Title:    locales.SelectCookieFile(),
 		Multiple: false,
 		Filters: []mygo.FileFilter{
-			{Name: "Cookie Files", Extensions: []string{"txt", "json"}},
-			{Name: "All Files", Extensions: []string{"*"}},
+			{Name: locales.CookieFiles(), Extensions: []string{"txt", "json"}},
+			{Name: locales.AllFiles(), Extensions: []string{"*"}},
 		},
 	})
 	if err != nil || len(paths) == 0 {
@@ -355,7 +358,7 @@ func (nativeFilePicker) PickFiles(ctx context.Context) ([]string, error) {
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
 		Parent:   mygo.CallerWindow(ctx),
-		Title:    "Select Photos and Videos to Upload",
+		Title:    locales.SelectUploadFiles(),
 		Multiple: true,
 	})
 	if err != nil || len(paths) == 0 {
@@ -368,8 +371,16 @@ func (nativeFilePicker) PickDirectory(ctx context.Context, title string) (string
 	if v, ok := os.LookupEnv("RAINFOREST_PICK_DIR"); ok {
 		return strings.TrimSpace(v), nil
 	}
+	switch title {
+	case "Select Folder to Upload":
+		title = locales.SelectUploadFolder()
+	case "Select Folder to Back Up":
+		title = locales.SelectBackupFolder()
+	case "Select Download Destination Directory":
+		title = locales.SelectDownloadFolder()
+	}
 	if strings.TrimSpace(title) == "" {
-		title = "Select Folder"
+		title = locales.SelectFolder()
 	}
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
 		Parent:            mygo.CallerWindow(ctx),

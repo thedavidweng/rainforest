@@ -1,3 +1,4 @@
+import { messages as m } from "@/locales"
 import { useEffect, useState } from "react"
 
 import type {
@@ -103,10 +104,9 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
   return (
     <div data-testid="downloads-view" className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-100">Recovery Download (Secondary)</h2>
+        <h2 className="text-lg font-semibold text-slate-100">{m.recoveryDownloadSecondary()}</h2>
         <p className="text-xs text-slate-400">
-          Restore original files from confirmed transfer records, verified albums/folders, or
-          explicit remote node IDs.
+          {m.restoreOriginalFilesFromConfirmedTransferRecordsVerifiedAlbumsFoldersOrExplicitRemoteNodeIds()}
         </p>
       </div>
 
@@ -115,7 +115,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
         className="rounded-lg border border-slate-800 bg-slate-900/70 p-4 space-y-2"
       >
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-medium text-slate-300">Region Capability:</span>
+          <span className="font-medium text-slate-300">{m.regionCapability()}</span>
           <span className="px-2 py-0.5 rounded bg-slate-800 font-mono uppercase text-slate-200">
             {(recoverySources?.region || auth?.region || "us").toUpperCase()}
           </span>
@@ -155,7 +155,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
                 : "bg-slate-800 text-slate-300"
             }`}
           >
-            Confirmed Transfer History
+            {m.confirmedTransferHistory()}
           </button>
           <button
             type="button"
@@ -171,7 +171,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
                 : "bg-slate-800 text-slate-300"
             }`}
           >
-            Remote Albums / Folders
+            {m.remoteAlbumsFolders()}
           </button>
           <button
             type="button"
@@ -180,18 +180,18 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
               recoveryMode === "nodes" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"
             }`}
           >
-            Explicit Remote Node IDs
+            {m.explicitRemoteNodeIds()}
           </button>
         </div>
 
         {recoveryMode === "history" && (
           <div className="space-y-2">
             <div className="text-xs text-slate-400">
-              Select confirmed uploaded files to download and verify:
+              {m.selectConfirmedUploadedFilesToDownloadAndVerify()}
             </div>
             {(recoverySources?.confirmedItems ?? []).length === 0 ? (
               <div className="text-xs text-slate-500 py-2">
-                No confirmed transfer history items available yet.
+                {m.noConfirmedTransferHistoryItemsAvailableYet()}
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -230,7 +230,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
         {recoveryMode === "container" && (
           <div className="space-y-2 text-xs">
             <label htmlFor="recovery-container-select" className="block text-slate-300">
-              Select Remote Folder or Album
+              {m.selectRemoteFolderOrAlbum()}
             </label>
             <select
               id="recovery-container-select"
@@ -239,15 +239,17 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
               onChange={(e) => setSelectedContainerId(e.target.value)}
               className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-100"
             >
-              <option value="">-- Choose an album or folder --</option>
+              <option value="">{m.chooseAnAlbumOrFolder()}</option>
               {(recoverySources?.folders ?? []).map((f) => (
                 <option key={f.id} value={f.id}>
-                  [Folder] {f.name} ({f.id})
+                  {m.folder()}
+                  {f.name} ({f.id})
                 </option>
               ))}
               {(recoverySources?.albums ?? []).map((a) => (
                 <option key={a.id} value={a.id}>
-                  [Album] {a.name} ({a.id})
+                  {m.album()}
+                  {a.name} ({a.id})
                 </option>
               ))}
             </select>
@@ -257,7 +259,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
         {recoveryMode === "nodes" && (
           <div className="space-y-2 text-xs">
             <label htmlFor="recovery-node-ids" className="block text-slate-300">
-              Remote Node IDs (comma or space separated)
+              {m.remoteNodeIdsCommaOrSpaceSeparated()}
             </label>
             <input
               id="recovery-node-ids"
@@ -274,7 +276,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
           <div className="sm:col-span-2">
             <label htmlFor="download-target-dir" className="block text-slate-300 mb-1">
-              Target Local Directory
+              {m.targetLocalDirectory()}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -291,14 +293,14 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
                 onClick={() => void handlePickDownloadDir()}
                 className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium border border-slate-700"
               >
-                Pick Directory
+                {m.pickDirectory()}
               </button>
             </div>
           </div>
 
           <div>
             <label htmlFor="download-conflict-policy" className="block text-slate-300 mb-1">
-              Conflict Policy
+              {m.conflictPolicyLabel()}
             </label>
             <select
               id="download-conflict-policy"
@@ -307,9 +309,9 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
               onChange={(e) => setDownloadConflictPolicy(e.target.value)}
               className="w-full rounded bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-100"
             >
-              <option value="skip">skip</option>
-              <option value="rename">rename</option>
-              <option value="fail">fail</option>
+              <option value="skip">{m.skip()}</option>
+              <option value="rename">{m.rename()}</option>
+              <option value="fail">{m.fail()}</option>
             </select>
           </div>
         </div>
@@ -320,7 +322,7 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
             onClick={() => void handleStartRecoveryDownload()}
             className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white"
           >
-            Start Recovery Download
+            {m.startRecoveryDownload()}
           </button>
         </div>
       </section>
@@ -332,11 +334,12 @@ export function DownloadsView({ backend, auth, onRefreshTransfers }: DownloadsVi
         >
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-emerald-300">
-              Recovery Transfer: {latestDownloadTransfer.sourceSummary} (
-              {latestDownloadTransfer.stage})
+              {m.recoveryTransfer()}
+              {latestDownloadTransfer.sourceSummary} ({latestDownloadTransfer.stage})
             </span>
             <span className="text-slate-400">
-              Destination: {latestDownloadTransfer.destLocalDir}
+              {m.destination()}
+              {latestDownloadTransfer.destLocalDir}
             </span>
           </div>
           <div className="space-y-1.5">

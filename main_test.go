@@ -198,7 +198,7 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 	release := contents[".github/workflows/release.yml"]
 	for _, snippet := range []string{
 		"v*",
-		"mygo build",
+		"bun frontend/node_modules/mygo-cli/bin/mygo.js build",
 		"sha256",
 		"darwin",
 		"linux",

@@ -102,6 +102,8 @@ export function isTerminalStage(stage: string): boolean {
 export interface Backend {
   auth: {
     status(): Promise<AuthStatus>
+    login(region: string): Promise<AuthStatus>
+    cancelLogin(): Promise<void>
     importCookies(input: ImportCookiesInput): Promise<AuthStatus>
     importCookieFile(path: string, region: string): Promise<AuthStatus>
     pickAndImportCookieFile(region: string): Promise<AuthStatus>

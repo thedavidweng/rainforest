@@ -51,10 +51,10 @@ describe("Rainforest App — Scope & Navigation (Spec §H.2 & §H.3)", () => {
     render(<App backend={backend} />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("account-banner").textContent).toMatch(/import.*cookie/i)
+      expect(screen.getByTestId("account-banner").textContent).toMatch(/sign in/i)
     })
 
-    fireEvent.click(screen.getByRole("button", { name: /open settings|import cookies/i }))
+    fireEvent.click(screen.getByRole("button", { name: /sign in in settings/i }))
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /account & session/i })).toBeTruthy()
@@ -479,8 +479,9 @@ describe("View 4: Settings & Diagnostics", () => {
     const regionSelect = screen.getByLabelText(/marketplace region/i) as HTMLSelectElement
     expect(regionSelect.value).toBe("")
     const optionValues = Array.from(regionSelect.options).map((o) => o.value)
-    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp"])
+    expect(optionValues).toEqual(["", "us", "ca", "uk", "jp", "de", "fr", "it", "es"])
 
+    fireEvent.click(screen.getByText(/import session cookies \(advanced\)/i))
     // Attempt cookie import with ambiguous cookies and no region selected -> shows explicit region error
     fireEvent.change(screen.getByLabelText(/session cookies/i), {
       target: { value: "session-id=135-9999999-9999999" },
@@ -497,16 +498,16 @@ describe("View 4: Settings & Diagnostics", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /import pasted cookies/i }))
 
-    await screen.findByText(/authenticated \(CA/i)
+    await screen.findByText(/signed in \(CA/i)
 
     // Sign Out
     fireEvent.click(screen.getByRole("button", { name: /sign out/i }))
-    await screen.findByText(/not authenticated/i)
+    await screen.findByText(/not signed in/i)
 
     // Import Cookie File button
     fireEvent.change(regionSelect, { target: { value: "us" } })
     fireEvent.click(screen.getByRole("button", { name: /import cookie file/i }))
-    await screen.findByText(/authenticated \(US/i)
+    await screen.findByText(/signed in \(US/i)
     await screen.findByText(/1,420 items/i)
 
     // Transfer & Desktop Behavior settings update
@@ -650,4 +651,86 @@ describe("Runtime destination probe", () => {
     )
     await waitFor(() => expect(screen.getByRole("dialog").textContent).toContain("pending"))
   })
+})
+
+describe("Web sign-in", () => {
+  test("offers Amazon web sign-in, reports progress, and preserves experimental evidence", async () => {
+    const backend = memoryBackend({
+      auth: { configured: false, authenticated: false, region: "" },
+      settings: { region: "" },
+    })
+    let complete!: () => void
+    let chosen = ""
+    backend.auth.login = async (region) => {
+      chosen = region
+      await new Promise<void>((resolve) => {
+        complete = resolve
+      })
+      return {
+        configured: true,
+        authenticated: true,
+        region,
+        evidence: "experimental",
+        ownerId: "new-owner",
+      }
+    }
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Settings" }))
+    const signIn = screen.getByRole("button", { name: "Sign in to Amazon" }) as HTMLButtonElement
+    expect(signIn.disabled).toBe(true)
+    fireEvent.change(screen.getByLabelText(/marketplace region/i), { target: { value: "ca" } })
+    fireEvent.click(signIn)
+    await screen.findByText(/complete sign-in in the Amazon window/i)
+    expect(chosen).toBe("ca")
+    expect((screen.getByLabelText(/marketplace region/i) as HTMLSelectElement).disabled).toBe(true)
+    expect(screen.getByRole("button", { name: "Cancel sign-in" })).toBeTruthy()
+    await act(async () => {
+      complete()
+    })
+    await screen.findByText(/signed in \(CA/i)
+    expect(screen.getByText(/Experimental protocol evidence/)).toBeTruthy()
+  })
+
+  test("cancelled and failed sign-ins keep the current account and allow retry", async () => {
+    const backend = memoryBackend()
+    let rejectLogin!: (reason: unknown) => void
+    backend.auth.login = () =>
+      new Promise((_, reject) => {
+        rejectLogin = reject
+      })
+    backend.auth.cancelLogin = async () => {
+      rejectLogin({ code: "INTERRUPTED", message: "operation interrupted" })
+    }
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Settings" }))
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to Amazon" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel sign-in" }))
+    await screen.findByText("Sign-in cancelled. Your account has not changed.")
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeTruthy()
+    backend.auth.login = async () => {
+      throw { code: "NETWORK_ERROR", message: "Check your connection and try again." }
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to Amazon" }))
+    expect((await screen.findByRole("alert")).textContent).toContain("Check your connection")
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeTruthy()
+  })
+})
+
+test("renders the web sign-in flow in the system's Chinese language independently of marketplace", async () => {
+  const original = Object.getOwnPropertyDescriptor(navigator, "languages")
+  Object.defineProperty(navigator, "languages", { configurable: true, value: ["zh-CN"] })
+  try {
+    const backend = memoryBackend({
+      auth: { configured: false, authenticated: false },
+      settings: { region: "" },
+    })
+    render(<App backend={backend} />)
+    fireEvent.click(await screen.findByRole("button", { name: "设置" }))
+    expect(screen.getByRole("button", { name: "登录 Amazon" })).toBeTruthy()
+    expect(screen.getByText(/密码和验证码仅由 Amazon 处理/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "传输／上传" })).toBeTruthy()
+  } finally {
+    if (original) Object.defineProperty(navigator, "languages", original)
+    else Reflect.deleteProperty(navigator, "languages")
+  }
 })
