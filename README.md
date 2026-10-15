@@ -27,6 +27,8 @@ Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidwe
 
 Download the latest installer or archive for your platform (`macOS` Apple Silicon / Intel, `Windows` x64 / ARM64, `Linux` x64 / ARM64 `.deb` or `.tar.gz` with `install.sh`) from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases).
 
+The macOS v0.1.0 release contains `.app` archives, not a `.dmg` installer. The inspected Apple Silicon bundle is ad-hoc signed, without a Developer ID signature or stapled notarization ticket. First-install Gatekeeper approval and the complete in-app update flow have not been verified. See [release acceptance status](docs/reference/platforms-and-packages.md#v010-release-acceptance).
+
 ### Build from Source
 
 ```bash
