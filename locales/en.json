@@ -271,5 +271,17 @@
   "selectUploadFolder": "Select Folder to Upload",
   "selectBackupFolder": "Select Folder to Back Up",
   "selectDownloadFolder": "Select Download Destination Directory",
-  "quitMessage": "{transfers, plural, =0 {No transfers are running.} one {# transfer is running.} other {# transfers are running.}} {backups, number} backup folder rules are enabled. Pause Task pauses one transfer; Stop Backups suspends scans. Close Window to Tray keeps the app running when enabled. Quit Rainforest stops background work and exits."
+  "quitMessage": "{transfers, plural, =0 {No transfers are running.} one {# transfer is running.} other {# transfers are running.}} {backups, number} backup folder rules are enabled. Pause Task pauses one transfer; Stop Backups suspends scans. Close Window to Tray keeps the app running when enabled. Quit Rainforest stops background work and exits.",
+  "languageTitle": "Language",
+  "languageSystem": "Follow System",
+  "menuFile": "File",
+  "menuView": "View",
+  "menuHelp": "Help",
+  "menuSettings": "Settings…",
+  "menuAbout": "About Rainforest",
+  "menuUploadFiles": "Upload Files…",
+  "menuUploadFolder": "Upload Folder…",
+  "menuHelpGuide": "Rainforest Help",
+  "menuReportIssue": "Report an Issue…",
+  "aboutCopyright": "Copyright © 2026 Davy Weng and contributors"
 }

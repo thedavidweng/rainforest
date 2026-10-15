@@ -8,9 +8,10 @@ import (
 )
 
 type Options struct {
-	Update  func(func())
-	Version string
-	Icon    []byte
+	SetLocale func(string)
+	Update    func(func())
+	Version   string
+	Icon      []byte
 }
 
 type loadState int
@@ -35,12 +36,14 @@ type probeState struct {
 }
 
 type App struct {
-	svc     *gui.Services
-	update  func(func())
-	spawn   func(func())
-	version string
-	router  *ui.Router
-	toasts  []ui.Toast
+	setLocale func(string)
+	aboutOpen bool
+	svc       *gui.Services
+	update    func(func())
+	spawn     func(func())
+	version   string
+	router    *ui.Router
+	toasts    []ui.Toast
 
 	authSeq    int
 	authLoaded bool
@@ -89,19 +92,24 @@ func New(svc *gui.Services, opts Options) *App {
 	if update == nil {
 		update = func(fn func()) { fn() }
 	}
+	setLocale := opts.SetLocale
+	if setLocale == nil {
+		setLocale = func(string) {}
+	}
 	icon, _ := ui.DecodeBitmap(opts.Icon)
 	return &App{
-		icon:    icon,
-		svc:     svc,
-		update:  update,
-		spawn:   func(fn func()) { go fn() },
-		version: opts.Version,
-		router:  ui.NewRouter("/upload"),
-		items:   map[string]*itemsState{},
-		probes:  map[string]*probeState{},
-		folders: map[string]*folderState{},
-		files:   map[string]*filesState{},
-		thumbs:  map[string]*ui.Bitmap{},
+		setLocale: setLocale,
+		icon:      icon,
+		svc:       svc,
+		update:    update,
+		spawn:     func(fn func()) { go fn() },
+		version:   opts.Version,
+		router:    ui.NewRouter("/upload"),
+		items:     map[string]*itemsState{},
+		probes:    map[string]*probeState{},
+		folders:   map[string]*folderState{},
+		files:     map[string]*filesState{},
+		thumbs:    map[string]*ui.Bitmap{},
 	}
 }
 
@@ -468,4 +476,22 @@ func (a *App) thumbnail(key string, data []byte) *ui.Bitmap {
 	}
 	a.thumbs[key] = bm
 	return bm
+}
+
+func (a *App) Navigate(path string) {
+	if path == "/settings" || a.signedIn() {
+		a.router.Push(path)
+	}
+}
+func (a *App) ShowAbout() { a.aboutOpen = true }
+func (a *App) OpenUpload(folder bool) {
+	if !a.signedIn() {
+		return
+	}
+	a.router.Push("/upload")
+	if folder {
+		a.pickDirectory()
+	} else {
+		a.pickFiles()
+	}
 }

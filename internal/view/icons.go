@@ -9,6 +9,11 @@ import (
 //go:embed icons/*.svg icons/icons.txt
 var iconFiles embed.FS
 
+//go:embed brand-leaf.svg
+var brandLeaf []byte
+
+var iconBrandLeaf = ui.MustParseSVG(brandLeaf)
+
 func loadIcon(name string) *ui.SVG {
 	data, err := iconFiles.ReadFile("icons/" + name + ".svg")
 	if err != nil {

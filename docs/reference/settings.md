@@ -29,13 +29,43 @@ Reference for all persistent settings stored in the SQLite `settings` table (`in
 
 ## Interface Language
 
-The native MyGo 0.5 i18n system chooses English (`en`) or Simplified Chinese
-(`zh-Hans`) from the user's system language preferences. This is independent of
-`SettingsDTO.region`, which controls Amazon routing. It is not stored in the
-SQLite settings table. Native views follow locale changes using the same catalogs. Framework menus/dialog strings use MyGo's bundled
+The native MyGo 0.5 i18n system uses the interface language the user selects;
+with `Follow System` it chooses English (`en`) or Simplified Chinese (`zh-Hans`)
+from the system language preferences. MyGo persists this choice; it is
+independent of `SettingsDTO.region`, which controls Amazon routing, and is not
+stored in the SQLite settings table. Native views follow locale changes using the same catalogs. Framework menus/dialog strings use MyGo's bundled
 translations. Protocol error details and remote data are not translated.
 
 For contributors: edit both `locales/*.json` catalogs, run
 `go tool mygo generate`, and run `mise run check`. Generated
 `locales/catalog_gen.go` is committed and checked for drift by
 `mise run i18n-check`.
+
+
+## Language Controls and Desktop Menus
+
+The welcome screen, Settings, and View → Language let users select English,
+Simplified Chinese, or Follow System. MyGo persists the language preference and
+refreshes native views and system menu roles. Custom app and tray labels rebuild
+on `OnLocaleChanged`. Amazon marketplace and recovery selections retain their IDs
+when the interface language changes.
+
+The macOS application menu provides About, Settings, Services, Hide, Hide Others,
+Show All, and Quit. About uses MyGo's native macOS panel; Windows and Linux use an
+in-app dialog with the same version, copyright, license, disclaimer, and source.
+Settings and About are accessible before signing in.
+
+| Action | macOS | Windows / Linux |
+|---|---|---|
+| Settings | ⌘, | Ctrl+, |
+| Quit | ⌘Q | Ctrl+Q |
+| Upload files | ⌘O | Ctrl+O |
+| Upload folder | ⇧⌘O | Ctrl+Shift+O |
+| Upload / Activity / Backup / Restore | ⌘1–4 | Ctrl+1–4 |
+| Close window | ⌘W | Ctrl+W |
+| Minimize | ⌘M | Ctrl+M |
+| Full screen | ⌃⌘F | F11 |
+| Help | Help menu | F1 |
+
+Edit and Window menus use MyGo roles, including native editing shortcuts. Closing
+retains the configured close-to-tray behavior; Quit retains transfer confirmation.

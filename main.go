@@ -86,7 +86,7 @@ func setupDesktop(svc *gui.Services) {
 	}
 
 	var win *mygo.Window
-	app := view.New(svc, view.Options{Update: func(f func()) { win.Update(f) }, Version: version, Icon: appIcon})
+	app := view.New(svc, view.Options{Update: func(f func()) { win.Update(f) }, Version: version, Icon: appIcon, SetLocale: mygo.App.SetLocale})
 	win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         "Rainforest",
 		Width:         1080,
@@ -102,7 +102,11 @@ func setupDesktop(svc *gui.Services) {
 	picker.win.Store(win)
 	shell.app.Store(app)
 	app.Start()
-	mygo.App.OnLocaleChanged(func(_ string) { shell.rebuildTrayMenu() })
+	shell.rebuildMenu()
+	mygo.App.OnLocaleChanged(func(_ string) {
+		shell.rebuildMenu()
+		shell.rebuildTrayMenu()
+	})
 
 	tray, trayErr := mygo.NewTray(mygo.TrayOptions{
 		Icon:           trayIconPNG,

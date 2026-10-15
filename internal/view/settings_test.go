@@ -146,3 +146,47 @@ func TestSettingsRendersInChinese(t *testing.T) {
 	h.wantText(zh.SettingsAccount())
 	h.wantText(zh.SettingsRunDiagnostics())
 }
+
+func TestLanguageSelectorUpdatesInterface(t *testing.T) {
+	for _, signedIn := range []bool{false, true} {
+		h := newHarness(t, signedIn)
+		h.tt.SetLocale("en")
+		h.app.setLocale = h.tt.SetLocale
+		h.start()
+		if signedIn {
+			h.app.Navigate("/settings")
+			h.drain()
+		}
+		if err := h.tt.Click("English"); err != nil {
+			t.Fatal(err)
+		}
+		if err := h.tt.Click("简体中文"); err != nil {
+			t.Fatal(err)
+		}
+		h.drain()
+		if signedIn {
+			h.wantText(locales.In("zh-Hans").SettingsTitle())
+		} else {
+			h.wantText(locales.In("zh-Hans").WelcomeTitle())
+		}
+	}
+}
+
+func TestSettingsAndAboutBeforeSignIn(t *testing.T) {
+	h := newHarness(t, false)
+	h.start()
+	h.app.Navigate("/settings")
+	h.drain()
+	h.wantText(locales.SettingsTitle())
+	h.noText(locales.SettingsSignOut())
+	h.app.ShowAbout()
+	h.drain()
+	h.wantText(locales.MenuAbout())
+	if err := h.tt.Click(locales.CommonClose()); err != nil {
+		t.Fatal(err)
+	}
+	h.drain()
+	if h.app.aboutOpen {
+		t.Fatal("About remains open")
+	}
+}

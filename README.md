@@ -17,6 +17,18 @@
 
 Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (`CGO_ENABLED=0`), Rainforest layers a native Go interface (`internal/view`, built on `mygo/ui`) over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` using native HttpOnly Cookie capture for web sign-in ([MyGo #343](https://github.com/egoist/mygo/issues/343)), shared English/Simplified Chinese i18n catalogs, and local upload previews ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
 
+## Screenshots
+
+macOS screenshots captured with the system screenshot tool.
+
+**Upload — English**
+
+![Rainforest upload screen in English on macOS](docs/assets/upload-en-macos.png)
+
+**Settings — Simplified Chinese**
+
+![Rainforest settings with the language selector in Simplified Chinese on macOS](docs/assets/settings-zh-macos.png)
+
 ## Sign in
 
 On first launch, choose your Amazon marketplace on the Welcome screen and click **Sign in with Amazon**.
@@ -25,8 +37,9 @@ captures the session natively and checks read access before saving it. Cancel or
 failure keeps the current account. Manual Cookie import is under the advanced
 section (**Other ways to sign in**). See [sign-in help](docs/how-to/sign-in.md).
 
-The interface follows the system language (English or Simplified Chinese) using
-MyGo 0.5's built-in i18n, independently of your Amazon marketplace.
+Choose English, Simplified Chinese, or Follow System on the Welcome screen, in
+Settings, or under View → Language. MyGo 0.5's built-in i18n saves your preference,
+independently of your Amazon marketplace. See [desktop shortcuts and settings](docs/reference/settings.md#language-controls-and-desktop-menus).
 
 ## Highlights
 

@@ -40,21 +40,12 @@ func regionOptions(m locales.Messages) []string {
 	return opts
 }
 
-func (w *welcomeState) regionCode(m locales.Messages) string {
-	for _, code := range regionCodes {
-		if regionLabel(m, code) == w.region {
-			return code
-		}
-	}
-	return "us"
-}
-
 func (a *App) welcome(c *ui.Context) {
 	m := tr(c)
 	t := c.Theme()
 	w := &a.welcomeUI
 	if !w.picked {
-		w.region = regionLabel(m, a.welcomeRegion())
+		w.region = a.welcomeRegion()
 	}
 	busy := w.signingIn || w.importing
 	ui.Column(c).Fill().AlignItems(ui.Stretch).Children(func() {
@@ -77,6 +68,7 @@ func (a *App) welcome(c *ui.Context) {
 					}
 					a.welcomeForm(c, m, w, busy)
 					a.welcomeOtherWays(c, m, w, busy)
+					a.languageControl(c, m)
 				})
 			})
 		})
@@ -89,12 +81,19 @@ func (a *App) welcomeForm(c *ui.Context, m locales.Messages, w *welcomeState, bu
 	t := c.Theme()
 	ui.Column(c).Gap(8).AlignItems(ui.Stretch).Children(func() {
 		ui.Field(c, m.WelcomeMarketplace(), func() {
-			sel := outlined(c, ui.Select(c, &w.region, regionOptions(m))).Disabled(busy)
+			current := regionLabel(m, w.region)
+			sel := outlined(c, ui.Select(c, &current, regionOptions(m))).Disabled(busy)
 			if sel.Changed() {
 				w.picked = true
+				for _, code := range regionCodes {
+					if current == regionLabel(m, code) {
+						w.region = code
+						break
+					}
+				}
 			}
 		})
-		if w.regionCode(m) != "us" {
+		if w.region != "us" {
 			ui.Text(c, m.WelcomeExperimental()).FontSize(12).TextColor(t.Warning)
 		}
 	})
@@ -103,7 +102,7 @@ func (a *App) welcomeForm(c *ui.Context, m locales.Messages, w *welcomeState, bu
 		case w.signingIn:
 			a.welcomeProgress(c, m)
 		case primaryButton(c, iconSignIn, m.WelcomeSignIn(), w.importing).Height(40).Clicked():
-			a.signIn(w.regionCode(m))
+			a.signIn(w.region)
 		}
 		switch {
 		case w.err != "":
@@ -137,11 +136,11 @@ func (a *App) welcomeOtherWays(c *ui.Context, m locales.Messages, w *welcomeStat
 				Placeholder(m.WelcomeCookiesPlaceholder()).Label(m.WelcomeOtherWays()).Disabled(busy)
 			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 				if secondaryButton(c, nil, m.WelcomeImportFile(), busy).Clicked() {
-					a.importCookieFile(w.regionCode(m))
+					a.importCookieFile(w.region)
 				}
 				pasted := secondaryButton(c, nil, m.WelcomeImportPasted(), busy || strings.TrimSpace(w.cookies) == "")
 				if pasted.Clicked() {
-					a.importCookies(w.regionCode(m), w.cookies)
+					a.importCookies(w.region, w.cookies)
 				}
 			})
 		})

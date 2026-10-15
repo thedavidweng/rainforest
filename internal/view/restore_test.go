@@ -133,7 +133,7 @@ func TestRestoreContainerModeNeedsChoice(t *testing.T) {
 	if h.restoreReady() {
 		t.Fatal("ready without choosing a container")
 	}
-	h.app.restore.container = locales.RestoreAlbumOption("Summer")
+	h.app.restore.container = "a1"
 	h.drain()
 	if !h.restoreReady() {
 		t.Fatal("not ready after choosing an album")
@@ -143,7 +143,7 @@ func TestRestoreContainerModeNeedsChoice(t *testing.T) {
 		t.Fatalf("container = %q", in.ContainerNodeID)
 	}
 	h.wantText(locales.RestoreDownloadAlbum())
-	h.app.restore.container = locales.RestoreFolderOption("Summer")
+	h.app.restore.container = "f1"
 	h.drain()
 	h.wantText(locales.RestoreDownloadFolder())
 }
@@ -242,5 +242,19 @@ func TestRestorePickerCanChooseRoot(t *testing.T) {
 	in, ok := h.app.restoreRequest(nil)
 	if !ok || in.ContainerNodeID != "root-us-1" {
 		t.Fatalf("root request=%+v ready=%v", in, ok)
+	}
+}
+
+func TestRestoreLanguageChangePreservesContainer(t *testing.T) {
+	h := openRestore(t, recoveryFixture())
+	h.app.restore.mode = restoreContainer
+	h.app.restore.container = "a1"
+	h.drain()
+	h.chooseRestoreDest(t.TempDir())
+	h.tt.SetLocale("zh-Hans")
+	h.drain()
+	h.wantText(locales.In("zh-Hans").RestoreAlbumOption("Summer"))
+	if !h.restoreReady() || h.app.restore.container != "a1" {
+		t.Fatal("restore source changed")
 	}
 }
