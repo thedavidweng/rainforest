@@ -395,7 +395,7 @@ async function setupDownloads() {
 
 /* ---------- one-way demo ---------- */
 
-const THUMBS = [
+const FALLBACK_GRADIENTS = [
   "linear-gradient(160deg, #2c4636, #a3c193)",
   "linear-gradient(160deg, #1d2b36, #7d9db3)",
   "linear-gradient(160deg, #4a3322, #d8a66d)",
@@ -404,6 +404,8 @@ const THUMBS = [
   "linear-gradient(160deg, #3b4a2a, #d6cf8a)",
   "linear-gradient(160deg, #18302e, #5fa39a)",
 ];
+
+const picsumThumb = (seed) => `url('https://picsum.photos/64?random=${seed}'), ${FALLBACK_GRADIENTS[seed % FALLBACK_GRADIENTS.length]}`;
 
 function oneWay(root) {
   const local = root.querySelector("[data-local]");
@@ -511,7 +513,7 @@ function oneWay(root) {
 
   addBtn.addEventListener("click", () => {
     const name = nextName();
-    const thumb = THUMBS[serial % THUMBS.length];
+    const thumb = picsumThumb(serial);
     addLocal(name, thumb);
     queue.push({ name, li: addCloud(name, thumb, true) });
     syncAdd();
@@ -521,7 +523,7 @@ function oneWay(root) {
 
   for (let i = 0; i < 4; i++) {
     const name = nextName();
-    const thumb = THUMBS[serial % THUMBS.length];
+    const thumb = picsumThumb(serial);
     addLocal(name, thumb);
     addCloud(name, thumb, false);
   }

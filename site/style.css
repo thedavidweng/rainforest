@@ -524,6 +524,9 @@ h2 {
   height: 26px;
   border-radius: 6px;
   background: var(--thumb);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 .file-name {
