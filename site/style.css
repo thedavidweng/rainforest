@@ -800,5 +800,8 @@ h2 {
   .js .reveal:not([data-shown]) { transform: none; filter: none; }
   .shot img { animation: none; }
   .sun::after { animation: none; }
-  .qicon .spin { animation-duration: 2.4s; }
+  .qicon .spin { animation: none; }
+  .qicon svg:not([data-show]) { transform: none; filter: none; }
+  .badge-label { transition-property: opacity; }
+  .mark-vein, .mark-head { stroke-dashoffset: 0; transition: none !important; }
 }

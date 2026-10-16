@@ -203,6 +203,7 @@ function setText(el, key, vars) {
 
 function applyLang() {
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelector("[data-lang-toggle]").setAttribute("aria-label", lang === "zh" ? "Switch to English" : "切换到中文");
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const vars = el.dataset.i18nVars ? JSON.parse(el.dataset.i18nVars) : undefined;
     el.textContent = t(el.dataset.i18n, vars);
@@ -645,7 +646,7 @@ function transferQueue(root) {
     visible = entry.isIntersecting;
     if (!visible) return;
     if (phase === "running") run();
-    else if (phase === "idle" && !started) { started = true; later(() => phase === "idle" && run(), 500); }
+    else if (phase === "idle" && !started && !reducedMotion.matches) { started = true; later(() => phase === "idle" && run(), 500); }
   }, { threshold: 0.5 }).observe(root);
 
   build();
