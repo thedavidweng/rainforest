@@ -46,7 +46,7 @@ func (r *reviewState) canConfirm() bool {
 }
 
 func (a *App) openUploadReview(paths []string) {
-	if len(paths) == 0 {
+	if a.preview || len(paths) == 0 {
 		return
 	}
 	conflict := "skip"
@@ -185,10 +185,10 @@ func (a *App) dropZone(c *ui.Context, m locales.Messages) {
 		ui.Text(c, m.UploadDropTitle()).FontSize(20).FontWeight(600).TextAlign(ui.Center)
 		ui.Text(c, m.UploadDropBody()).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(420)
 		ui.Row(c).Gap(10).Margin(12, 0, 0).Children(func() {
-			if primaryButton(c, iconPlus, m.UploadChooseFiles(), false).Clicked() {
+			if primaryButton(c, iconPlus, m.UploadChooseFiles(), a.preview).Clicked() {
 				a.pickFiles()
 			}
-			if secondaryButton(c, iconFolder, m.UploadChooseFolder(), false).Clicked() {
+			if secondaryButton(c, iconFolder, m.UploadChooseFolder(), a.preview).Clicked() {
 				a.pickDirectory()
 			}
 		})

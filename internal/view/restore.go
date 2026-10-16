@@ -359,7 +359,7 @@ func (a *App) restoreDestination(c *ui.Context, m locales.Messages) {
 			ui.Field(c, m.RestoreSaveTo(), func() {
 				ui.Row(c).Gap(8).Children(func() {
 					outlined(c, ui.TextInput(c, &rs.dest)).Placeholder(m.RestoreFolderPlaceholder()).Grow(1).MinWidth(0)
-					if secondaryButton(c, nil, m.CommonChoose(), false).Clicked() {
+					if secondaryButton(c, nil, m.CommonChoose(), a.preview).Clicked() {
 						a.pickRestoreFolder()
 					}
 				})
@@ -426,7 +426,7 @@ func (a *App) restoreFooter(c *ui.Context, m locales.Messages, choices []restore
 	}
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, m.RestoreVerifyNote()).FontSize(12).TextColor(t.TextMuted).Grow(1)
-		if primaryButton(c, nil, label, !ok || rs.starting).Clicked() {
+		if primaryButton(c, nil, label, a.preview || !ok || rs.starting).Clicked() {
 			a.startDownload(in)
 		}
 	})

@@ -22,6 +22,7 @@ const svg = (d, cls = "") => `<svg viewBox="0 0 256 256" aria-hidden="true"${cls
 const STRINGS = {
   en: {
     "skip": "Skip to content",
+    "preview.note": "Try the app. Sample data only; file and account operations are disabled.",
     "nav.features": "Features",
     "nav.safety": "Safety",
     "nav.docs": "Docs",
@@ -101,6 +102,7 @@ const STRINGS = {
   },
   zh: {
     "skip": "跳到正文",
+    "preview.note": "试用真实界面。仅含示例数据，文件和账号操作已禁用。",
     "nav.features": "功能",
     "nav.safety": "安全",
     "nav.docs": "文档",
@@ -653,7 +655,7 @@ function transferQueue(root) {
   render();
 }
 
-/* ---------- ambient pointer: dappled light + window tilt ---------- */
+/* ---------- ambient pointer: dappled light ---------- */
 
 function ambient() {
   if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -669,36 +671,19 @@ function ambient() {
       glow.style.transform = `translate3d(${e.clientX - r.left}px, ${e.clientY - r.top}px, 0)`;
     });
   });
-
-  const shot = document.querySelector(".shot");
-  const tilt = shot.querySelector(".shot-tilt");
-  const s = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0 };
-  let raf = 0, last = 0;
-
-  function step(now) {
-    const dt = Math.min(1 / 30, (now - last) / 1000);
-    last = now;
-    for (const [p, v, t] of [["x", "vx", "tx"], ["y", "vy", "ty"]]) {
-      s[v] += (-90 * (s[p] - s[t]) - 14 * s[v]) * dt;
-      s[p] += s[v] * dt;
-    }
-    tilt.style.transform = `perspective(1600px) rotateX(${(-s.y * 2.4).toFixed(3)}deg) rotateY(${(s.x * 3.2).toFixed(3)}deg)`;
-    const settled = Math.abs(s.x - s.tx) + Math.abs(s.y - s.ty) + Math.abs(s.vx) + Math.abs(s.vy) < 0.001;
-    raf = settled ? 0 : requestAnimationFrame(step);
-  }
-  const kick = () => { if (!raf && !reducedMotion.matches) { last = performance.now(); raf = requestAnimationFrame(step); } };
-
-  addEventListener("pointermove", (e) => {
-    const r = shot.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > innerHeight) return;
-    s.tx = clampUnit((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
-    s.ty = clampUnit((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
-    kick();
-  }, { passive: true });
-  document.addEventListener("pointerleave", () => { s.tx = s.ty = 0; kick(); });
 }
 
-const clampUnit = (v) => Math.max(-1, Math.min(1, v));
+const preview = document.querySelector("[data-preview]");
+const previewWindow = preview.parentElement;
+new ResizeObserver(([entry]) => {
+  preview.style.transform = `scale(${entry.contentRect.width / 1080})`;
+}).observe(previewWindow);
+langListeners.push(() => {
+  const locale = lang === "zh" ? "zh-Hans" : "en";
+  const src = `preview/?lang=${locale}`;
+  if (preview.getAttribute("src") !== src) preview.src = src;
+  preview.title = lang === "zh" ? "Rainforest 交互预览" : "Interactive Rainforest preview";
+});
 
 ambient();
 oneWay(document.querySelector("[data-oneway]"));

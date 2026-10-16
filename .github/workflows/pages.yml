@@ -6,6 +6,12 @@ on:
     paths:
       - "site/**"
       - "docs/assets/**"
+      - "**/*.go"
+      - "locales/**"
+      - "resources/**"
+      - "go.mod"
+      - "go.sum"
+      - "mise.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -19,7 +25,7 @@ jobs:
   build:
     name: Build site
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -27,11 +33,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Assemble site
-        run: |
-          mkdir -p _site/assets
-          cp -R site/. _site/
-          cp docs/assets/icon-256.png docs/assets/upload-en-macos.png _site/assets/
+      - name: Install Go via mise
+        uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          install_args: go
+      - name: Build site and live preview
+        run: mise run site-build
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Upload artifact

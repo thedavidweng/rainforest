@@ -105,3 +105,13 @@ run = [
   "mise run conventions",
   "mise run i18n-check",
 ]
+
+[tasks.site-build]
+description = "Build the website with the real UI running in WebAssembly"
+run = """
+mkdir -p _site/assets _site/preview
+cp -R site/. _site/
+cp docs/assets/icon-256.png docs/assets/upload-en-macos.png _site/assets/
+GOOS=js GOARCH=wasm go build -tags mygo_noinspector -trimpath -ldflags='-s -w' -o _site/preview/app.wasm .
+cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" _site/preview/
+"""

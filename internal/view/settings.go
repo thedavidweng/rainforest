@@ -38,10 +38,10 @@ func (a *App) settingsPage(c *ui.Context, r *ui.Route) {
 			section(c, m.SettingsAccount(), func() { a.accountCard(c, m) })
 		}
 		if a.settings != nil {
-			section(c, m.SettingsTransfers(), func() { a.transfersCard(c, m) })
-			section(c, m.SettingsComputer(), func() { a.computerCard(c, m) })
+			section(c, m.SettingsTransfers(), func() { ui.Column(c).Disabled(a.preview).Children(func() { a.transfersCard(c, m) }) })
+			section(c, m.SettingsComputer(), func() { ui.Column(c).Disabled(a.preview).Children(func() { a.computerCard(c, m) }) })
 		}
-		section(c, m.SettingsDiagnostics(), func() { a.diagnosticsCard(c, m) })
+		section(c, m.SettingsDiagnostics(), func() { ui.Column(c).Disabled(a.preview).Children(func() { a.diagnosticsCard(c, m) }) })
 		section(c, m.SettingsAbout(), func() { a.aboutCard(c, m) })
 	})
 	a.signOutDialog(c, m)
@@ -78,7 +78,7 @@ func (a *App) accountCard(c *ui.Context, m locales.Messages) {
 			} else {
 				statusPill(c, m.SettingsExperimental(), toneWarning)
 			}
-			if secondaryButton(c, nil, m.SettingsSignOut(), false).Clicked() {
+			if secondaryButton(c, nil, m.SettingsSignOut(), a.preview).Clicked() {
 				a.settingsUI.signOutAsk = true
 			}
 		})

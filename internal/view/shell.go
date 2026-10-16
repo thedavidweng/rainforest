@@ -45,6 +45,9 @@ func (a *App) welcomeShell(c *ui.Context) {
 }
 
 func (a *App) takeDrops(e ui.Element) bool {
+	if a.preview {
+		return false
+	}
 	if paths := e.DroppedFiles(); len(paths) > 0 {
 		a.openUploadReview(paths)
 		a.router.Push("/upload")

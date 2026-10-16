@@ -335,9 +335,11 @@ h1 {
   background: radial-gradient(50% 50% at 50% 50%, rgba(156, 199, 170, 0.16), transparent 70%);
   filter: blur(40px);
 }
-.shot img {
+.preview-window {
   width: 100%;
-  height: auto;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #f8f9fa;
   border-radius: clamp(8px, 1.1vw, 13px);
   box-shadow:
     0 0 0 1px rgba(232, 240, 235, 0.1),
@@ -345,16 +347,18 @@ h1 {
     0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
 
-@supports (animation-timeline: view()) {
-  .shot img {
-    animation: settle linear both;
-    animation-timeline: view();
-    animation-range: entry 20% cover 45%;
-  }
-  @keyframes settle {
-    from { transform: perspective(1600px) rotateX(10deg) scale(0.96); }
-    to { transform: none; }
-  }
+.preview-window iframe {
+  display: block;
+  width: 1080px;
+  height: 720px;
+  border: 0;
+  transform-origin: top left;
+}
+.shot figcaption {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
 }
 
 /* Entrance + reveal */
@@ -635,7 +639,6 @@ h2 {
 }
 .demo[data-lit] .glow { opacity: 1; }
 
-.shot-tilt { will-change: transform; }
 
 /* Queue demo */
 
@@ -798,7 +801,6 @@ h2 {
   .enter { animation-name: fade; animation-duration: 400ms; }
   @keyframes fade { from { opacity: 0; } }
   .js .reveal:not([data-shown]) { transform: none; filter: none; }
-  .shot img { animation: none; }
   .sun::after { animation: none; }
   .qicon .spin { animation: none; }
   .qicon svg:not([data-show]) { transform: none; filter: none; }

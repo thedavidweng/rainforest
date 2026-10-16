@@ -5,3 +5,5 @@ build/
 *.out
 .DS_Store
 .scratch/
+
+_site/

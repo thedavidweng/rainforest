@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" data-mygo-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rainforest preview</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #f8f9fa; font-family: system-ui, sans-serif; }
+    #status { position: absolute; inset: 0; display: grid; place-content: center; color: #6b7280; }
+    #status[hidden] { display: none; }
+    #mygo { position: absolute; inset: 0; }
+  </style>
+  <script src="wasm_exec.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div id="status" role="status">Loading Rainforest…</div>
+  <div id="mygo"></div>
+</body>
+</html>
