@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rainforest — a quiet desktop client for Amazon Photos</title>
+  <meta name="description" content="Upload once, back up folders one way, watch the transfer queue, restore verified originals. An unofficial, open-source desktop client for Amazon Photos on macOS, Windows and Linux.">
+  <meta name="theme-color" content="#0a0c0b">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Rainforest">
+  <meta property="og:description" content="A quiet desktop client for Amazon Photos. Upload, one-way backup, transfer queue, verified restore.">
+  <meta property="og:image" content="https://thedavidweng.github.io/rainforest/assets/upload-en-macos.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/icon-256.png">
+  <link rel="apple-touch-icon" href="assets/icon-256.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..650&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches&&!sessionStorage.getItem("rainforest.intro"))document.documentElement.setAttribute("data-intro","")}catch(e){}</script>
+  <script src="canopy.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Rainforest">
+      <img src="assets/icon-256.png" width="28" height="28" alt="">
+      <span>Rainforest</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#one-way" data-i18n="nav.safety">Safety</a>
+      <a href="https://github.com/thedavidweng/rainforest#documentation" data-i18n="nav.docs">Docs</a>
+      <a href="https://github.com/thedavidweng/rainforest">GitHub</a>
+    </nav>
+    <button class="lang" type="button" data-lang-toggle aria-label="切换到中文">
+      <span data-lang-option="en">EN</span><span data-lang-option="zh">中</span>
+    </button>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="sun" aria-hidden="true"></div>
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="canopy" data-canopy="hero" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="kicker enter" style="--i:0">
+          <span data-i18n="hero.kicker">Unofficial desktop client for Amazon Photos</span>
+          <span class="kicker-sep" aria-hidden="true"></span>
+          <span class="mono" data-version>v0.1.0</span>
+        </p>
+        <h1 class="enter" style="--i:1" data-i18n-html="hero.title">A <em>quiet</em> way to keep your photos in the cloud.</h1>
+        <p class="lede enter" style="--i:2" data-i18n="hero.lede">Upload once, back up folders one way, watch the queue, restore verified originals. A small native app — not another gallery.</p>
+        <div class="cta enter" style="--i:3">
+          <a class="button primary" data-download href="https://github.com/thedavidweng/rainforest/releases/latest">
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></svg>
+            <span data-download-label data-i18n="dl.generic">Download</span>
+          </a>
+          <a class="button ghost" href="https://github.com/thedavidweng/rainforest" data-i18n="hero.source">View source</a>
+        </div>
+        <p class="cta-note enter" style="--i:4" data-download-note data-i18n="dl.note">macOS · Windows · Linux — free and open source</p>
+      </div>
+      <figure class="shot enter" style="--i:5">
+        <div class="shot-tilt"><img src="assets/upload-en-macos.png" width="2080" height="1440" alt="Rainforest's Upload screen on macOS: a drop zone that reads “Drop photos and videos here” with Choose files and Choose folder buttons." fetchpriority="high"></div>
+      </figure>
+    </section>
+
+    <section class="section" id="features">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-i18n="features.eyebrow">Four things</p>
+        <h2 data-i18n-html="features.title">It does four things, <em>carefully.</em></h2>
+        <p class="section-lede" data-i18n="features.lede">No timeline, no albums to manage, no AI search. Just getting files safely up — and back down when you ask.</p>
+      </header>
+      <ol class="pillars">
+        <li class="pillar reveal" style="--i:0">
+          <span class="pillar-icon"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M178.34,165.66,160,147.31V208a8,8,0,0,1-16,0V147.31l-18.34,18.35a8,8,0,0,1-11.32-11.32l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32ZM160,40A88.08,88.08,0,0,0,81.29,88.68,64,64,0,1,0,72,216h40a8,8,0,0,0,0-16H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.12A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,100.8,66,8,8,0,0,0,3.2,15.34,7.9,7.9,0,0,0,3.2-.68A88,88,0,0,0,160,40Z"/></svg></span>
+          <h3 data-i18n="p1.title">Upload</h3>
+          <p data-i18n="p1.body">Drop files or folders. See counts, sizes and what will be skipped before a single byte leaves your disk.</p>
+        </li>
+        <li class="pillar reveal" style="--i:1">
+          <span class="pillar-icon"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z"/></svg></span>
+          <h3 data-i18n="p2.title">Backup</h3>
+          <p data-i18n="p2.body">Point it at a folder. New and changed files go up, immediately or on an interval. Subfolders are mirrored.</p>
+        </li>
+        <li class="pillar reveal" style="--i:2">
+          <span class="pillar-icon"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M117.66,170.34a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32L72,188.69V48a8,8,0,0,1,16,0V188.69l18.34-18.35A8,8,0,0,1,117.66,170.34Zm96-96-32-32a8,8,0,0,0-11.32,0l-32,32a8,8,0,0,0,11.32,11.32L168,67.31V208a8,8,0,0,0,16,0V67.31l18.34,18.35a8,8,0,0,0,11.32-11.32Z"/></svg></span>
+          <h3 data-i18n="p3.title">Activity</h3>
+          <p data-i18n="p3.body">A persistent queue you can pause, resume, cancel and retry. It survives quitting, crashes and sleep.</p>
+        </li>
+        <li class="pillar reveal" style="--i:3">
+          <span class="pillar-icon"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M248,128a87.34,87.34,0,0,1-17.6,52.81,8,8,0,1,1-12.8-9.62A71.34,71.34,0,0,0,232,128a72,72,0,0,0-144,0,8,8,0,0,1-16,0,88,88,0,0,1,3.29-23.88C74.2,104,73.1,104,72,104a48,48,0,0,0,0,96H96a8,8,0,0,1,0,16H72A64,64,0,1,1,81.29,88.68,88,88,0,0,1,248,128Zm-69.66,42.34L160,188.69V128a8,8,0,0,0-16,0v60.69l-18.34-18.35a8,8,0,0,0-11.32,11.32l32,32a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z"/></svg></span>
+          <h3 data-i18n="p4.title">Restore</h3>
+          <p data-i18n="p4.body">Bring originals back by history, folder or album. Every file is checked by size and MD5 before it lands.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section split" id="one-way">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-i18n="oneway.eyebrow">One-way backup</p>
+        <h2 data-i18n-html="oneway.title">Water only flows <em>one way.</em></h2>
+        <p class="section-lede" data-i18n="oneway.lede">New photos travel up. Deleting something on your computer never deletes it from the cloud. Try it.</p>
+      </header>
+      <div class="demo oneway reveal" data-oneway>
+        <div class="pane">
+          <p class="pane-title"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M224,64H32A16,16,0,0,0,16,80v96a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V80A16,16,0,0,0,224,64Zm0,112H32V80H224v96Zm-24-48a12,12,0,1,1-12-12A12,12,0,0,1,200,128Z"/></svg><span data-i18n="oneway.local">This computer</span></p>
+          <ul class="files" data-local></ul>
+          <button class="text-button" type="button" data-add>
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
+            <span data-i18n="oneway.add">Take a photo</span>
+          </button>
+        </div>
+        <div class="flow" aria-hidden="true"><span class="flow-line"></span><span class="flow-drop" data-drop></span></div>
+        <div class="pane">
+          <p class="pane-title"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></svg><span data-i18n="oneway.cloud">Amazon Photos</span></p>
+          <ul class="files" data-cloud></ul>
+        </div>
+        <p class="demo-status" aria-live="polite" data-oneway-status data-i18n="oneway.hint">Delete a local file, or take a new photo.</p>
+      </div>
+    </section>
+
+    <section class="section split reverse" id="queue">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-i18n="queue.eyebrow">Transfer queue</p>
+        <h2 data-i18n-html="queue.title">Interrupted? It <em>checks</em> before it re-sends.</h2>
+        <p class="section-lede" data-i18n="queue.lede">If the app quits mid-upload, nothing is blindly sent twice. On the next launch Rainforest compares what reached the cloud by name and MD5, confirms it, and retries only what didn’t make it.</p>
+      </header>
+      <div class="demo queue reveal" data-queue>
+        <div class="queue-head">
+          <p class="queue-state" aria-live="polite" data-queue-state>—</p>
+          <button class="chip" type="button" data-queue-action>—</button>
+        </div>
+        <ul class="queue-list" data-queue-list></ul>
+      </div>
+    </section>
+
+    <section class="section" id="details">
+      <header class="section-head reveal">
+        <p class="eyebrow" data-i18n="details.eyebrow">Small things</p>
+        <h2 data-i18n-html="details.title">Made of <em>small</em> decisions.</h2>
+      </header>
+      <ul class="details">
+        <li class="reveal" style="--i:0"><h3 data-i18n="d1.t">External drives are respected</h3><p data-i18n="d1.b">Unplug a backup source and the rule pauses as “source unavailable” instead of treating your library as deleted.</p></li>
+        <li class="reveal" style="--i:1"><h3 data-i18n="d2.t">Half-written files wait</h3><p data-i18n="d2.b">A file still being copied or exported is left alone until its size settles.</p></li>
+        <li class="reveal" style="--i:2"><h3 data-i18n="d3.t">Folders keep their shape</h3><p data-i18n="d3.b">Local subfolders are mirrored under the destination. Albums stay flat, as they should.</p></li>
+        <li class="reveal" style="--i:3"><h3 data-i18n="d4.t">Your session stays local</h3><p data-i18n="d4.b">Sign in through Amazon’s own window. Cookies are stored in a permission-locked local vault and redacted from every log.</p></li>
+        <li class="reveal" style="--i:4"><h3 data-i18n="d5.t">English and 简体中文</h3><p data-i18n="d5.b">Follows your system language, or pick one from Settings or the View menu.</p></li>
+        <li class="reveal" style="--i:5"><h3 data-i18n="d6.t">Native on every desktop</h3><p data-i18n="d6.b">macOS, Windows and Linux on Intel and ARM. A single Go binary, no Electron.</p></li>
+      </ul>
+    </section>
+
+    <section class="closing" id="download">
+      <div class="canopy" data-canopy="closing" aria-hidden="true"></div>
+      <div class="closing-inner reveal">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path class="mark-leaf" d="M9 55C7 30 22 10 56 8c1 30-17 47-45 47Z"/>
+          <path class="mark-vein" pathLength="1" d="M13 51 45 19"/>
+          <path class="mark-head" pathLength="1" d="M33 19h12v12"/>
+        </svg>
+        <h2 data-i18n-html="close.title">Let it <em>rain</em> upward.</h2>
+        <p class="section-lede" data-i18n="close.lede">Free, open source under AGPL-3.0, and small enough to forget it’s running.</p>
+        <div class="cta">
+          <a class="button primary" data-download href="https://github.com/thedavidweng/rainforest/releases/latest">
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></svg>
+            <span data-download-label data-i18n="dl.generic">Download</span>
+          </a>
+          <a class="button ghost" href="https://github.com/thedavidweng/rainforest/releases/latest" data-i18n="dl.all">All downloads</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p data-i18n="footer.disclaimer">Rainforest is an unofficial client. It is not affiliated with, endorsed by, or sponsored by Amazon.com, Inc.</p>
+    <p class="footer-links">
+      <a href="https://github.com/thedavidweng/rainforest">GitHub</a>
+      <a href="https://github.com/thedavidweng/rainforest/blob/main/CHANGELOG.md" data-i18n="footer.changelog">Changelog</a>
+      <a href="https://github.com/thedavidweng/rainforest/blob/main/SECURITY.md" data-i18n="footer.security">Security</a>
+      <a href="https://github.com/thedavidweng/rainforest/blob/main/LICENSE">AGPL-3.0</a>
+    </p>
+  </footer>
+</body>
+</html>
