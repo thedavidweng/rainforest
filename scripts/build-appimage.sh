@@ -27,7 +27,8 @@ install -m 755 "$root/packaging/appimage/AppRun" "$appdir/AppRun"
 libraries=(libgtk-3.so.0 libgdk-3.so.0 libglib-2.0.so.0 libgobject-2.0.so.0 libgio-2.0.so.0
   libcairo.so.2 libgdk_pixbuf-2.0.so.0 libpango-1.0.so.0 libpangocairo-1.0.so.0
   libpangoft2-1.0.so.0 libharfbuzz.so.0 libfontconfig.so.1 libatk-1.0.so.0 libepoxy.so.0
-  libX11.so.6 libxkbcommon-x11.so.0 libxcb-xkb.so.1 libsecret-1.so.0
+  libX11.so.6 libxkbcommon-x11.so.0 libxcb-xkb.so.1 libsecret-1.so.0 libfribidi.so.0
+  libthai.so.0 libdatrie.so.1 libfreetype.so.6 libpng16.so.16 libexpat.so.1 libbrotlidec.so.1 libbrotlicommon.so.1
   libayatana-appindicator3.so.1 libwebkit2gtk-4.1.so.0 libjavascriptcoregtk-4.1.so.0 libsoup-3.0.so.0)
 args=()
 for library in "${libraries[@]}"; do
