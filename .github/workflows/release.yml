@@ -35,11 +35,11 @@ jobs:
             target: darwin/amd64
             dir_name: darwin-amd64
             archive_name: rainforest-darwin-amd64.tar.gz
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: linux/amd64
             dir_name: linux-amd64
             archive_name: rainforest-linux-amd64.tar.gz
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: linux/arm64
             dir_name: linux-arm64
             archive_name: rainforest-linux-arm64.tar.gz
@@ -143,6 +143,25 @@ jobs:
             grep -q '"signature":' "$manifest"
           fi
 
+      - name: Install AppImage packaging tools
+        if: matrix.target == 'linux/amd64'
+        run: |
+          bash scripts/install-appimage-tools.sh "$RUNNER_TEMP/appimage-tools"
+          echo "$RUNNER_TEMP/appimage-tools" >> "$GITHUB_PATH"
+
+      - name: Build updateable x86_64 AppImage
+        if: matrix.target == 'linux/amd64'
+        run: bash scripts/build-appimage.sh dist/linux-amd64 dist/linux-amd64
+
+      - name: Smoke actual AppImage offline as non-root on Ubuntu 22.04
+        if: matrix.target == 'linux/amd64'
+        run: |
+          docker build -f packaging/appimage/smoke.Dockerfile -t rainforest-appimage-smoke .
+          image=$(realpath dist/linux-amd64/rainforest-*-x86_64.AppImage)
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            -v "$(pwd)/dist/linux-amd64:/artifacts:ro" -v "$(pwd)/scripts:/checks:ro" \
+            rainforest-appimage-smoke "/artifacts/${image##*/}"
+
       - name: Package release archive and SHA-256 checksum
         shell: bash
         env:
@@ -156,7 +175,7 @@ jobs:
           else
             tar -czf "release-assets/$ARCHIVE_NAME" -C dist .
           fi
-          for f in "dist/${DIR_NAME}"/update-*.json "dist/${DIR_NAME}"/rainforest-*-*.tar.gz "dist/${DIR_NAME}"/*.deb "dist/${DIR_NAME}"/*Setup*.exe "dist/${DIR_NAME}"/*.dmg "dist/${DIR_NAME}"/install.sh; do
+          for f in "dist/${DIR_NAME}"/update-*.json "dist/${DIR_NAME}"/rainforest-*-*.tar.gz "dist/${DIR_NAME}"/*.deb "dist/${DIR_NAME}"/*Setup*.exe "dist/${DIR_NAME}"/*.dmg "dist/${DIR_NAME}"/install.sh "dist/${DIR_NAME}"/*.AppImage "dist/${DIR_NAME}"/*.AppImage.zsync; do
             if [[ -f "$f" ]]; then
               cp "$f" release-assets/
             fi
