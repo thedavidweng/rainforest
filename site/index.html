@@ -38,9 +38,15 @@
       <a href="https://github.com/thedavidweng/rainforest#documentation" data-i18n="nav.docs">Docs</a>
       <a href="https://github.com/thedavidweng/rainforest">GitHub</a>
     </nav>
-    <button class="lang" type="button" data-lang-toggle aria-label="切换到中文">
-      <span data-lang-option="en">EN</span><span data-lang-option="zh">中</span>
-    </button>
+    <div class="nav-controls">
+      <button class="nav-theme" type="button" data-nav-theme-toggle aria-label="Switch demo to light theme" title="Switch demo to light theme">
+        <svg class="nav-theme-sun" viewBox="0 0 256 256" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16a8,8,0,0,0-11.32,11.32Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM197.66,58.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM186.34,186.34a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM240,120H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16ZM40,120H16a8,8,0,0,0,0,16H40a8,8,0,0,0,0-16Zm96,88a8,8,0,0,0-16,0v24a8,8,0,0,0,16,0Z"/></svg>
+        <svg class="nav-theme-moon" viewBox="0 0 256 256" aria-hidden="true"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.1,103.1,0,0,0,62.52-20.85,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM136,208A88,88,0,0,1,65.34,58.37,88.74,88.74,0,0,1,90,39.63,104.22,104.22,0,0,0,216.37,166,88.74,88.74,0,0,1,136,208Z"/></svg>
+      </button>
+      <button class="lang" type="button" data-lang-toggle aria-label="切换到中文">
+        <span data-lang-option="en">EN</span><span data-lang-option="zh">中</span>
+      </button>
+    </div>
   </header>
 
   <main id="main">
@@ -66,7 +72,29 @@
         <p class="cta-note enter" style="--i:4" data-download-note data-i18n="dl.note">macOS · Windows · Linux — free and open source</p>
       </div>
       <figure class="shot enter" style="--i:5">
-        <div class="preview-window"><iframe data-preview title="Interactive Rainforest preview" src="preview/?lang=en" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe></div>
+        <div class="shot-window">
+          <div class="shot-bar">
+            <div class="shot-dots" aria-hidden="true">
+              <span class="shot-dot close"></span>
+              <span class="shot-dot min"></span>
+              <span class="shot-dot max"></span>
+            </div>
+            <div class="shot-title">Rainforest</div>
+            <div class="shot-actions">
+              <div class="shot-theme-switch" role="group" aria-label="Demo appearance">
+                <button type="button" class="shot-theme-btn" data-theme-val="light" aria-pressed="false" title="Light theme">
+                  <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16a8,8,0,0,0-11.32,11.32Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM197.66,58.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM186.34,186.34a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM240,120H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16ZM40,120H16a8,8,0,0,0,0,16H40a8,8,0,0,0,0-16Zm96,88a8,8,0,0,0-16,0v24a8,8,0,0,0,16,0Z"/></svg>
+                  <span class="shot-theme-label" data-i18n="theme.light">Light</span>
+                </button>
+                <button type="button" class="shot-theme-btn" data-theme-val="dark" aria-pressed="true" title="Dark theme">
+                  <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.1,103.1,0,0,0,62.52-20.85,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM136,208A88,88,0,0,1,65.34,58.37,88.74,88.74,0,0,1,90,39.63,104.22,104.22,0,0,0,216.37,166,88.74,88.74,0,0,1,136,208Z"/></svg>
+                  <span class="shot-theme-label" data-i18n="theme.dark">Dark</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="preview-window"><iframe data-preview title="Interactive Rainforest preview" src="preview/?lang=en&theme=dark" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe></div>
+        </div>
         <figcaption data-i18n="preview.note">Try the app. Sample data only; file and account operations are disabled.</figcaption>
       </figure>
     </section>

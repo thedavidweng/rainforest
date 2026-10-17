@@ -23,6 +23,10 @@ const STRINGS = {
   en: {
     "skip": "Skip to content",
     "preview.note": "Try the app. Sample data only; file and account operations are disabled.",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
+    "theme.switchToLight": "Switch demo to light theme",
+    "theme.switchToDark": "Switch demo to dark theme",
     "nav.features": "Features",
     "nav.safety": "Safety",
     "nav.docs": "Docs",
@@ -103,6 +107,10 @@ const STRINGS = {
   zh: {
     "skip": "跳到正文",
     "preview.note": "试用真实界面。仅含示例数据，文件和账号操作已禁用。",
+    "theme.light": "浅色",
+    "theme.dark": "深色",
+    "theme.switchToLight": "切换 Demo 为浅色模式",
+    "theme.switchToDark": "切换 Demo 为深色模式",
     "nav.features": "功能",
     "nav.safety": "安全",
     "nav.docs": "文档",
@@ -680,12 +688,79 @@ const previewWindow = preview.parentElement;
 new ResizeObserver(([entry]) => {
   preview.style.transform = `scale(${entry.contentRect.width / 1080})`;
 }).observe(previewWindow);
+
+const THEME_KEY = "rainforest.demo_theme";
+let demoTheme = storage.get(THEME_KEY) || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+
+function setDemoTheme(nextTheme) {
+  demoTheme = nextTheme === "light" ? "light" : "dark";
+  storage.set(THEME_KEY, demoTheme);
+  document.documentElement.setAttribute("data-demo-theme", demoTheme);
+
+  document.querySelectorAll("[data-theme-val]").forEach((btn) => {
+    const active = btn.dataset.themeVal === demoTheme;
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+    btn.classList.toggle("active", active);
+  });
+
+  const navBtn = document.querySelector("[data-nav-theme-toggle]");
+  if (navBtn) {
+    const isDark = demoTheme === "dark";
+    const labelKey = isDark ? "theme.switchToLight" : "theme.switchToDark";
+    navBtn.setAttribute("aria-label", t(labelKey));
+    navBtn.title = t(labelKey);
+  }
+
+  if (preview) {
+    try {
+      if (preview.contentDocument && preview.contentDocument.documentElement) {
+        preview.contentDocument.documentElement.setAttribute("data-mygo-theme", demoTheme);
+      }
+    } catch (_) {}
+    preview.contentWindow?.postMessage({ type: "theme", theme: demoTheme }, "*");
+  }
+}
+
+document.querySelectorAll("[data-theme-val]").forEach((btn) => {
+  btn.addEventListener("click", () => setDemoTheme(btn.dataset.themeVal));
+});
+
+const navThemeToggle = document.querySelector("[data-nav-theme-toggle]");
+if (navThemeToggle) {
+  navThemeToggle.addEventListener("click", () => {
+    setDemoTheme(demoTheme === "dark" ? "light" : "dark");
+  });
+}
+
+preview.addEventListener("load", () => {
+  try {
+    preview.contentDocument?.documentElement.setAttribute("data-mygo-theme", demoTheme);
+  } catch (_) {}
+  preview.contentWindow?.postMessage({ type: "theme", theme: demoTheme }, "*");
+});
+
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
+  if (!storage.get(THEME_KEY)) {
+    setDemoTheme(e.matches ? "light" : "dark");
+  }
+});
+
 langListeners.push(() => {
   const locale = lang === "zh" ? "zh-Hans" : "en";
-  const src = `preview/?lang=${locale}`;
+  const src = `preview/?lang=${locale}&theme=${demoTheme}`;
   if (preview.getAttribute("src") !== src) preview.src = src;
   preview.title = lang === "zh" ? "Rainforest 交互预览" : "Interactive Rainforest preview";
+
+  const navBtn = document.querySelector("[data-nav-theme-toggle]");
+  if (navBtn) {
+    const isDark = demoTheme === "dark";
+    const labelKey = isDark ? "theme.switchToLight" : "theme.switchToDark";
+    navBtn.setAttribute("aria-label", t(labelKey));
+    navBtn.title = t(labelKey);
+  }
 });
+
+setDemoTheme(demoTheme);
 
 ambient();
 oneWay(document.querySelector("[data-oneway]"));
