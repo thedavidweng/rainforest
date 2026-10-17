@@ -1040,7 +1040,7 @@ func TestAlbumRetryOnlyAssociatesPersistedMedia(t *testing.T) {
 	var uploads, patches atomic.Int32
 	var fail atomic.Bool
 	fail.Store(true)
-	client := newTestClient(t, aphotos.RegionCA, roundTripFunc(func(r *http.Request) (*http.Response, error) {
+	transport := roundTripFunc(func(r *http.Request) (*http.Response, error) {
 		switch {
 		case r.Method == "GET" && r.URL.Path == "/drive/v1/nodes/album":
 			return jsonResponse(200, map[string]any{"id": "album", "kind": "VISUAL_COLLECTION", "status": "AVAILABLE", "name": "Trip"}), nil
@@ -1076,7 +1076,8 @@ func TestAlbumRetryOnlyAssociatesPersistedMedia(t *testing.T) {
 			t.Errorf("unexpected %s", r.Method)
 			return jsonResponse(500, nil), nil
 		}
-	}))
+	})
+	client := newTestClient(t, aphotos.RegionCA, transport)
 	eng, st := newTestEngine(t, client)
 	tr, err := eng.StartUpload(ctx, engine.UploadJobRequest{Paths: []string{path}, DestinationNodeID: "album"})
 	if err != nil {
@@ -1090,10 +1091,14 @@ func TestAlbumRetryOnlyAssociatesPersistedMedia(t *testing.T) {
 	if items[0].RemoteNodeID != "media" {
 		t.Fatalf("lost uploaded ID: %+v", items)
 	}
+	if err := eng.Close(); err != nil {
+		t.Fatal(err)
+	}
 	fail.Store(false)
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
 	}
+	client = newTestClient(t, aphotos.RegionCA, transport)
 	recovered := engine.New(engine.Config{Store: st, Client: client})
 	t.Cleanup(func() { _ = recovered.Close() })
 	if err := recovered.ReconcileOnStartup(ctx); err != nil {

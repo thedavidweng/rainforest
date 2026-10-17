@@ -21,7 +21,10 @@ export default {
       ? { signingIdentity: process.env.MACOS_SIGNING_IDENTITY }
       : {}),
     ...(process.env.MACOS_NOTARIZE_PROFILE
-      ? { notarize: { keychainProfile: process.env.MACOS_NOTARIZE_PROFILE } }
+      ? { notarize: {
+          keychainProfile: process.env.MACOS_NOTARIZE_PROFILE,
+          keychain: process.env.APPLE_SIGNING_KEYCHAIN,
+        } }
       : {}),
   },
 }

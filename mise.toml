@@ -10,6 +10,9 @@ run = "go build ./..."
 [tasks.test]
 run = "go test ./..."
 
+[tasks.test-release]
+run = "python3 scripts/test-macos-release.py"
+
 [tasks.test-race]
 run = "go test -race ./..."
 
@@ -100,6 +103,7 @@ run = [
   "mise run vet",
   "mise run build",
   "mise run test",
+  "mise run test-release",
   "mise run test-race",
   "mise run lint",
   "mise run conventions",

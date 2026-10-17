@@ -8,7 +8,7 @@ on:
     inputs:
       tag_name:
         description: "Release tag (e.g. v0.1.0)"
-        required: false
+        required: true
         type: string
 
 permissions: {}
@@ -22,7 +22,7 @@ jobs:
     name: Build Desktop Artifacts (${{ matrix.target }})
     permissions:
       contents: read
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +52,10 @@ jobs:
             dir_name: windows-arm64
             archive_name: rainforest-windows-arm64.zip
     runs-on: ${{ matrix.os }}
+    env:
+      APPLE_TEAM_ID: NCFNX3LJ83
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -78,6 +82,37 @@ jobs:
             exit 1
           fi
 
+      - name: Import Developer ID signing identity
+        if: runner.os == 'macOS'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: "Developer ID Application: MOE AI LLC (NCFNX3LJ83)"
+          API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          : "${CERTIFICATE_BASE64:?}" "${CERTIFICATE_PASSWORD:?}" "${API_KEY_BASE64:?}"
+          : "${APPLE_API_KEY_ID:?}" "${APPLE_API_ISSUER:?}"
+          umask 077
+          keychain="$RUNNER_TEMP/release-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 32)"
+          printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          printf '%s' "$API_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/notary-key.p8"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 7200 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" \
+            -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$keychain_password" "$keychain" > /dev/null
+          security find-identity -v -p codesigning "$keychain" | grep -F "$APPLE_SIGNING_IDENTITY"
+          echo "APPLE_SIGNING_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+          security list-keychains -d user -s "$keychain" "$HOME/Library/Keychains/login.keychain-db"
+          xcrun notarytool store-credentials release-notary --keychain "$keychain" \
+            --key "$RUNNER_TEMP/notary-key.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER"
+          echo "MACOS_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> "$GITHUB_ENV"
+          echo "MACOS_NOTARIZE_PROFILE=release-notary" >> "$GITHUB_ENV"
+
       - name: Run pre-release tests
         run: |
           go test -race ./...
@@ -88,24 +123,20 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           MATRIX_TARGET: ${{ matrix.target }}
           DIR_NAME: ${{ matrix.dir_name }}
-          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
-          MACOS_NOTARIZE_PROFILE: ${{ secrets.MACOS_NOTARIZE_PROFILE }}
           MYGO_UPDATER_PUBLIC_KEY: ${{ secrets.MYGO_UPDATER_PUBLIC_KEY }}
           MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
         run: |
           set -euo pipefail
           FLAGS=(-platform "$MATRIX_TARGET" -o dist)
           if [[ "$MATRIX_OS" == macos-* ]]; then
-            if [[ -z "${MACOS_SIGNING_IDENTITY:-}" ]]; then
-              FLAGS+=(-skip-dmg)
-            fi
-            if [[ -z "${MACOS_NOTARIZE_PROFILE:-}" ]]; then
-              FLAGS+=(-skip-notarize)
-            fi
+            : "${MACOS_SIGNING_IDENTITY:?}" "${MACOS_NOTARIZE_PROFILE:?}" "${APPLE_SIGNING_KEYCHAIN:?}"
           else
             FLAGS+=(-skip-dmg -skip-notarize)
           fi
           go tool mygo build "${FLAGS[@]}"
+          if [[ "$MATRIX_OS" == macos-* ]]; then
+            bash scripts/verify-macos-release.sh "dist/$DIR_NAME"
+          fi
           if [[ -n "${MYGO_UPDATER_PRIVATE_KEY:-}" ]]; then
             manifest="dist/${DIR_NAME}/update-${DIR_NAME}.json"
             test -s "$manifest"
@@ -148,6 +179,13 @@ jobs:
         with:
           name: release-${{ strategy.job-index }}
           path: release-assets/*
+
+      - name: Remove signing credentials
+        if: always() && runner.os == 'macOS'
+        run: |
+          keychain="$RUNNER_TEMP/release-signing.keychain-db"
+          if [[ -f "$keychain" ]]; then security delete-keychain "$keychain"; fi
+          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/notary-key.p8"
 
   release:
     name: Publish GitHub Release
