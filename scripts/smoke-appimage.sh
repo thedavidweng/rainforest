@@ -15,11 +15,12 @@ grep -Fx "Filename: ${image##*/}" "${image}.zsync"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 cd "$work"
-env -u APPIMAGE_EXTRACT_AND_RUN "$image" --appimage-extract > /dev/null
+unsquashfs -offset "$(env -u APPIMAGE_EXTRACT_AND_RUN "$image" --appimage-offset)" -d squashfs-root "$image" >/dev/null
 python3 /checks/check-appdir.py "$work/squashfs-root"
 export HOME="$work/home" XDG_CONFIG_HOME="$work/home/.config" XDG_DATA_HOME="$work/home/.local/share"
 export XDG_CACHE_HOME="$work/home/.cache" XDG_RUNTIME_DIR="$work/runtime"
-mkdir -m 700 -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+chmod 700 "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 export LANG=C.UTF-8 GDK_BACKEND=x11 LIBGL_ALWAYS_SOFTWARE=1 APPIMAGE_EXTRACT_AND_RUN=1
 export IMAGE="$image" SMOKE_WORK="$work"
 dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' bash <<'GUI'
