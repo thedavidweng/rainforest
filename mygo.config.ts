@@ -2,7 +2,7 @@ export default {
   name: "Rainforest",
   id: "com.thedavidweng.rainforest",
   identifier: "com.thedavidweng.rainforest",
-  version: "0.1.0",
+  version: "0.1.1",
   copyright: "Copyright (C) 2026 Davy Weng and contributors",
   main: ".",
   i18n: { dir: "locales", source: "en" },

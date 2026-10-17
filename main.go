@@ -20,7 +20,7 @@ import (
 	"github.com/thedavidweng/rainforest/locales"
 )
 
-var version = "0.1.0"
+var version = "0.1.1"
 
 //go:embed resources/icon.png
 var appIcon []byte
