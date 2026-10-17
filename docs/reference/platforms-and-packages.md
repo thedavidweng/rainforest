@@ -10,8 +10,30 @@ Reference for Rainforest's supported desktop platforms, architectures, package f
 | **macOS 12.0+** | Intel (`darwin/amd64`) | `Rainforest.app` | `Rainforest <ver> amd64.dmg` (when signed) + `rainforest-darwin-amd64.tar.gz` | `update-darwin-amd64.json` |
 | **Windows 10/11** | x64 (`windows/amd64`) | `Rainforest.exe` | `Rainforest Setup <ver> amd64.exe` (with NSIS) + `rainforest-windows-amd64.zip` | `update-windows-amd64.json` |
 | **Windows 11** | ARM64 (`windows/arm64`) | `Rainforest.exe` | `Rainforest Setup <ver> arm64.exe` (with NSIS) + `rainforest-windows-arm64.zip` | `update-windows-arm64.json` |
-| **Linux** | x64 (`linux/amd64`) | `rainforest` + `rainforest.desktop` | `rainforest_<ver>_amd64.deb`, `rainforest-<ver>-linux-amd64.tar.gz`, `install.sh` | `update-linux-amd64.json` |
+| **Linux** | x64 (`linux/amd64`) | `rainforest` + `rainforest.desktop` | `rainforest_<ver>_amd64.deb`, `rainforest-<ver>-linux-amd64.tar.gz`, `install.sh`, `rainforest-<ver>-x86_64.AppImage` + `.AppImage.zsync` | `update-linux-amd64.json` |
 | **Linux** | ARM64 (`linux/arm64`) | `rainforest` + `rainforest.desktop` | `rainforest_<ver>_arm64.deb`, `rainforest-<ver>-linux-arm64.tar.gz`, `install.sh` | `update-linux-arm64.json` |
+
+## Linux AppImage
+
+The x86_64 AppImage is built on Ubuntu 22.04 in addition to the existing Debian packages, tar archives, install scripts, and ARM64 outputs. GTK, WebKitGTK libraries/helpers, and GTK resources are bundled explicitly because MyGo loads native libraries dynamically rather than through ELF dependencies. The host still supplies its graphics driver stack and normal desktop services.
+
+Each AppImage embeds `gh-releases-zsync|thedavidweng|rainforest|latest|rainforest-*-x86_64.AppImage.zsync`. The adjacent `.AppImage.zsync`, both individual SHA-256 files, and `checksums.txt` are published together. AppImageUpdate can use this metadata to find and delta-update the latest x86_64 AppImage; it does not add a Rainforest in-app updater, nor replace MyGo's signed tarball update channel. Keep the AppImage in a user-writable directory for external updates.
+
+CI and release jobs extract the actual AppImage, reject unreadable/non-executable package paths and missing dynamic libraries, and launch the artifact under Xvfb in a fresh HOME as UID 10001 with no network on Ubuntu 22.04. A visible, correctly sized Rainforest main window owned by its executable and an initialized SQLite database are required; `--version` alone is insufficient. This smoke covers offline startup, not Amazon sign-in or real-account transfers. `mise run test-release` exercises packaging permission and launcher boundaries without building an AppImage.
+
+To reproduce on x86_64 Ubuntu 22.04 after installing the Go toolchain:
+
+```sh
+bash scripts/install-appimage-tools.sh "$PWD/.appimage-tools"
+export PATH="$PWD/.appimage-tools:$PATH"
+go tool mygo build -platform linux/amd64 -skip-dmg -skip-notarize -o dist
+bash scripts/build-appimage.sh dist/linux-amd64 dist/linux-amd64
+docker build -f packaging/appimage/smoke.Dockerfile -t rainforest-appimage-smoke .
+image=$(realpath dist/linux-amd64/rainforest-*-x86_64.AppImage)
+docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+  -v "$PWD/dist/linux-amd64:/artifacts:ro" -v "$PWD/scripts:/checks:ro" \
+  rainforest-appimage-smoke "/artifacts/${image##*/}"
+```
 
 ## Auto-Update Signing (`mygo.config.ts`)
 

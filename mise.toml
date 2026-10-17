@@ -11,7 +11,7 @@ run = "go build ./..."
 run = "go test ./..."
 
 [tasks.test-release]
-run = "python3 scripts/test-macos-release.py"
+run = ["python3 scripts/test-macos-release.py", "python3 scripts/test-appimage-release.py"]
 
 [tasks.test-race]
 run = "go test -race ./..."
