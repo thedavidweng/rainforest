@@ -2,15 +2,10 @@
 
 This guide covers common installation, OS permission, and startup issues on macOS, Windows, and Linux.
 
-## macOS Gatekeeper Warning on Unsigned Builds
+## macOS signing and notarization
 
-If you download a CI dry-run build or an ad-hoc signed `.app` / `.dmg` that has not been notarized with an Apple Developer ID:
-
-```sh
-xattr -dr com.apple.quarantine /Applications/Rainforest.app
-```
-
-Official signed releases notarized with Developer ID open without quarantine prompts.
+Official releases from v0.1.1 are signed with Developer ID and notarized by Apple.
+Download the macOS artifact for your architecture from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases).
 
 ## Windows SmartScreen and WebView2 Runtime
 
