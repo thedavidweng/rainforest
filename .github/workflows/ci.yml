@@ -82,9 +82,9 @@ jobs:
                 test -x "dist/linux-${arch}/rainforest"
                 test -s "dist/linux-${arch}/rainforest.desktop"
                 test -s "dist/linux-${arch}/install.sh"
-                test -s "dist/linux-${arch}/rainforest_0.1.0_${arch}.deb"
-                test -s "dist/linux-${arch}/rainforest-0.1.0-linux-${arch}.tar.gz"
-                tar -tzf "dist/linux-${arch}/rainforest-0.1.0-linux-${arch}.tar.gz" > "$RUNNER_TEMP/tar-${arch}.list"
+                test -s "dist/linux-${arch}/rainforest_0.1.1_${arch}.deb"
+                test -s "dist/linux-${arch}/rainforest-0.1.1-linux-${arch}.tar.gz"
+                tar -tzf "dist/linux-${arch}/rainforest-0.1.1-linux-${arch}.tar.gz" > "$RUNNER_TEMP/tar-${arch}.list"
                 grep -q "rainforest" "$RUNNER_TEMP/tar-${arch}.list"
               done
               ./dist/linux-amd64/rainforest --version

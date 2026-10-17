@@ -146,7 +146,7 @@ func TestDocumentationAndReleaseWorkflowsContract(t *testing.T) {
 
 	changelog := contents["CHANGELOG.md"]
 	for _, snippet := range []string{
-		"0.1.0",
+		"0.1.1",
 		"Rainforest",
 		"MyGo",
 		"ReconcileOnStartup",

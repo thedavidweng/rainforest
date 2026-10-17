@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-17
+
+### Fixed
+
+- macOS releases now require Developer ID signatures, Apple notarization, and valid stapled tickets before publication.
+
 ### Changed
 
 - Rebuilt the interface as a native desktop UI with a sidebar and a Welcome sign-in screen. Pages are now Upload, Activity, Backup, Restore, and Settings, with light and dark appearance that follows your system.
