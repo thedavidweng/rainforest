@@ -25,7 +25,7 @@ func (a *App) activityPage(c *ui.Context, r *ui.Route) {
 	var actions func()
 	if len(a.history) > 0 {
 		actions = func() {
-			if secondaryButton(c, nil, m.ActivityClearHistory(), false).Clicked() {
+			if secondaryButton(c, nil, m.ActivityClearHistory(), a.preview).Clicked() {
 				st.confirmClear = true
 			}
 		}
@@ -206,14 +206,14 @@ func (a *App) transferActions(c *ui.Context, m locales.Messages, t gui.TransferD
 			if t.Stage == "paused" {
 				icon, name = iconPlay, m.CommonResume()
 			}
-			if iconButton(c, icon, name).Clicked() {
+			if iconButton(c, icon, name).Disabled(a.preview).Clicked() {
 				a.pauseOrResume(t)
 			}
-			if iconButton(c, iconX, m.ActivityCancel()).Clicked() {
+			if iconButton(c, iconX, m.ActivityCancel()).Disabled(a.preview).Clicked() {
 				a.transferCall(a.svc.Transfers.Cancel, t.ID)
 			}
 		case canRetry(t):
-			if secondaryButton(c, nil, m.CommonRetry(), false).Clicked() {
+			if secondaryButton(c, nil, m.CommonRetry(), a.preview).Clicked() {
 				a.transferCall(a.svc.Transfers.Retry, t.ID)
 			}
 		}
@@ -241,13 +241,13 @@ func (a *App) transferMenu(menu *ui.Menu, m locales.Messages, t gui.TransferDTO,
 	if resume {
 		name = m.CommonResume()
 	}
-	if menu.Item(name).Disabled(!active).Chosen() {
+	if menu.Item(name).Disabled(a.preview || !active).Chosen() {
 		a.pauseOrResume(t)
 	}
-	if menu.Item(m.CommonCancel()).Disabled(!active).Chosen() {
+	if menu.Item(m.CommonCancel()).Disabled(a.preview || !active).Chosen() {
 		a.transferCall(a.svc.Transfers.Cancel, t.ID)
 	}
-	if menu.Item(m.CommonRetry()).Disabled(!canRetry(t)).Chosen() {
+	if menu.Item(m.CommonRetry()).Disabled(a.preview || !canRetry(t)).Chosen() {
 		a.transferCall(a.svc.Transfers.Retry, t.ID)
 	}
 	menu.Separator()

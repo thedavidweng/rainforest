@@ -8,6 +8,7 @@ import (
 )
 
 type Options struct {
+	Preview   bool
 	SetLocale func(string)
 	Update    func(func())
 	Version   string
@@ -38,7 +39,8 @@ type probeState struct {
 type App struct {
 	setLocale func(string)
 	aboutOpen bool
-	svc       *gui.Services
+	svc       Services
+	preview   bool
 	update    func(func())
 	spawn     func(func())
 	version   string
@@ -88,6 +90,10 @@ type App struct {
 }
 
 func New(svc *gui.Services, opts Options) *App {
+	return NewWithServices(Services{Auth: svc.Auth, Transfers: svc.Transfers, Backups: svc.Backups, Downloads: svc.Downloads, Settings: svc.Settings}, opts)
+}
+
+func NewWithServices(svc Services, opts Options) *App {
 	update := opts.Update
 	if update == nil {
 		update = func(fn func()) { fn() }
@@ -101,6 +107,7 @@ func New(svc *gui.Services, opts Options) *App {
 		setLocale: setLocale,
 		icon:      icon,
 		svc:       svc,
+		preview:   opts.Preview,
 		update:    update,
 		spawn:     func(fn func()) { go fn() },
 		version:   opts.Version,

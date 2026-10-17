@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/thedavidweng/amazon-photos/pkg/aphotos"
 	"github.com/thedavidweng/rainforest/internal/credstore"
-	_ "modernc.org/sqlite"
 )
 
 var ErrNotFound = errors.New("record not found")

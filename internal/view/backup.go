@@ -67,10 +67,10 @@ func (a *App) backupActions(c *ui.Context, m locales.Messages) {
 	if a.backupsStopped() {
 		label, stop = m.BackupResumeAll(), false
 	}
-	if secondaryButton(c, nil, label, a.settings == nil).Clicked() {
+	if secondaryButton(c, nil, label, a.preview || a.settings == nil).Clicked() {
 		a.setBackupsStopped(stop)
 	}
-	if primaryButton(c, iconPlus, m.BackupAddFolder(), false).Clicked() {
+	if primaryButton(c, iconPlus, m.BackupAddFolder(), a.preview).Clicked() {
 		a.addFolder()
 	}
 }
@@ -82,7 +82,9 @@ func (a *App) backupEmpty(c *ui.Context, m locales.Messages) {
 		})
 		return
 	}
-	emptyState(c, iconFolder, m.BackupEmptyTitle(), m.BackupEmptyBody(), m.BackupAddFolder(), a.addFolder)
+	ui.Column(c).Disabled(a.preview).Children(func() {
+		emptyState(c, iconFolder, m.BackupEmptyTitle(), m.BackupEmptyBody(), m.BackupAddFolder(), a.addFolder)
+	})
 }
 
 func (a *App) selectedRule() gui.BackupRuleDTO {
@@ -181,10 +183,10 @@ func (a *App) ruleDetail(c *ui.Context, m locales.Messages, rule gui.BackupRuleD
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
 				statusPill(c, status, tn)
 				busy := rule.Status == "scanning" || rule.Paused || stopped
-				if secondaryButton(c, nil, m.BackupNow(), busy).Clicked() {
+				if secondaryButton(c, nil, m.BackupNow(), a.preview || busy).Clicked() {
 					a.scanNow(rule.ID)
 				}
-				iconButton(c, iconDotsThree, m.CommonMoreActions()).Menu(func(menu *ui.Menu) {
+				iconButton(c, iconDotsThree, m.CommonMoreActions()).Disabled(a.preview).Menu(func(menu *ui.Menu) {
 					a.ruleMenu(menu, m, rule)
 				})
 			})

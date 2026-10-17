@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-mygo-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rainforest preview</title>
+  <style>
+    html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; transition: background-color 200ms ease; }
+    html[data-mygo-theme="dark"], html[data-mygo-theme="dark"] body { background: #0E0E0E; color: #F5F5F5; }
+    html[data-mygo-theme="light"], html[data-mygo-theme="light"] body { background: #f8f9fa; color: #0F1111; }
+    #status { position: absolute; inset: 0; display: grid; place-content: center; color: #6b7280; }
+    html[data-mygo-theme="dark"] #status { color: #a3a3a3; }
+    #status[hidden] { display: none; }
+    #mygo { position: absolute; inset: 0; }
+  </style>
+  <script src="wasm_exec.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div id="status" role="status">Loading Rainforest…</div>
+  <div id="mygo"></div>
+</body>
+</html>

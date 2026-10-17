@@ -57,7 +57,7 @@ func (a *App) recentUploads(c *ui.Context, m locales.Messages) {
 				} else {
 					ui.Box(c).Grow(1)
 				}
-				ui.Link(c, m.UploadViewInPhotos(), a.photosURL()).FontWeight(500)
+				ui.Link(c, m.UploadViewInPhotos(), a.photosURL()).FontWeight(500).Disabled(a.preview)
 			})
 		})
 	})

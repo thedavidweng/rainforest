@@ -22,6 +22,11 @@ const svg = (d, cls = "") => `<svg viewBox="0 0 256 256" aria-hidden="true"${cls
 const STRINGS = {
   en: {
     "skip": "Skip to content",
+    "preview.note": "Try the app. Sample data only; file and account operations are disabled.",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
+    "theme.switchToLight": "Switch demo to light theme",
+    "theme.switchToDark": "Switch demo to dark theme",
     "nav.features": "Features",
     "nav.safety": "Safety",
     "nav.docs": "Docs",
@@ -101,6 +106,11 @@ const STRINGS = {
   },
   zh: {
     "skip": "跳到正文",
+    "preview.note": "试用真实界面。仅含示例数据，文件和账号操作已禁用。",
+    "theme.light": "浅色",
+    "theme.dark": "深色",
+    "theme.switchToLight": "切换 Demo 为浅色模式",
+    "theme.switchToDark": "切换 Demo 为深色模式",
     "nav.features": "功能",
     "nav.safety": "安全",
     "nav.docs": "文档",
@@ -203,6 +213,7 @@ function setText(el, key, vars) {
 
 function applyLang() {
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelector("[data-lang-toggle]").setAttribute("aria-label", lang === "zh" ? "Switch to English" : "切换到中文");
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const vars = el.dataset.i18nVars ? JSON.parse(el.dataset.i18nVars) : undefined;
     el.textContent = t(el.dataset.i18n, vars);
@@ -392,7 +403,7 @@ async function setupDownloads() {
 
 /* ---------- one-way demo ---------- */
 
-const THUMBS = [
+const FALLBACK_GRADIENTS = [
   "linear-gradient(160deg, #2c4636, #a3c193)",
   "linear-gradient(160deg, #1d2b36, #7d9db3)",
   "linear-gradient(160deg, #4a3322, #d8a66d)",
@@ -401,6 +412,8 @@ const THUMBS = [
   "linear-gradient(160deg, #3b4a2a, #d6cf8a)",
   "linear-gradient(160deg, #18302e, #5fa39a)",
 ];
+
+const picsumThumb = (seed) => `url('https://picsum.photos/64?random=${seed}'), ${FALLBACK_GRADIENTS[seed % FALLBACK_GRADIENTS.length]}`;
 
 function oneWay(root) {
   const local = root.querySelector("[data-local]");
@@ -508,7 +521,7 @@ function oneWay(root) {
 
   addBtn.addEventListener("click", () => {
     const name = nextName();
-    const thumb = THUMBS[serial % THUMBS.length];
+    const thumb = picsumThumb(serial);
     addLocal(name, thumb);
     queue.push({ name, li: addCloud(name, thumb, true) });
     syncAdd();
@@ -518,7 +531,7 @@ function oneWay(root) {
 
   for (let i = 0; i < 4; i++) {
     const name = nextName();
-    const thumb = THUMBS[serial % THUMBS.length];
+    const thumb = picsumThumb(serial);
     addLocal(name, thumb);
     addCloud(name, thumb, false);
   }
@@ -645,14 +658,14 @@ function transferQueue(root) {
     visible = entry.isIntersecting;
     if (!visible) return;
     if (phase === "running") run();
-    else if (phase === "idle" && !started) { started = true; later(() => phase === "idle" && run(), 500); }
+    else if (phase === "idle" && !started && !reducedMotion.matches) { started = true; later(() => phase === "idle" && run(), 500); }
   }, { threshold: 0.5 }).observe(root);
 
   build();
   render();
 }
 
-/* ---------- ambient pointer: dappled light + window tilt ---------- */
+/* ---------- ambient pointer: dappled light ---------- */
 
 function ambient() {
   if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -668,36 +681,86 @@ function ambient() {
       glow.style.transform = `translate3d(${e.clientX - r.left}px, ${e.clientY - r.top}px, 0)`;
     });
   });
-
-  const shot = document.querySelector(".shot");
-  const tilt = shot.querySelector(".shot-tilt");
-  const s = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0 };
-  let raf = 0, last = 0;
-
-  function step(now) {
-    const dt = Math.min(1 / 30, (now - last) / 1000);
-    last = now;
-    for (const [p, v, t] of [["x", "vx", "tx"], ["y", "vy", "ty"]]) {
-      s[v] += (-90 * (s[p] - s[t]) - 14 * s[v]) * dt;
-      s[p] += s[v] * dt;
-    }
-    tilt.style.transform = `perspective(1600px) rotateX(${(-s.y * 2.4).toFixed(3)}deg) rotateY(${(s.x * 3.2).toFixed(3)}deg)`;
-    const settled = Math.abs(s.x - s.tx) + Math.abs(s.y - s.ty) + Math.abs(s.vx) + Math.abs(s.vy) < 0.001;
-    raf = settled ? 0 : requestAnimationFrame(step);
-  }
-  const kick = () => { if (!raf && !reducedMotion.matches) { last = performance.now(); raf = requestAnimationFrame(step); } };
-
-  addEventListener("pointermove", (e) => {
-    const r = shot.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > innerHeight) return;
-    s.tx = clampUnit((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
-    s.ty = clampUnit((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
-    kick();
-  }, { passive: true });
-  document.addEventListener("pointerleave", () => { s.tx = s.ty = 0; kick(); });
 }
 
-const clampUnit = (v) => Math.max(-1, Math.min(1, v));
+const preview = document.querySelector("[data-preview]");
+const previewWindow = preview.parentElement;
+new ResizeObserver(([entry]) => {
+  preview.style.transform = `scale(${entry.contentRect.width / 1080})`;
+}).observe(previewWindow);
+
+const THEME_KEY = "rainforest.demo_theme";
+let demoTheme = storage.get(THEME_KEY) || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+
+function setDemoTheme(nextTheme) {
+  demoTheme = nextTheme === "light" ? "light" : "dark";
+  storage.set(THEME_KEY, demoTheme);
+  document.documentElement.setAttribute("data-demo-theme", demoTheme);
+
+  document.querySelectorAll("[data-theme-val]").forEach((btn) => {
+    const active = btn.dataset.themeVal === demoTheme;
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+    btn.classList.toggle("active", active);
+  });
+
+  const navBtn = document.querySelector("[data-nav-theme-toggle]");
+  if (navBtn) {
+    const isDark = demoTheme === "dark";
+    const labelKey = isDark ? "theme.switchToLight" : "theme.switchToDark";
+    navBtn.setAttribute("aria-label", t(labelKey));
+    navBtn.title = t(labelKey);
+  }
+
+  if (preview) {
+    try {
+      if (preview.contentDocument && preview.contentDocument.documentElement) {
+        preview.contentDocument.documentElement.setAttribute("data-mygo-theme", demoTheme);
+      }
+    } catch (_) {}
+    preview.contentWindow?.postMessage({ type: "theme", theme: demoTheme }, "*");
+  }
+}
+
+document.querySelectorAll("[data-theme-val]").forEach((btn) => {
+  btn.addEventListener("click", () => setDemoTheme(btn.dataset.themeVal));
+});
+
+const navThemeToggle = document.querySelector("[data-nav-theme-toggle]");
+if (navThemeToggle) {
+  navThemeToggle.addEventListener("click", () => {
+    setDemoTheme(demoTheme === "dark" ? "light" : "dark");
+  });
+}
+
+preview.addEventListener("load", () => {
+  try {
+    preview.contentDocument?.documentElement.setAttribute("data-mygo-theme", demoTheme);
+  } catch (_) {}
+  preview.contentWindow?.postMessage({ type: "theme", theme: demoTheme }, "*");
+});
+
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
+  if (!storage.get(THEME_KEY)) {
+    setDemoTheme(e.matches ? "light" : "dark");
+  }
+});
+
+langListeners.push(() => {
+  const locale = lang === "zh" ? "zh-Hans" : "en";
+  const src = `preview/?lang=${locale}&theme=${demoTheme}`;
+  if (preview.getAttribute("src") !== src) preview.src = src;
+  preview.title = lang === "zh" ? "Rainforest 交互预览" : "Interactive Rainforest preview";
+
+  const navBtn = document.querySelector("[data-nav-theme-toggle]");
+  if (navBtn) {
+    const isDark = demoTheme === "dark";
+    const labelKey = isDark ? "theme.switchToLight" : "theme.switchToDark";
+    navBtn.setAttribute("aria-label", t(labelKey));
+    navBtn.title = t(labelKey);
+  }
+});
+
+setDemoTheme(demoTheme);
 
 ambient();
 oneWay(document.querySelector("[data-oneway]"));
