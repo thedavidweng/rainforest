@@ -29,26 +29,31 @@ set -euo pipefail
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; cat "$SMOKE_WORK/gui.log"' EXIT
 window=''
+owner=''
 for attempt in {1..60}; do
   kill -0 "$pid" || { echo 'AppImage exited before mapping its window' >&2; exit 1; }
-  window=$(xdotool search --onlyvisible --name '^Rainforest$' 2>/dev/null | sort -n | uniq | tr '\n' ' ' || true)
+  while read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    candidate_owner=$(xdotool getwindowpid "$candidate" 2>/dev/null || true)
+    [[ -n "$candidate_owner" ]] || continue
+    [[ $(readlink "/proc/$candidate_owner/exe" 2>/dev/null || true) == */rainforest ]] || continue
+    window="$candidate"
+    owner="$candidate_owner"
+    break
+  done < <(xdotool search --onlyvisible --name '.' 2>/dev/null | sort -n | uniq || true)
   if [[ -n "$window" ]]; then break; fi
   sleep 1
 done
 [[ -n "$window" ]] || { echo 'No visible Rainforest window' >&2; exit 1; }
-read -r -a windows <<< "$window"
-[[ ${#windows[@]} == 1 ]] || { echo 'Expected exactly one Rainforest main window' >&2; exit 1; }
-owner=$(xdotool getwindowpid "${windows[0]}")
-[[ $(readlink "/proc/$owner/exe") == */rainforest ]]
+# The window must belong to the packaged app, run by the invoking user.
 [[ $(stat -c %u "/proc/$owner") == "$(id -u)" ]]
-geometry=$(xdotool getwindowgeometry --shell "${windows[0]}")
+geometry=$(xdotool getwindowgeometry --shell "$window")
 printf '%s\n' "$geometry"
 width=$(printf '%s\n' "$geometry" | grep '^WIDTH=' | cut -d= -f2)
 height=$(printf '%s\n' "$geometry" | grep '^HEIGHT=' | cut -d= -f2)
 [[ "$width" -ge 860 && "$height" -ge 580 ]]
 sleep 5
 kill -0 "$pid"
-xdotool search --onlyvisible --all --pid "$owner" --name '^Rainforest$' > /dev/null
 # Initialization must reach SQLite, not merely display an error dialog.
 find "$HOME" -name rainforest.db -type f -size +0c | grep -q .
 GUI
