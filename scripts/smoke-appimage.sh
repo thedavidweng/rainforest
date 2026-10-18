@@ -44,7 +44,21 @@ for attempt in {1..60}; do
   if [[ -n "$window" ]]; then break; fi
   sleep 1
 done
-[[ -n "$window" ]] || { echo 'No visible Rainforest window' >&2; exit 1; }
+if [[ -z "$window" ]]; then
+  echo 'No visible Rainforest window' >&2
+  set +e
+  while read -r candidate; do
+    printf 'Window %s: ' "$candidate"
+    xdotool getwindowname "$candidate"
+    xdotool getwindowgeometry --shell "$candidate"
+    candidate_owner=$(xdotool getwindowpid "$candidate")
+    printf 'Owner %s, executable: ' "$candidate_owner"
+    readlink "/proc/$candidate_owner/exe"
+  done < <(xdotool search --onlyvisible --name '.' 2>/dev/null || true)
+  kill -QUIT "$pid"
+  wait "$pid"
+  exit 1
+fi
 # The window must belong to the packaged app, run by the invoking user.
 [[ $(stat -c %u "/proc/$owner") == "$(id -u)" ]]
 geometry=$(xdotool getwindowgeometry --shell "$window")
