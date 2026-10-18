@@ -9,5 +9,7 @@ sudo apt-get install -y --no-install-recommends libgtk-3-dev libgirepository1.0-
   libxkbcommon-x11-dev libxcb-xkb-dev patchelf desktop-file-utils zsync file
 curl --fail --location --retry 3 https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -o "$tools/linuxdeploy"
 printf '%s  %s\n' 8aea8da0f7f7039d2a2cecb14657d752a222a5e1d3825caeef186c82f751cdd1 "$tools/linuxdeploy" | sha256sum -c -
+curl --fail --location --retry 3 https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o "$tools/appimagetool"
+printf '%s  %s\n' 95cbe7cce9717fce90c484e34052ee7c7f1d7635b33c12525b4776826a7d29b6 "$tools/appimagetool" | sha256sum -c -
 curl --fail --location --retry 3 https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/7a3fbc31a9e5075073ff8790f26effbac5f84453/linuxdeploy-plugin-gtk.sh -o "$tools/linuxdeploy-plugin-gtk.sh"
-chmod 755 "$tools/linuxdeploy" "$tools/linuxdeploy-plugin-gtk.sh"
+chmod 755 "$tools/linuxdeploy" "$tools/appimagetool" "$tools/linuxdeploy-plugin-gtk.sh"

@@ -50,11 +50,12 @@ export LDAI_OUTPUT="$output_dir/rainforest-${version}-x86_64.AppImage"
 # Keep appimagetool's relative .zsync output out of the repository.
 cd "$work"
 linuxdeploy --appdir "$appdir" --plugin gtk "${args[@]}"
+desktop-file-validate "$appdir/rainforest.desktop"
+# Normalize last: a second deploy pass re-creates entries with restrictive modes.
 chmod -R a+rX "$appdir"
 chmod a+rx "$appdir/AppRun" "$appdir/usr/bin/rainforest"
 python3 "$root/scripts/check-appdir.py" "$appdir"
-desktop-file-validate "$appdir/rainforest.desktop"
-linuxdeploy --appdir "$appdir" --output appimage
+appimagetool -u "$LDAI_UPDATE_INFORMATION" "$appdir" "$LDAI_OUTPUT"
 if [[ -f "${LDAI_OUTPUT##*/}.zsync" ]]; then mv "${LDAI_OUTPUT##*/}.zsync" "${LDAI_OUTPUT}.zsync"; fi
 test -s "$LDAI_OUTPUT"
 test -s "${LDAI_OUTPUT}.zsync"
