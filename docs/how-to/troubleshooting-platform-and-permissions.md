@@ -22,6 +22,19 @@ sudo apt install ./rainforest_0.1.0_amd64.deb
 
 Or use the user-local `install.sh` script included in the release archive (installs into `~/.local/rainforest.app`, which supports in-app auto-updates).
 
+### Portable x86_64 AppImage
+
+Download `rainforest-<ver>-x86_64.AppImage` and verify it against the release's `checksums.txt`, then run it without sudo:
+
+```sh
+chmod a+rx rainforest-*-x86_64.AppImage
+./rainforest-*-x86_64.AppImage
+```
+
+If FUSE is unavailable, use `APPIMAGE_EXTRACT_AND_RUN=1 ./rainforest-<ver>-x86_64.AppImage`. The AppImage includes GTK/WebKitGTK runtime libraries; the host must still provide a working desktop graphics stack. The tested baseline is Ubuntu 22.04 x86_64. ARM64 users should continue using `.deb` or the tar archive.
+
+For external updates, keep the AppImage in a directory you own and use AppImageUpdate. The release includes the adjacent `.AppImage.zsync` metadata; Rainforest's in-app MyGo updater is a separate tarball installation channel, not an AppImage replacement mechanism.
+
 ## Persistent User Data Directory Errors on Startup
 
 Rainforest stores `rainforest.db` (SQLite state) and `credentials.json` in your OS user configuration/data directory (`~/Library/Application Support/com.thedavidweng.rainforest` on macOS, `%APPDATA%` on Windows, `$XDG_CONFIG_HOME/rainforest` or `~/.config/rainforest` on Linux).

@@ -42,7 +42,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             platform: "linux/amd64,linux/arm64"
             archive_name: rainforest-linux-dryrun.tar.gz
           - os: macos-latest
@@ -71,6 +71,22 @@ jobs:
           go test -race ./...
       - name: Package desktop build via MyGo (dry run)
         run: go tool mygo build -platform "${{ matrix.platform }}" -skip-dmg -skip-notarize -o dist
+      - name: Install AppImage packaging tools
+        if: runner.os == 'Linux'
+        run: |
+          bash scripts/install-appimage-tools.sh "$RUNNER_TEMP/appimage-tools"
+          echo "$RUNNER_TEMP/appimage-tools" >> "$GITHUB_PATH"
+      - name: Build updateable x86_64 AppImage
+        if: runner.os == 'Linux'
+        run: bash scripts/build-appimage.sh dist/linux-amd64 dist/linux-amd64
+      - name: Smoke actual AppImage offline as non-root on Ubuntu 22.04
+        if: runner.os == 'Linux'
+        run: |
+          docker build -f packaging/appimage/smoke.Dockerfile -t rainforest-appimage-smoke .
+          image=$(realpath dist/linux-amd64/rainforest-*-x86_64.AppImage)
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            -v "$(pwd)/dist/linux-amd64:/artifacts:ro" -v "$(pwd)/scripts:/checks:ro" \
+            rainforest-appimage-smoke "/artifacts/${image##*/}"
       - name: Verify packaged artifacts and SHA-256
         env:
           ARCHIVE_NAME: ${{ matrix.archive_name }}

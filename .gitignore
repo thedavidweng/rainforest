@@ -7,3 +7,5 @@ build/
 .scratch/
 
 _site/
+.appimage-tools/
+__pycache__/

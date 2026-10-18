@@ -53,7 +53,7 @@ independently of your Amazon marketplace. See [desktop shortcuts and settings](d
 
 ### Install
 
-Download the latest installer or archive for your platform (`macOS` Apple Silicon / Intel, `Windows` x64 / ARM64, `Linux` x64 / ARM64 `.deb` or `.tar.gz` with `install.sh`) from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases).
+Download the latest installer or archive for your platform (`macOS` Apple Silicon / Intel, `Windows` x64 / ARM64, `Linux` x64 / ARM64 `.deb` or `.tar.gz` with `install.sh`, plus a portable x86_64 `.AppImage` with AppImageUpdate `.zsync` metadata) from [GitHub Releases](https://github.com/thedavidweng/rainforest/releases). See [Linux installation and permissions](docs/how-to/troubleshooting-platform-and-permissions.md#portable-x86_64-appimage) for execution and external updates.
 
 ### Build from Source
 
