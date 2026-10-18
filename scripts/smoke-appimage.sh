@@ -21,11 +21,11 @@ export HOME="$work/home" XDG_CONFIG_HOME="$work/home/.config" XDG_DATA_HOME="$wo
 export XDG_CACHE_HOME="$work/home/.cache" XDG_RUNTIME_DIR="$work/runtime"
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 chmod 700 "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
-export LANG=C.UTF-8 GDK_BACKEND=x11 LIBGL_ALWAYS_SOFTWARE=1 APPIMAGE_EXTRACT_AND_RUN=1
-export IMAGE="$image" SMOKE_WORK="$work"
+export LANG=C.UTF-8 GDK_BACKEND=x11 LIBGL_ALWAYS_SOFTWARE=1
+export APPDIR="$work/squashfs-root" SMOKE_WORK="$work"
 dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24 -nolisten tcp' bash <<'GUI'
 set -euo pipefail
-"$IMAGE" > "$SMOKE_WORK/gui.log" 2>&1 &
+"$APPDIR/AppRun" > "$SMOKE_WORK/gui.log" 2>&1 &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; cat "$SMOKE_WORK/gui.log"' EXIT
 window=''
