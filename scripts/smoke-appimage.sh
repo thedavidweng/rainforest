@@ -12,7 +12,8 @@ expected='gh-releases-zsync|thedavidweng|rainforest|latest|rainforest-*-x86_64.A
 actual=$(env -u APPIMAGE_EXTRACT_AND_RUN "$image" --appimage-updateinformation 2>&1)
 [[ "$actual" == "$expected" ]] || { printf 'unexpected update information: %s\n' "$actual" >&2; exit 1; }
 grep -Fx "Filename: ${image##*/}" "${image}.zsync"
-work=$(mktemp -d)
+# Keep the isolated HOME outside /tmp: startup rejects temporary paths for persistent state.
+work=$(mktemp -d "${HOME}/rainforest-smoke.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 cd "$work"
 unsquashfs -offset "$(env -u APPIMAGE_EXTRACT_AND_RUN "$image" --appimage-offset)" -d squashfs-root "$image" >/dev/null
