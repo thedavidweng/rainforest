@@ -23,6 +23,19 @@ are credentials: do not share them. Import is configuration, not proof of a live
 session; run **Run diagnostics** in **Settings** afterward. Cookies are stored in the permission-
 restricted local vault, not encrypted by the OS Keychain.
 
+On a machine without a window, sign in with the same vault from the Rainforest
+executable. Pass a Cookie header, JSON, or Netscape file directly, or pipe it.
+Rainforest checks account read access before replacing the saved account:
+
+```bash
+rainforest auth login --region us --cookie-file ./cookies.txt
+rainforest auth login --region us < ./cookies.txt
+```
+
+`--cookie` puts the header in the process list. A terminal with no cookie flag
+asks for the marketplace, then a hidden Cookie header. This does not require
+the separate `aphotos` program. Open the app afterward; it loads this account.
+
 The app language follows your system preferences (English/Simplified Chinese).
 Choosing Chinese does not switch your Amazon marketplace to China. Experimental
 region warnings remain visible and never disable sign-in or destination selection.

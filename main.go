@@ -30,6 +30,9 @@ func main() {
 		fmt.Printf("rainforest %s\n", version)
 		return
 	}
+	if len(os.Args) >= 2 && os.Args[1] == "auth" {
+		os.Exit(runAuthCommand(os.Args[2:]))
+	}
 
 	mygo.App.SetName("Rainforest")
 	mygo.App.SetVersion(version)

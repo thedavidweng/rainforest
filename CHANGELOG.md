@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `rainforest auth login` stores a Cookie header, JSON, or Netscape file from a flag, a file, or stdin, then checks account read access before replacing the saved account. A terminal can paste the header with hidden input. The separate `aphotos` program is not required.
+
 ## [0.1.1] - 2026-10-17
 
 ### Fixed

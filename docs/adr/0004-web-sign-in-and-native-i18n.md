@@ -16,8 +16,10 @@ session access. A successful read must not be mistaken for write verification.
 Use a separate HTTPS Amazon window with no trusted origins. Capture only the
 selected marketplace's required cookies in Go, verify them with `GetRoot`, clear
 the app's Amazon browser cookies, then commit the new vault. Serialize account
-changes; cancel and failure preserve the previous account. The CLI separately
-provides hidden interactive Cookie paste and retains file import for automation.
+changes; cancel and failure preserve the previous account. `rainforest auth login`
+accepts a Cookie header, JSON, or Netscape file from `--cookie`, `--cookie-file`,
+or stdin, and hidden paste on a terminal. It verifies with `GetRoot` and leaves
+the previous account in place when that check fails.
 
 Use MyGo 0.5.1 catalogs for English and Simplified Chinese. OS locale and Amazon
 marketplace are independent. React subscribes to MyGo locale changes. Generated

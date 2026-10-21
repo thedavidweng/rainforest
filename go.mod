@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/thedavidweng/amazon-photos v0.1.3
 	golang.org/x/image v0.46.0
+	golang.org/x/term v0.40.0
 	modernc.org/sqlite v1.60.1
 )
 
