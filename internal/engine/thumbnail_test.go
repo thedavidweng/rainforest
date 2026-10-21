@@ -19,7 +19,8 @@ func TestLocalThumbnailAllowsFileLargerThanFormerByteCap(t *testing.T) {
 	if err := jpeg.Encode(&enc, img, &jpeg.Options{Quality: 80}); err != nil {
 		t.Fatal(err)
 	}
-	raw := append(enc.Bytes(), bytes.Repeat([]byte{0}, 21<<20)...)
+	raw := make([]byte, enc.Len()+21<<20)
+	copy(raw, enc.Bytes())
 	path := filepath.Join(t.TempDir(), "padded.jpg")
 	if err := os.WriteFile(path, raw, 0o644); err != nil {
 		t.Fatal(err)
@@ -114,7 +115,7 @@ func TestLocalThumbnailUsesTIFFPreview(t *testing.T) {
 	}
 }
 
-func tiffWithJPEG(jpeg []byte) []byte {
+func tiffWithJPEG(preview []byte) []byte {
 	const ifd = 8
 	jpegAt := ifd + 2 + 2*12 + 4
 	var b bytes.Buffer
@@ -122,9 +123,9 @@ func tiffWithJPEG(jpeg []byte) []byte {
 	_ = binary.Write(&b, binary.LittleEndian, uint32(ifd))
 	_ = binary.Write(&b, binary.LittleEndian, uint16(2))
 	writeLongTag(&b, 0x0201, uint32(jpegAt))
-	writeLongTag(&b, 0x0202, uint32(len(jpeg)))
+	writeLongTag(&b, 0x0202, uint32(len(preview)))
 	_ = binary.Write(&b, binary.LittleEndian, uint32(0))
-	b.Write(jpeg)
+	b.Write(preview)
 	return b.Bytes()
 }
 

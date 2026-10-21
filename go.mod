@@ -4,7 +4,9 @@ go 1.27.1
 
 require (
 	github.com/egoist/mygo v0.5.1
+	github.com/evanoberholster/imagemeta v1.1.0
 	github.com/google/uuid v1.6.0
+	github.com/m8rge/go-scaled-jpeg v1.2.0
 	github.com/thedavidweng/amazon-photos v0.1.3
 	golang.org/x/image v0.46.0
 	golang.org/x/term v0.40.0
@@ -14,9 +16,7 @@ require (
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.11.1 // indirect
-	github.com/evanoberholster/imagemeta v1.1.0 // indirect
 	github.com/go-text/typesetting v0.3.5 // indirect
-	github.com/m8rge/go-scaled-jpeg v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
