@@ -97,6 +97,9 @@ type Engine struct {
 	activeMu sync.Mutex
 	active   map[string]*activeTransferControl
 
+	liveMu sync.Mutex
+	live   map[string]*transferLive
+
 	thumbs thumbnailCache
 
 	scanMu   sync.Mutex
@@ -164,6 +167,17 @@ func (e *Engine) SetObserver(obs Observer) {
 }
 
 func (e *Engine) emitTransferStage(tr store.Transfer) {
+	if tr.ID != "" {
+		st := e.transferLive(tr.ID)
+		st.mu.Lock()
+		if st.base.ID == "" || !tr.UpdatedAt.Before(st.base.UpdatedAt) {
+			st.base = tr
+		}
+		if store.IsTerminalStage(tr.Stage) {
+			st.inflight = nil
+		}
+		st.mu.Unlock()
+	}
 	e.mu.RLock()
 	fn := e.observer.OnTransferStage
 	e.mu.RUnlock()
@@ -173,12 +187,82 @@ func (e *Engine) emitTransferStage(tr store.Transfer) {
 }
 
 func (e *Engine) emitTransferProgress(tr store.Transfer, item store.TransferItem) {
+	out := tr
+	if tr.ID != "" {
+		st := e.transferLive(tr.ID)
+		st.mu.Lock()
+		delete(st.inflight, item.ID)
+		st.base = tr
+		out = st.snapshotLocked()
+		st.mu.Unlock()
+	}
+	e.emitTransferProgressRaw(out, item)
+}
+
+// emitLiveByteProgress folds one in-flight item into the last aggregate.
+// The transfer value captured when a batch starts stays at zero done-counts,
+// and publishing it replaces newer totals in the UI.
+func (e *Engine) emitLiveByteProgress(fallback store.Transfer, item store.TransferItem) {
+	if fallback.ID == "" {
+		e.emitTransferProgressRaw(fallback, item)
+		return
+	}
+	st := e.transferLive(fallback.ID)
+	st.mu.Lock()
+	if store.IsTerminalStage(st.base.Stage) {
+		st.mu.Unlock()
+		return
+	}
+	if st.base.ID == "" {
+		st.base = fallback
+	}
+	if st.inflight == nil {
+		st.inflight = map[string]int64{}
+	}
+	st.inflight[item.ID] = item.BytesDone
+	out := st.snapshotLocked()
+	st.mu.Unlock()
+	e.emitTransferProgressRaw(out, item)
+}
+
+func (e *Engine) emitTransferProgressRaw(tr store.Transfer, item store.TransferItem) {
 	e.mu.RLock()
 	fn := e.observer.OnTransferProgress
 	e.mu.RUnlock()
 	if fn != nil {
 		fn(tr, item)
 	}
+}
+
+type transferLive struct {
+	mu       sync.Mutex
+	base     store.Transfer
+	inflight map[string]int64
+}
+
+func (e *Engine) transferLive(id string) *transferLive {
+	e.liveMu.Lock()
+	defer e.liveMu.Unlock()
+	if e.live == nil {
+		e.live = map[string]*transferLive{}
+	}
+	st := e.live[id]
+	if st == nil {
+		st = &transferLive{}
+		e.live[id] = st
+	}
+	return st
+}
+
+func (st *transferLive) snapshotLocked() store.Transfer {
+	tr := st.base
+	for _, n := range st.inflight {
+		tr.BytesDone += n
+	}
+	if tr.BytesTotal > 0 && tr.BytesDone > tr.BytesTotal {
+		tr.BytesDone = tr.BytesTotal
+	}
+	return tr
 }
 
 func (e *Engine) emitBackupStatus(rule store.BackupRule) {

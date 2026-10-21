@@ -513,7 +513,7 @@ func (e *Engine) processSingleUploadItem(
 		ConflictPolicy:  tr.ConflictPolicy,
 		Progress: func(p aphotos.TransferProgress) {
 			item.BytesDone = p.BytesTransferred
-			e.emitTransferProgress(tr, item)
+			e.emitLiveByteProgress(tr, item)
 		},
 	})
 
