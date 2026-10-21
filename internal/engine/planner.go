@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	maxThumbnailSourceBytes = 20 * 1024 * 1024
-	maxPlanPreviewThumbs    = 32
+	maxPlanPreviewThumbs = 32
 )
 
 var photoExtensions = map[string]bool{

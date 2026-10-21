@@ -12,6 +12,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/evanoberholster/imagemeta"
+	jpegscaled "github.com/m8rge/go-scaled-jpeg"
 	_ "golang.org/x/image/bmp"
 	"golang.org/x/image/draw"
 	_ "golang.org/x/image/tiff"
@@ -20,9 +22,19 @@ import (
 
 const (
 	thumbnailMaxDimension = 320
-	maxThumbnailPixels    = 8192
 	thumbnailCacheEntries = 128
 	jpegThumbnailQuality  = 85
+	// fullDecodePixels is the point where a JPEG is decoded at full
+	// resolution. Larger files use 1/8-step IDCT scaling.
+	fullDecodePixels = 2_000_000
+	// maxDecodedPixels caps the bitmap a thumbnail decode may allocate.
+	maxDecodedPixels = 24_000_000
+	maxSourceEdge    = 65535
+	// maxEmbeddedPreviewBytes caps a RAW or HEIC preview JPEG before it is scaled.
+	maxEmbeddedPreviewBytes = 20 << 20
+	embeddedScanBytes       = 8 << 20
+	orientationProbeBytes   = 256 << 10
+	maxEmbeddedCandidates   = 16
 )
 
 var errThumbnailUnavailable = errors.New("thumbnail unavailable")
@@ -71,7 +83,7 @@ func (e *Engine) LocalThumbnail(localPath string) (Thumbnail, error) {
 	if err != nil {
 		return Thumbnail{}, err
 	}
-	if !info.Mode().IsRegular() || info.Size() <= 0 || info.Size() > maxThumbnailSourceBytes {
+	if !info.Mode().IsRegular() || info.Size() <= 0 {
 		return Thumbnail{}, errThumbnailUnavailable
 	}
 	key := thumbnailKey{path: localPath, size: info.Size(), mtime: info.ModTime().UnixNano()}
@@ -86,24 +98,253 @@ func (e *Engine) LocalThumbnail(localPath string) (Thumbnail, error) {
 	return t, nil
 }
 
+type imageKind int
+
+const (
+	kindOther imageKind = iota
+	kindJPEG
+	kindGeneric
+	kindTIFF
+	kindCR3
+)
+
 func renderThumbnail(localPath string, maxDim int) (Thumbnail, error) {
-	raw, err := os.ReadFile(localPath)
+	f, err := os.Open(localPath)
 	if err != nil {
 		return Thumbnail{}, err
 	}
-	cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+	defer f.Close()
+
+	kind, err := sniffImage(f)
+	if err != nil {
+		return Thumbnail{}, err
+	}
+	switch kind {
+	case kindJPEG:
+		return renderJPEG(f, maxDim)
+	case kindGeneric:
+		return renderGeneric(f, maxDim)
+	case kindTIFF:
+		if thumb, err := renderPreview(f, maxDim, func(r io.ReadSeeker) ([]byte, error) {
+			return imagemeta.PreviewTIFF(r, imagemeta.WithMaxPreviewLength(maxEmbeddedPreviewBytes))
+		}); err == nil {
+			return thumb, nil
+		}
+		if _, err := f.Seek(0, io.SeekStart); err != nil {
+			return Thumbnail{}, err
+		}
+		return renderGeneric(f, maxDim)
+	case kindCR3:
+		return renderPreview(f, maxDim, func(r io.ReadSeeker) ([]byte, error) {
+			raw, err := imagemeta.PreviewCR3(r)
+			if err != nil || len(raw) == 0 || len(raw) > maxEmbeddedPreviewBytes {
+				return nil, errThumbnailUnavailable
+			}
+			return raw, nil
+		})
+	default:
+		return renderEmbeddedScan(f, maxDim)
+	}
+}
+
+func sniffImage(f *os.File) (imageKind, error) {
+	var head [32]byte
+	n, err := io.ReadFull(f, head[:])
+	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		return kindOther, err
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return kindOther, err
+	}
+	headN := head[:n]
+	switch {
+	case n >= 3 && headN[0] == 0xFF && headN[1] == 0xD8:
+		return kindJPEG, nil
+	case n >= 8 && bytes.Equal(headN[:8], []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}):
+		return kindGeneric, nil
+	case n >= 6 && (bytes.Equal(headN[:6], []byte("GIF87a")) || bytes.Equal(headN[:6], []byte("GIF89a"))):
+		return kindGeneric, nil
+	case n >= 12 && bytes.Equal(headN[:4], []byte("RIFF")) && bytes.Equal(headN[8:12], []byte("WEBP")):
+		return kindGeneric, nil
+	case n >= 2 && headN[0] == 'B' && headN[1] == 'M':
+		return kindGeneric, nil
+	case n >= 4 && (bytes.Equal(headN[:4], []byte{'I', 'I', '*', 0}) || bytes.Equal(headN[:4], []byte{'M', 'M', 0, '*'})):
+		return kindTIFF, nil
+	case n >= 12 && bytes.Equal(headN[4:8], []byte("ftyp")) && bytes.Contains(headN, []byte("crx ")):
+		return kindCR3, nil
+	default:
+		return kindOther, nil
+	}
+}
+
+func renderJPEG(f *os.File, maxDim int) (Thumbnail, error) {
+	cfg, err := jpeg.DecodeConfig(f)
 	if err != nil {
 		return Thumbnail{}, errThumbnailUnavailable
 	}
-	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > maxThumbnailPixels || cfg.Height > maxThumbnailPixels {
-		return Thumbnail{}, errThumbnailUnavailable
+	orientation := readJPEGOrientation(f)
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return Thumbnail{}, err
 	}
-	img, _, err := image.Decode(bytes.NewReader(raw))
+	img, err := decodeScaledJPEG(f, cfg, maxDim)
 	if err != nil {
 		return Thumbnail{}, errThumbnailUnavailable
 	}
-	scaled := orient(downscale(img, maxDim), jpegOrientation(raw))
+	return encodeThumb(img, cfg.Width, cfg.Height, orientation, maxDim)
+}
+
+func renderGeneric(f *os.File, maxDim int) (Thumbnail, error) {
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil || !fullPixelsOK(cfg.Width, cfg.Height) {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return Thumbnail{}, err
+	}
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	return encodeThumb(img, cfg.Width, cfg.Height, 1, maxDim)
+}
+
+func renderPreview(f *os.File, maxDim int, read func(io.ReadSeeker) ([]byte, error)) (Thumbnail, error) {
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return Thumbnail{}, err
+	}
+	raw, err := read(f)
+	if err != nil || len(raw) == 0 {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	cfg, err := jpeg.DecodeConfig(bytes.NewReader(raw))
+	if err != nil {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	img, err := decodeScaledJPEG(bytes.NewReader(raw), cfg, maxDim)
+	if err != nil {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	return encodeThumb(img, cfg.Width, cfg.Height, jpegOrientation(raw), maxDim)
+}
+
+func renderEmbeddedScan(f *os.File, maxDim int) (Thumbnail, error) {
+	info, err := f.Stat()
+	if err != nil {
+		return Thumbnail{}, err
+	}
+	window := embeddedScanBytes
+	if info.Size() < int64(window) {
+		window = int(info.Size())
+	}
+	buf := make([]byte, window)
+	n, err := f.ReadAt(buf, 0)
+	if err != nil && err != io.EOF {
+		return Thumbnail{}, errThumbnailUnavailable
+	}
+	buf = buf[:n]
+	attempts := 0
+	for i := 0; i+3 < len(buf) && attempts < maxEmbeddedCandidates; i++ {
+		if buf[i] != 0xFF || buf[i+1] != 0xD8 || buf[i+2] != 0xFF {
+			continue
+		}
+		attempts++
+		section := io.NewSectionReader(f, int64(i), maxEmbeddedPreviewBytes)
+		cfg, err := jpeg.DecodeConfig(section)
+		if err != nil || cfg.Width < 8 || cfg.Height < 8 {
+			continue
+		}
+		if _, err := section.Seek(0, io.SeekStart); err != nil {
+			continue
+		}
+		img, err := decodeScaledJPEG(section, cfg, maxDim)
+		if err != nil {
+			continue
+		}
+		probe := buf[i:]
+		if len(probe) > orientationProbeBytes {
+			probe = probe[:orientationProbeBytes]
+		}
+		return encodeThumb(img, cfg.Width, cfg.Height, jpegOrientation(probe), maxDim)
+	}
+	return Thumbnail{}, errThumbnailUnavailable
+}
+
+func decodeScaledJPEG(r io.ReadSeeker, cfg image.Config, maxDim int) (image.Image, error) {
+	pixels := int64(cfg.Width) * int64(cfg.Height)
+	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > maxSourceEdge || cfg.Height > maxSourceEdge {
+		return nil, errThumbnailUnavailable
+	}
+	if pixels <= fullDecodePixels {
+		if _, err := r.Seek(0, io.SeekStart); err != nil {
+			return nil, err
+		}
+		return jpeg.Decode(r)
+	}
+	scale := dctScale(cfg.Width, cfg.Height, maxDim)
+	if !fitsDecode(cfg.Width, cfg.Height, scale) {
+		return nil, errThumbnailUnavailable
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+	img, err := jpegscaled.Decode(r, jpegscaled.DecodeOptions{DCTSizeScaled: scale})
+	if err == nil {
+		return img, nil
+	}
+	if pixels > maxDecodedPixels {
+		return nil, err
+	}
+	if _, seekErr := r.Seek(0, io.SeekStart); seekErr != nil {
+		return nil, seekErr
+	}
+	return jpeg.Decode(r)
+}
+
+func dctScale(w, h, maxDim int) int {
+	long := w
+	if h > long {
+		long = h
+	}
+	for n := 1; n <= 8; n++ {
+		if int64(long)*int64(n)/8 >= int64(maxDim) {
+			return n
+		}
+	}
+	return 8
+}
+
+func fitsDecode(w, h, scale int) bool {
+	if w <= 0 || h <= 0 || scale < 1 || scale > 8 {
+		return false
+	}
+	sw := int64(w) * int64(scale) / 8
+	sh := int64(h) * int64(scale) / 8
+	if sw < 1 || sh < 1 {
+		return false
+	}
+	return sw*sh <= maxDecodedPixels
+}
+
+func fullPixelsOK(w, h int) bool {
+	if w <= 0 || h <= 0 || w > maxSourceEdge || h > maxSourceEdge {
+		return false
+	}
+	return int64(w)*int64(h) <= maxDecodedPixels
+}
+
+func readJPEGOrientation(f *os.File) int {
+	buf := make([]byte, orientationProbeBytes)
+	n, _ := f.ReadAt(buf, 0)
+	if n < 4 {
+		return 1
+	}
+	return jpegOrientation(buf[:n])
+}
+
+func encodeThumb(img image.Image, srcW, srcH, orientation, maxDim int) (Thumbnail, error) {
+	scaled := orient(downscale(img, maxDim), orientation)
 	var buf bytes.Buffer
+	var err error
 	if o, ok := scaled.(interface{ Opaque() bool }); ok && !o.Opaque() {
 		err = png.Encode(&buf, scaled)
 	} else {
@@ -112,7 +353,7 @@ func renderThumbnail(localPath string, maxDim int) (Thumbnail, error) {
 	if err != nil {
 		return Thumbnail{}, err
 	}
-	return Thumbnail{Data: buf.Bytes(), Width: cfg.Width, Height: cfg.Height}, nil
+	return Thumbnail{Data: buf.Bytes(), Width: srcW, Height: srcH}, nil
 }
 
 func downscale(src image.Image, maxDim int) *image.RGBA {
@@ -127,7 +368,7 @@ func downscale(src image.Image, maxDim int) *image.RGBA {
 		}
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-	draw.CatmullRom.Scale(dst, dst.Bounds(), src, b, draw.Src, nil)
+	draw.ApproxBiLinear.Scale(dst, dst.Bounds(), src, b, draw.Src, nil)
 	return dst
 }
 
