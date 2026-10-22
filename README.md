@@ -17,6 +17,16 @@
 
 Built on [`github.com/thedavidweng/amazon-photos`](https://github.com/thedavidweng/amazon-photos) and [`egoist/mygo`](https://github.com/egoist/mygo) v0.5.1 (`CGO_ENABLED=0`), Rainforest layers a native Go interface (`internal/view`, built on `mygo/ui`) over `internal/gui`, `internal/engine`, `internal/store`, and `internal/credstore` using native HttpOnly Cookie capture for web sign-in ([MyGo #343](https://github.com/egoist/mygo/issues/343)), shared English/Simplified Chinese i18n catalogs, and local upload previews ([MyGo #161](https://github.com/egoist/mygo/issues/161)).
 
+## Related projects
+
+Three sibling projects share one Amazon Photos foundation:
+
+| Project | What it is | Relation |
+| --- | --- | --- |
+| [`amazon-photos`](https://github.com/thedavidweng/amazon-photos) | Go SDK (`pkg/aphotos`) and `aphotos` CLI | Foundation: Rainforest and `immich-amazon-sync` both import this SDK |
+| [`rainforest`](https://github.com/thedavidweng/rainforest) | Cross-platform desktop app for one-time upload, one-way folder backup, and recovery download | This project; end-user client on the SDK |
+| [`immich-amazon-sync`](https://github.com/thedavidweng/immich-amazon-sync) | Self-hosted container service | Server-side Immich → Amazon Photos backup on the same SDK |
+
 ## Screenshots
 
 macOS screenshots captured with the system screenshot tool.
