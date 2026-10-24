@@ -3,7 +3,7 @@ module github.com/thedavidweng/rainforest
 go 1.27.1
 
 require (
-	github.com/egoist/mygo v0.5.1
+	github.com/egoist/mygo v0.5.5
 	github.com/evanoberholster/imagemeta v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/m8rge/go-scaled-jpeg v1.2.0
