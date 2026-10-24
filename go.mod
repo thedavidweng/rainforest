@@ -9,7 +9,7 @@ require (
 	github.com/m8rge/go-scaled-jpeg v1.2.0
 	github.com/thedavidweng/amazon-photos v0.1.3
 	golang.org/x/image v0.47.0
-	golang.org/x/term v0.40.0
+	golang.org/x/term v0.47.0
 	modernc.org/sqlite v1.60.1
 )
 
