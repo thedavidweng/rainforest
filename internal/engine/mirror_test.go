@@ -113,7 +113,7 @@ func (f *fakeDrive) transport(t *testing.T) roundTripFunc {
 			if f.queryStatus != 0 {
 				return jsonResponse(f.queryStatus, map[string]any{"message": "boom"}), nil
 			}
-			var data []any
+			data := []any{}
 			if flt["kind"] == "FOLDER" {
 				for _, fo := range f.folders {
 					if fo.name == flt["name"] && fo.parent == flt["parents"] {

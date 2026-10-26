@@ -46,6 +46,9 @@ func nodeResponse(rest string) *http.Response {
 	}
 	if children {
 		data := folders[id]
+		if data == nil {
+			data = []map[string]any{}
+		}
 		return jsonResponse(http.StatusOK, map[string]any{"count": len(data), "data": data})
 	}
 	switch id {

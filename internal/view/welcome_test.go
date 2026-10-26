@@ -84,8 +84,10 @@ func TestWelcomeInterruptedSignInShowsCancelledNote(t *testing.T) {
 }
 
 func TestWelcomeCancelStopsPendingSignIn(t *testing.T) {
+	started := make(chan struct{})
 	cancelled := make(chan struct{})
 	h := newLoginHarness(t, func(ctx context.Context) error {
+		close(started)
 		<-ctx.Done()
 		close(cancelled)
 		return ctx.Err()
@@ -99,6 +101,7 @@ func TestWelcomeCancelStopsPendingSignIn(t *testing.T) {
 	h.queue = nil
 	done := make(chan struct{})
 	go func() { signIn(); close(done) }()
+	<-started
 
 	if err := h.tt.Click(locales.CommonCancel()); err != nil {
 		t.Fatal(err)
