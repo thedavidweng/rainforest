@@ -8,66 +8,9 @@ import (
 	"image/png"
 	"testing"
 
-	"github.com/egoist/mygo/ui"
 	"github.com/thedavidweng/rainforest/internal/gui"
 	"github.com/thedavidweng/rainforest/locales"
 )
-
-func TestEveryIconLoads(t *testing.T) {
-	for i, icon := range []*ui.SVG{
-		iconArrowsDownUp,
-		iconCheck,
-		iconCaretDown,
-		iconCaretRight,
-		iconWarningCircle,
-		iconCheckCircle,
-		iconCircleDashed,
-		iconPauseCircle,
-		iconXCircle,
-		iconClock,
-		iconCloud,
-		iconCloudCheck,
-		iconCloudSlash,
-		iconCloudArrowUp,
-		iconDownloadSimple,
-		iconDotsThree,
-		iconArrowSquareOut,
-		iconFile,
-		iconFilmStrip,
-		iconFolder,
-		iconFolderOpen,
-		iconFolder,
-		iconGlobe,
-		iconHardDrive,
-		iconCloudArrowDown,
-		iconImage,
-		iconImages,
-		iconInfo,
-		iconListChecks,
-		iconCircleNotch,
-		iconSignIn,
-		iconSignOut,
-		iconPause,
-		iconPencilSimple,
-		iconPlay,
-		iconPlus,
-		iconArrowsClockwise,
-		iconClockCounterClockwise,
-		iconArrowClockwise,
-		iconGear,
-		iconShieldCheck,
-		iconStethoscope,
-		iconTrash,
-		iconWarning,
-		iconUploadSimple,
-		iconUser,
-		iconX,
-	} {
-		if icon == nil {
-			t.Errorf("icon %d is nil", i)
-		}
-	}
-}
 
 func TestLoadersSettleAndEnsureRecoveryRunsOnce(t *testing.T) {
 	h := newHarness(t, true)

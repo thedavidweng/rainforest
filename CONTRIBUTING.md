@@ -45,7 +45,7 @@ View tests run headless with `ui.NewTester` against real `gui.Services` backed b
 
 ## Icons
 
-Icons are [Phosphor](https://phosphoricons.com) SVGs in `internal/view/icons/`, pinned by `internal/view/icons/icons.txt` (first line is the `@phosphor-icons/core` version, then one `weight name` line per icon, such as `regular folder` or `fill house`; non-regular weights are saved as `<name>-<weight>.svg`). To add one, append its line to `icons.txt`, run `mise run icons`, and commit the downloaded SVG. Never hand-edit the SVGs; `TestIconsMatchManifest` fails if the manifest and files differ.
+Icons are [Phosphor](https://phosphoricons.com) SVGs in `internal/view/icons/`, pinned by `internal/view/icons/icons.txt` (first line is the `@phosphor-icons/core` version, then one `weight name` line per icon, such as `regular folder` or `fill house`; non-regular weights are saved as `<name>-<weight>.svg`). To add one, append its line to `icons.txt`, run `mise run icons`, and commit the downloaded SVG. Never hand-edit the SVGs.
 
 ## Project Structure
 
