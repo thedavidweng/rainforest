@@ -30,7 +30,7 @@ plain Go.
 4. The MyGo CLI is pinned as a Go tool and invoked as `go tool mygo`. Icons are
    embedded Phosphor SVGs in `internal/view/icons`, pinned by the version and
    `weight name` lines in `icons.txt`; `mise run icons` syncs the SVGs from that
-   manifest and a test fails when the manifest and files differ. `locales/*.json` remain the
+   manifest. `locales/*.json` remain the
    single string source and `locales/catalog_gen.go` is checked for drift by
    `mise run i18n-check`.
 
@@ -49,3 +49,5 @@ plain Go.
   backed by temporary SQLite databases and stub HTTP transports.
 - The Amazon sign-in window still uses the system WebView through MyGo's
   cookie APIs, as described in ADR 0004.
+
+**2026-10-28:** Removed the manifest comparison test; icon initialization parses the SVGs used by the app.
