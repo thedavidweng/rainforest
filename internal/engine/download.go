@@ -317,9 +317,7 @@ func (e *Engine) launchDownloadWorkers(transferID string) {
 	e.active[transferID] = ctrl
 	e.activeMu.Unlock()
 
-	e.bgWG.Add(1)
-	go func() {
-		defer e.bgWG.Done()
+	e.bgWG.Go(func() {
 		defer func() {
 			e.activeMu.Lock()
 			if e.active[transferID] == ctrl {
@@ -330,7 +328,7 @@ func (e *Engine) launchDownloadWorkers(transferID string) {
 			cancel()
 		}()
 		e.executeDownloadTransfer(runCtx, transferID, ctrl)
-	}()
+	})
 }
 
 func (e *Engine) executeDownloadTransfer(ctx context.Context, transferID string, ctrl *activeTransferControl) {
@@ -375,16 +373,14 @@ func (e *Engine) executeDownloadTransfer(ctx context.Context, transferID string,
 
 	var wg sync.WaitGroup
 	for range workerCount {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for idx := range indexCh {
 				if wErr := ctrl.waitIfPaused(ctx); wErr != nil {
 					return
 				}
 				e.processSingleDownloadItem(ctx, st, tr, items[idx])
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

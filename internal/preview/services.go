@@ -84,7 +84,7 @@ func (t *transfers) RecentUploads(ctx context.Context, limit int) ([]gui.RecentU
 	n := min(limit, len(t.items))
 	recent := make([]gui.RecentUploadDTO, n)
 	var wg sync.WaitGroup
-	for i := 0; i < n; i++ {
+	for i := range n {
 		item := &t.items[i]
 		recent[i] = gui.RecentUploadDTO{
 			Name:         item.Name,

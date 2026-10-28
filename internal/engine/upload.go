@@ -323,9 +323,7 @@ func (e *Engine) launchUploadWorkers(transferID string, checkRemoteBeforePost bo
 	e.active[transferID] = ctrl
 	e.activeMu.Unlock()
 
-	e.bgWG.Add(1)
-	go func() {
-		defer e.bgWG.Done()
+	e.bgWG.Go(func() {
 		defer func() {
 			e.activeMu.Lock()
 			if e.active[transferID] == ctrl {
@@ -336,7 +334,7 @@ func (e *Engine) launchUploadWorkers(transferID string, checkRemoteBeforePost bo
 			cancel()
 		}()
 		e.executeUploadTransfer(runCtx, transferID, ctrl, checkRemoteBeforePost)
-	}()
+	})
 }
 
 func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, ctrl *activeTransferControl, checkRemoteBeforePost bool) {
@@ -396,16 +394,14 @@ func (e *Engine) executeUploadTransfer(ctx context.Context, transferID string, c
 
 	var wg sync.WaitGroup
 	for range workerCount {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for idx := range indexCh {
 				if wErr := ctrl.waitIfPaused(ctx); wErr != nil {
 					return
 				}
 				e.processSingleUploadItem(ctx, st, client, destination, tr, items[idx], checkRemoteBeforePost, nil)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

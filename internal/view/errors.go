@@ -21,8 +21,7 @@ func errMessage(err error) string {
 }
 
 func errCode(err error) string {
-	var ge *gui.Error
-	if errors.As(err, &ge) {
+	if ge, ok := errors.AsType[*gui.Error](err); ok {
 		return ge.Code
 	}
 	return ""

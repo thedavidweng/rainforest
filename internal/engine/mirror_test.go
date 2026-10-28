@@ -82,7 +82,7 @@ func (f *fakeDrive) createdPaths() []string {
 
 func parseFilter(raw string) map[string]string {
 	out := map[string]string{}
-	for _, clause := range strings.Split(raw, " AND ") {
+	for clause := range strings.SplitSeq(raw, " AND ") {
 		k, v, ok := strings.Cut(clause, ":")
 		if !ok {
 			continue

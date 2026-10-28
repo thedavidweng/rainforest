@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -311,9 +312,7 @@ func (e *Engine) StartBackground(ctx context.Context) {
 	poll := e.pollInterval
 	e.mu.Unlock()
 
-	e.bgWG.Add(1)
-	go func() {
-		defer e.bgWG.Done()
+	e.bgWG.Go(func() {
 		ticker := time.NewTicker(poll)
 		defer ticker.Stop()
 		for {
@@ -324,7 +323,7 @@ func (e *Engine) StartBackground(ctx context.Context) {
 				e.runScheduledBackupScans(bgCtx)
 			}
 		}
-	}()
+	})
 }
 
 func (e *Engine) ReconcileOnStartup(ctx context.Context) error {
@@ -450,13 +449,7 @@ func findRemoteNodeForItem(ctx context.Context, client *aphotos.Client, item sto
 			return false
 		}
 		if parentID != "" && len(cand.Parents) > 0 {
-			hasParent := false
-			for _, p := range cand.Parents {
-				if p == parentID {
-					hasParent = true
-					break
-				}
-			}
+			hasParent := slices.Contains(cand.Parents, parentID)
 			if !hasParent {
 				return false
 			}
