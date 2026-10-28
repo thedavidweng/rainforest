@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 	"sync"
 
@@ -24,7 +25,7 @@ func newFolderResolver(client *aphotos.Client, base string) *folderResolver {
 
 func splitRemoteDir(dir string) []string {
 	var parts []string
-	for _, p := range strings.Split(dir, "/") {
+	for p := range strings.SplitSeq(dir, "/") {
 		if p != "" && p != "." && p != ".." {
 			parts = append(parts, p)
 		}
@@ -92,12 +93,7 @@ func hasParent(n *aphotos.Node, parentID string) bool {
 	if len(n.Parents) == 0 {
 		return true
 	}
-	for _, p := range n.Parents {
-		if p == parentID {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(n.Parents, parentID)
 }
 
 func (d DestinationCapability) uploadParent(ctx context.Context, remoteDir string, create bool) (id string, found bool, err error) {

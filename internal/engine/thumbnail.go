@@ -301,10 +301,7 @@ func decodeScaledJPEG(r io.ReadSeeker, cfg image.Config, maxDim int) (image.Imag
 }
 
 func dctScale(w, h, maxDim int) int {
-	long := w
-	if h > long {
-		long = h
-	}
+	long := max(h, w)
 	for n := 1; n <= 8; n++ {
 		if int64(long)*int64(n)/8 >= int64(maxDim) {
 			return n

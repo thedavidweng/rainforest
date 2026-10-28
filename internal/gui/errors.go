@@ -105,8 +105,7 @@ func toError(err error) error {
 		return nil
 	}
 
-	var existing *Error
-	if errors.As(err, &existing) {
+	if existing, ok := errors.AsType[*Error](err); ok {
 		if existing.Code == "" {
 			existing.Code = ErrValidationFailed
 		}
@@ -131,8 +130,7 @@ func toError(err error) error {
 		return newError(ErrNetworkError, err.Error(), nil)
 	}
 
-	var cfgErr *aphotos.ConfigError
-	if errors.As(err, &cfgErr) {
+	if cfgErr, ok := errors.AsType[*aphotos.ConfigError](err); ok {
 		var details map[string]any
 		if cfgErr.Field != "" {
 			details = map[string]any{"field": aphotos.Redact(cfgErr.Field)}
@@ -140,18 +138,15 @@ func toError(err error) error {
 		return newError(ErrConfigError, cfgErr.Error(), details)
 	}
 
-	var authErr *aphotos.AuthenticationError
-	if errors.As(err, &authErr) {
+	if authErr, ok := errors.AsType[*aphotos.AuthenticationError](err); ok {
 		return newError(ErrAuthFailed, authErr.Error(), httpDetails(authErr.Endpoint, authErr.StatusCode, authErr.RequestID))
 	}
 
-	var permErr *aphotos.PermissionError
-	if errors.As(err, &permErr) {
+	if permErr, ok := errors.AsType[*aphotos.PermissionError](err); ok {
 		return newError(ErrPermissionDenied, permErr.Error(), httpDetails(permErr.Endpoint, permErr.StatusCode, permErr.RequestID))
 	}
 
-	var rlErr *aphotos.RateLimitError
-	if errors.As(err, &rlErr) {
+	if rlErr, ok := errors.AsType[*aphotos.RateLimitError](err); ok {
 		ge := newError(ErrRateLimited, rlErr.Error(), httpDetails(rlErr.Endpoint, rlErr.StatusCode, rlErr.RequestID))
 		if rlErr.RetryAfter > 0 {
 			ge.RetryAfterMS = rlErr.RetryAfter.Milliseconds()
@@ -159,8 +154,7 @@ func toError(err error) error {
 		return ge
 	}
 
-	var filterErr *aphotos.InvalidFilterError
-	if errors.As(err, &filterErr) {
+	if filterErr, ok := errors.AsType[*aphotos.InvalidFilterError](err); ok {
 		details := httpDetails(filterErr.Endpoint, filterErr.StatusCode, filterErr.RequestID)
 		if filterErr.Filter != "" {
 			if details == nil {
@@ -171,8 +165,7 @@ func toError(err error) error {
 		return newError(ErrInvalidFilter, filterErr.Error(), details)
 	}
 
-	var nfErr *aphotos.NotFoundError
-	if errors.As(err, &nfErr) {
+	if nfErr, ok := errors.AsType[*aphotos.NotFoundError](err); ok {
 		details := httpDetails(nfErr.Endpoint, nfErr.StatusCode, nfErr.RequestID)
 		if nfErr.NodeID != "" {
 			if details == nil {
@@ -183,8 +176,7 @@ func toError(err error) error {
 		return newError(ErrResourceNotFound, nfErr.Error(), details)
 	}
 
-	var conflictErr *aphotos.ConflictError
-	if errors.As(err, &conflictErr) {
+	if conflictErr, ok := errors.AsType[*aphotos.ConflictError](err); ok {
 		details := httpDetails(conflictErr.Endpoint, conflictErr.StatusCode, conflictErr.RequestID)
 		if conflictErr.ConflictingNodeID != "" {
 			if details == nil {
@@ -195,18 +187,15 @@ func toError(err error) error {
 		return newError(ErrConflict, conflictErr.Error(), details)
 	}
 
-	var netErr *aphotos.TransientNetworkError
-	if errors.As(err, &netErr) {
+	if netErr, ok := errors.AsType[*aphotos.TransientNetworkError](err); ok {
 		return newError(ErrNetworkError, netErr.Error(), httpDetails(netErr.Endpoint, netErr.StatusCode, netErr.RequestID))
 	}
 
-	var protoErr *aphotos.RemoteProtocolError
-	if errors.As(err, &protoErr) {
+	if protoErr, ok := errors.AsType[*aphotos.RemoteProtocolError](err); ok {
 		return newError(ErrRemoteProtocolError, protoErr.Error(), httpDetails(protoErr.Endpoint, protoErr.StatusCode, protoErr.RequestID))
 	}
 
-	var partialErr *aphotos.PartialResultError
-	if errors.As(err, &partialErr) {
+	if partialErr, ok := errors.AsType[*aphotos.PartialResultError](err); ok {
 		var details map[string]any
 		if partialErr.Endpoint != "" {
 			details = map[string]any{"endpoint": aphotos.Redact(partialErr.Endpoint)}
@@ -224,8 +213,7 @@ func toError(err error) error {
 		return newError(ErrPartialSuccess, partialErr.Error(), details)
 	}
 
-	var pathErr *fs.PathError
-	if errors.As(err, &pathErr) {
+	if _, ok := errors.AsType[*fs.PathError](err); ok {
 		return newError(ErrFilesystemError, err.Error(), nil)
 	}
 

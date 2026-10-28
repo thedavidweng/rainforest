@@ -87,8 +87,7 @@ func (a *Auth) Status(ctx context.Context) (*AuthStatus, error) {
 			return out, nil
 		}
 		mapped := toError(loadErr)
-		var ge *Error
-		if errors.As(mapped, &ge) {
+		if ge, ok := errors.AsType[*Error](mapped); ok {
 			out.ErrorCode = ge.Code
 			out.ErrorMessage = ge.Message
 		} else {
@@ -112,8 +111,7 @@ func (a *Auth) Status(ctx context.Context) (*AuthStatus, error) {
 	client := eng.Client()
 	if client == nil {
 		if rErr := a.state.reopen(ctx); rErr != nil {
-			var ge *Error
-			if errors.As(rErr, &ge) {
+			if ge, ok := errors.AsType[*Error](rErr); ok {
 				out.ErrorCode = ge.Code
 				out.ErrorMessage = ge.Message
 			}
@@ -128,8 +126,7 @@ func (a *Auth) Status(ctx context.Context) (*AuthStatus, error) {
 	root, rootErr := client.GetRoot(ctx)
 	if rootErr != nil {
 		mapped := toError(rootErr)
-		var ge *Error
-		if errors.As(mapped, &ge) {
+		if ge, ok := errors.AsType[*Error](mapped); ok {
 			out.ErrorCode = ge.Code
 			out.ErrorMessage = ge.Message
 		} else {

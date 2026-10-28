@@ -451,8 +451,8 @@ func parseNetscapeCookies(data []byte) map[string]string {
 		if line == "" {
 			continue
 		}
-		if strings.HasPrefix(line, "#HttpOnly_") {
-			line = strings.TrimPrefix(line, "#HttpOnly_")
+		if after, ok := strings.CutPrefix(line, "#HttpOnly_"); ok {
+			line = after
 		} else if strings.HasPrefix(line, "#") {
 			continue
 		}
@@ -474,8 +474,8 @@ func parseNetscapeCookies(data []byte) map[string]string {
 
 func parseRawCookieHeader(raw string) map[string]string {
 	out := make(map[string]string)
-	lines := strings.Split(raw, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(raw, "\n")
+	for line := range lines {
 		l := strings.TrimSpace(line)
 		if l == "" || strings.HasPrefix(l, "#") {
 			continue
@@ -483,8 +483,8 @@ func parseRawCookieHeader(raw string) map[string]string {
 		if len(l) >= 7 && strings.EqualFold(l[:7], "cookie:") {
 			l = strings.TrimSpace(l[7:])
 		}
-		parts := strings.Split(l, ";")
-		for _, part := range parts {
+		parts := strings.SplitSeq(l, ";")
+		for part := range parts {
 			kv := strings.TrimSpace(part)
 			if kv == "" {
 				continue
@@ -508,8 +508,7 @@ func redactError(err error) error {
 	if err == nil {
 		return nil
 	}
-	var cfgErr *aphotos.ConfigError
-	if errors.As(err, &cfgErr) {
+	if cfgErr, ok := errors.AsType[*aphotos.ConfigError](err); ok {
 		return &aphotos.ConfigError{
 			Field:   cfgErr.Field,
 			Message: aphotos.Redact(cfgErr.Message),

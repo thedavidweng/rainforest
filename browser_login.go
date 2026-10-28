@@ -76,8 +76,7 @@ func browserLogin(ctx context.Context, rc aphotos.RegionConfig, verify func(map[
 				continue
 			}
 			err = verify(captured)
-			var authErr *aphotos.AuthenticationError
-			if errors.As(err, &authErr) {
+			if _, ok := errors.AsType[*aphotos.AuthenticationError](err); ok {
 				continue
 			}
 			return err

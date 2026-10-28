@@ -675,9 +675,7 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 	}
 	var wg sync.WaitGroup
 	for range workerCount {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for idx := range indexCh {
 				if wErr := ctrl.waitIfPaused(runCtx); wErr != nil {
 					return
@@ -695,7 +693,7 @@ func (e *Engine) ScanNow(ctx context.Context, ruleID string) (*store.Transfer, e
 					errMu.Unlock()
 				}
 			}
-		}()
+		})
 	}
 	wg.Wait()
 
