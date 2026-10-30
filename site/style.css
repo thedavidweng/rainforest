@@ -519,6 +519,7 @@ html[lang="zh-CN"][data-demo-theme="light"] .preview-start { background-image: u
   font-size: 13px;
   font-weight: 600;
 }
+.preview-start:focus-visible span { outline: 3px solid #0a0c0b; outline-offset: -3px; }
 .preview-start[hidden], .preview-window iframe[hidden] { display: none; }
 html[data-demo-theme="light"] .preview-window {
   background: #f8f9fa;
