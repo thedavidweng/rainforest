@@ -11,7 +11,7 @@ mise install
 mise run check
 ```
 
-Requires Go `1.27+` (automatically managed when using [mise](https://mise.jdx.dev/)). The MyGo CLI is pinned as a Go tool: run it as `go tool mygo`. There is no Node or bun toolchain.
+Requires Go `1.27+` (automatically managed when using [mise](https://mise.jdx.dev/)). `mise.toml` pins the compiler used by CI and release builds, and `GOTOOLCHAIN=local` prevents Go from downloading a different toolchain. The `go` directive in `go.mod` is the minimum supported Go version, not the compiler pin. The MyGo CLI is pinned as a Go tool: run it as `go tool mygo`. There is no Node or bun toolchain.
 
 ## Development Workflow
 
