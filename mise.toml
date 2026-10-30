@@ -4,6 +4,12 @@ gofumpt = "0.12.0"
 golangci-lint = "2.15.0"
 jactionlint = "2.3.0"
 
+[env]
+# The compiler pin above is authoritative for CI and releases. go.mod records
+# the minimum supported Go version, so never let builds download a different
+# toolchain to satisfy it.
+GOTOOLCHAIN = "local"
+
 [tasks.build]
 run = "go build ./..."
 
