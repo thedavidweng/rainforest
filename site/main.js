@@ -23,6 +23,7 @@ const STRINGS = {
   en: {
     "skip": "Skip to content",
     "preview.note": "Try the app. Sample data only; file and account operations are disabled.",
+    "preview.start": "Open interactive preview",
     "theme.light": "Light",
     "theme.dark": "Dark",
     "theme.switchToLight": "Switch demo to light theme",
@@ -107,6 +108,7 @@ const STRINGS = {
   zh: {
     "skip": "跳到正文",
     "preview.note": "试用真实界面。仅含示例数据，文件和账号操作已禁用。",
+    "preview.start": "打开交互预览",
     "theme.light": "浅色",
     "theme.dark": "深色",
     "theme.switchToLight": "切换 Demo 为浅色模式",
@@ -748,7 +750,7 @@ matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
 langListeners.push(() => {
   const locale = lang === "zh" ? "zh-Hans" : "en";
   const src = `preview/?lang=${locale}&theme=${demoTheme}`;
-  if (preview.getAttribute("src") !== src) preview.src = src;
+  if (preview.hasAttribute("src") && preview.getAttribute("src") !== src) preview.src = src;
   preview.title = lang === "zh" ? "Rainforest 交互预览" : "Interactive Rainforest preview";
 
   const navBtn = document.querySelector("[data-nav-theme-toggle]");
@@ -761,6 +763,13 @@ langListeners.push(() => {
 });
 
 setDemoTheme(demoTheme);
+
+document.querySelector("[data-preview-start]").addEventListener("click", (event) => {
+  preview.src = `preview/?lang=${lang === "zh" ? "zh-Hans" : "en"}&theme=${demoTheme}`;
+  preview.hidden = false;
+  event.currentTarget.hidden = true;
+  preview.focus();
+});
 
 ambient();
 oneWay(document.querySelector("[data-oneway]"));
