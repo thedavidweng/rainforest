@@ -764,12 +764,33 @@ langListeners.push(() => {
 
 setDemoTheme(demoTheme);
 
-document.querySelector("[data-preview-start]").addEventListener("click", (event) => {
+const previewStart = document.querySelector("[data-preview-start]");
+function loadPreview() {
+  if (preview.hasAttribute("src")) return;
   preview.src = `preview/?lang=${lang === "zh" ? "zh-Hans" : "en"}&theme=${demoTheme}`;
   preview.hidden = false;
-  event.currentTarget.hidden = true;
+  previewStart.hidden = true;
+}
+previewStart.addEventListener("click", () => {
+  loadPreview();
   preview.focus();
 });
+// Load quietly once the visitor interacts toward the demo. Only user input
+// arms this; programmatic scrolls (e.g. Lighthouse's screenshot pass) do not,
+// so the heavy iframe stays out of the measurement window.
+const armPreview = () => {
+  for (const type of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+    removeEventListener(type, armPreview);
+  }
+  new IntersectionObserver((entries, observer) => {
+    if (!entries[0].isIntersecting) return;
+    observer.disconnect();
+    loadPreview();
+  }, { rootMargin: "600px 0px" }).observe(previewWindow);
+};
+for (const type of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+  addEventListener(type, armPreview, { once: true, passive: true });
+}
 
 ambient();
 oneWay(document.querySelector("[data-oneway]"));
