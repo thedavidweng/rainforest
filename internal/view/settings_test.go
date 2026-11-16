@@ -182,9 +182,14 @@ func TestSettingsAndAboutBeforeSignIn(t *testing.T) {
 	h.app.ShowAbout()
 	h.drain()
 	h.wantText(locales.MenuAbout())
-	if err := h.tt.Click(locales.CommonClose()); err != nil {
-		t.Fatal(err)
+	// The signed-out Settings page has its own Close under the modal, and
+	// it comes first in the frame's texts. Screen readers see only the
+	// dialog, so its Close is the one a user reaches.
+	closeButton, ok := h.tt.AccessByRole(ui.RoleButton, locales.CommonClose())
+	if !ok {
+		t.Fatalf("About has no Close button; texts: %q", h.tt.Texts())
 	}
+	h.tt.ClickAt(closeButton.Bounds.X+closeButton.Bounds.W/2, closeButton.Bounds.Y+closeButton.Bounds.H/2)
 	h.drain()
 	if h.app.aboutOpen {
 		t.Fatal("About remains open")
